@@ -1,0 +1,21 @@
+# Thư mục build và output
+/target/
+/build/
+/out/
+
+# Node modules
+/node_modules/
+
+# File log
+*.log
+
+# File hệ điều hành
+.DS_Store
+Thumbs.db
+
+# File IDE
+.idea/
+*.iml
+
+# File cấu hình tạm
+*.class
