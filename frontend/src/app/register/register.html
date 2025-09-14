@@ -7,6 +7,10 @@
   <form (ngSubmit)="submit()" class="content">
     <h2>Create Account</h2>
     <label>
+      Full Name
+      <input type="text" name="fullName" [(ngModel)]="form.fullName" />
+    </label>
+    <label>
       Email
       <input type="email" name="email" [(ngModel)]="form.email" required />
     </label>

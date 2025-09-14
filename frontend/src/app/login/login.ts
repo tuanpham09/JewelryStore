@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -11,10 +12,17 @@ import { RouterLink } from '@angular/router';
   styleUrl: './login.css'
 })
 export class LoginComponent {
+  private auth = inject(AuthService);
   credentials = { email: '', password: '' };
 
   submit() {
-    console.log('Login', this.credentials);
+    this.auth.login(this.credentials).subscribe({
+      next: res => {
+        alert(res.message);
+        localStorage.setItem('token', res.data.token);
+      },
+      error: err => alert(err.error?.message || 'Login failed')
+    });
   }
 }
 
