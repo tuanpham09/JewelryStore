@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -13,15 +13,32 @@ import { AuthService } from '../auth.service';
 })
 export class LoginComponent {
   private auth = inject(AuthService);
+  private router = inject(Router);
+  
   credentials = { email: '', password: '' };
+  error = '';
 
   submit() {
+    this.error = '';
+    console.log('Login form submitted with:', this.credentials);
+    
     this.auth.login(this.credentials).subscribe({
-      next: res => {
-        alert(res.message);
-        localStorage.setItem('token', res.data.token);
+      next: (res) => {
+        console.log('Login success response in component:', res);
+        if (res.success) {
+          this.router.navigate(['/']); // Redirect to home page
+        } else {
+          this.error = res.message || 'Login failed';
+        }
       },
-      error: err => alert(err.error?.message || 'Login failed')
+      error: (err) => {
+        console.error('Login error in component:', err);
+        if (err.status === 0) {
+          this.error = 'Cannot connect to server. Please check if backend is running.';
+        } else {
+          this.error = err.error?.message || `Login failed (${err.status})`;
+        }
+      }
     });
   }
 }

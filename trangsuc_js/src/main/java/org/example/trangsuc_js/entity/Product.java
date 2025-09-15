@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter @Setter
@@ -16,7 +18,10 @@ public class Product {
 
     private String name;
     private String slug;
+    
+    @Column(columnDefinition = "TEXT")
     private String description;
+    
     private BigDecimal price;
     private Integer stock;
     private String thumbnail;
@@ -24,4 +29,7 @@ public class Product {
     @ManyToOne
     @JoinColumn(name="category_id")
     private Category category;
+    
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews = new ArrayList<>();
 }

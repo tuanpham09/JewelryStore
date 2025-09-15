@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,7 +25,9 @@ public class Order {
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime deliveredAt;
 
-    @OneToMany(mappedBy="order", cascade=CascadeType.ALL)
-    private List<OrderItem> items;
+    @OneToMany(mappedBy="order", cascade=CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+    
+    private String address;
 }
 

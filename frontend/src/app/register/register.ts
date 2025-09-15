@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -13,19 +13,49 @@ import { AuthService } from '../auth.service';
 })
 export class RegisterComponent {
   private auth = inject(AuthService);
-  form = { fullName: '', email: '', password: '', confirm: '' };
+  private router = inject(Router);
+
+  userData = {
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: ''
+  };
+  error = '';
 
   submit() {
-    if (this.form.password !== this.form.confirm) {
-      alert('Passwords do not match');
+    if (this.userData.password !== this.userData.confirmPassword) {
+      this.error = 'Passwords do not match';
       return;
     }
-    this.auth
-      .register({ fullName: this.form.fullName, email: this.form.email, password: this.form.password })
-      .subscribe({
-        next: res => alert(res.message),
-        error: err => alert(err.error?.message || 'Registration failed')
-      });
+
+    console.log('Register form submitted with:', {...this.userData, password: '***'});
+    
+    // Create a copy without confirmPassword
+    const registerData = {
+      email: this.userData.email,
+      password: this.userData.password,
+      fullName: this.userData.fullName
+    };
+
+    this.auth.register(registerData).subscribe({
+      next: (res) => {
+        console.log('Register success response in component:', res);
+        if (res.success) {
+          this.router.navigate(['/']);
+        } else {
+          this.error = res.message || 'Registration failed';
+        }
+      },
+      error: (err) => {
+        console.error('Register error in component:', err);
+        if (err.status === 0) {
+          this.error = 'Cannot connect to server. Please check if backend is running.';
+        } else {
+          this.error = err.error?.message || `Registration failed (${err.status})`;
+        }
+      }
+    });
   }
 }
 
