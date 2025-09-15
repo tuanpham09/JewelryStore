@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-register',
@@ -14,6 +15,7 @@ import { AuthService } from '../auth.service';
 export class RegisterComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private toastr = inject(ToastrService);
 
   userData = {
     email: '',
@@ -26,6 +28,7 @@ export class RegisterComponent {
   submit() {
     if (this.userData.password !== this.userData.confirmPassword) {
       this.error = 'Passwords do not match';
+      this.toastr.error('Mật khẩu không khớp!', 'Lỗi');
       return;
     }
 
@@ -42,9 +45,11 @@ export class RegisterComponent {
       next: (res) => {
         console.log('Register success response in component:', res);
         if (res.success) {
-          this.router.navigate(['/']);
+          this.toastr.success('Đăng ký thành công! Chào mừng bạn đến với Trang Sức JS!', 'Thành công');
+          this.router.navigate(['/home']);
         } else {
           this.error = res.message || 'Registration failed';
+          this.toastr.error(this.error, 'Lỗi đăng ký');
         }
       },
       error: (err) => {
@@ -54,6 +59,7 @@ export class RegisterComponent {
         } else {
           this.error = err.error?.message || `Registration failed (${err.status})`;
         }
+        this.toastr.error(this.error, 'Lỗi đăng ký');
       }
     });
   }

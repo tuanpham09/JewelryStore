@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,7 @@ import { AuthService } from '../auth.service';
 export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private toastr = inject(ToastrService);
   
   credentials = { email: '', password: '' };
   error = '';
@@ -26,9 +28,11 @@ export class LoginComponent {
       next: (res) => {
         console.log('Login success response in component:', res);
         if (res.success) {
-          this.router.navigate(['/']); // Redirect to home page
+          this.toastr.success('Đăng nhập thành công!', 'Thành công');
+          this.router.navigate(['/home']); // Redirect to home page
         } else {
           this.error = res.message || 'Login failed';
+          this.toastr.error(this.error, 'Lỗi đăng nhập');
         }
       },
       error: (err) => {
@@ -38,6 +42,7 @@ export class LoginComponent {
         } else {
           this.error = err.error?.message || `Login failed (${err.status})`;
         }
+        this.toastr.error(this.error, 'Lỗi đăng nhập');
       }
     });
   }

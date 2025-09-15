@@ -1,0 +1,37 @@
+<div class="home-container">
+  <header class="header">
+    <div class="header-content">
+      <h1>Trang Sức JS</h1>
+      <div class="user-info" *ngIf="currentUser">
+        <span>Xin chào, {{ currentUser.fullName }}!</span>
+        <button class="logout-btn" (click)="logout()">Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="welcome-section">
+      <h2>Chào mừng đến với cửa hàng trang sức!</h2>
+      <p>Khám phá bộ sưu tập trang sức đẹp nhất của chúng tôi.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3>💍 Nhẫn</h3>
+        <p>Nhẫn cưới, nhẫn đính hôn và nhẫn trang sức cao cấp</p>
+      </div>
+      <div class="feature-card">
+        <h3>📿 Dây chuyền</h3>
+        <p>Dây chuyền vàng, bạc với thiết kế tinh tế</p>
+      </div>
+      <div class="feature-card">
+        <h3>💎 Bông tai</h3>
+        <p>Bông tai kim cương và đá quý sang trọng</p>
+      </div>
+      <div class="feature-card">
+        <h3>⌚ Đồng hồ</h3>
+        <p>Đồng hồ cao cấp cho nam và nữ</p>
+      </div>
+    </div>
+  </main>
+</div>
