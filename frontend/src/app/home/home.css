@@ -47,6 +47,31 @@
   transform: translateY(-2px);
 }
 
+.login-btn, .register-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+}
+
+.login-btn:hover, .register-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.register-btn {
+  background: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.register-btn:hover {
+  background: rgba(76, 175, 80, 0.5);
+}
+
 .main-content {
   max-width: 1200px;
   margin: 0 auto;

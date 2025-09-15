@@ -82,6 +82,11 @@ export class AuthService {
     }
   }
 
+  // Public method để load user từ bên ngoài
+  loadUserFromToken(): void {
+    this.loadCurrentUser();
+  }
+
   logout() {
     if (this.isBrowser) {
       localStorage.removeItem('token');

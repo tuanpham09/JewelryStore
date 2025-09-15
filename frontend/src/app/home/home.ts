@@ -14,15 +14,16 @@ export class Home implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    public router: Router  // Đổi thành public để sử dụng trong template
   ) {}
 
   ngOnInit() {
+    // Load user từ token nếu có
+    this.authService.loadUserFromToken();
+    
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
-      if (!user) {
-        this.router.navigate(['/login']);
-      }
+      // Không redirect về login nữa, cho phép truy cập home mà không cần đăng nhập
     });
   }
 

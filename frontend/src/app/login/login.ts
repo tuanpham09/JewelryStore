@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
@@ -12,13 +12,25 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
   private toastr = inject(ToastrService);
   
   credentials = { email: '', password: '' };
   error = '';
+
+  ngOnInit() {
+    // Kiểm tra nếu đã đăng nhập thì chuyển về home
+    this.auth.currentUser$.subscribe(user => {
+      if (user) {
+        this.router.navigate(['/home']);
+      }
+    });
+    
+    // Load user từ token nếu có
+    this.auth.loadUserFromToken();
+  }
 
   submit() {
     this.error = '';

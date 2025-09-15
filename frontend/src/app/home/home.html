@@ -2,10 +2,16 @@
   <header class="header">
     <div class="header-content">
       <h1>Trang Sức JS</h1>
-      <div class="user-info" *ngIf="currentUser">
+      <div class="user-info" *ngIf="currentUser; else notLoggedIn">
         <span>Xin chào, {{ currentUser.fullName }}!</span>
         <button class="logout-btn" (click)="logout()">Đăng xuất</button>
       </div>
+      <ng-template #notLoggedIn>
+        <div class="user-info">
+          <button class="login-btn" (click)="router.navigate(['/login'])">Đăng nhập</button>
+          <button class="register-btn" (click)="router.navigate(['/register'])">Đăng ký</button>
+        </div>
+      </ng-template>
     </div>
   </header>
 
