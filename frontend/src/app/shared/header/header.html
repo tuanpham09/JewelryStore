@@ -17,7 +17,7 @@
 
         <!-- Center Logo -->
         <div class="logo-section">
-            <h1 class="brand-logo" (click)="navigateToHome()">TRANG SỨC JS</h1>
+            <h1 class="brand-logo gradient-text" (click)="navigateToHome()">TRANG SỨC JS</h1>
         </div>
 
         <!-- Right Actions -->
@@ -80,6 +80,11 @@
         <mat-icon>shopping_bag</mat-icon>
         <span>Giỏ hàng</span>
         <span class="menu-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+    </button>
+
+    <button mat-menu-item (click)="navigateToAdmin()" class="menu-item">
+        <mat-icon>admin_panel_settings</mat-icon>
+        <span>Quản trị</span>
     </button>
 
     <mat-divider></mat-divider>

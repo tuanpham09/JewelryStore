@@ -76,6 +76,10 @@ export class Header {
         this.router.navigate(['/search']);
     }
 
+    navigateToAdmin() {
+        this.router.navigate(['/admin']);
+    }
+
     getInitials(): string {
         if (this.currentUser && this.currentUser.fullName) {
             return this.currentUser.fullName

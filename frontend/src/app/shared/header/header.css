@@ -47,10 +47,6 @@
 .brand-logo {
     font-size: 1.5rem;
     font-weight: 200;
-    background: linear-gradient(135deg, #d63384, #ff6b9d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     margin: 0;
     letter-spacing: 2px;
     cursor: pointer;

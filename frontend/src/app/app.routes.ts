@@ -8,6 +8,7 @@ import { OrderHistory } from './order-history/order-history';
 import { Profile } from './profile/profile';
 import { Wishlist } from './wishlist/wishlist';
 import { Search } from './search/search';
+import { AdminComponent } from './admin/admin';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'profile', component: Profile },
   { path: 'wishlist', component: Wishlist },
   { path: 'search', component: Search },
+  { path: 'admin', component: AdminComponent },
   // Wildcard route để xử lý tất cả các routes không khớp
   { path: '**', redirectTo: 'home' }
 ];

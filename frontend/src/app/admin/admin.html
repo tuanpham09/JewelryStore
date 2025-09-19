@@ -1,0 +1,166 @@
+<!-- Admin Dashboard -->
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<div class="admin-dashboard">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title gradient-text">Admin Panel</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button mat-button class="nav-item" [class.active]="activeSection === 'dashboard'"
+                (click)="setActiveSection('dashboard')">
+                <mat-icon>dashboard</mat-icon>
+                <span>Dashboard</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'products'"
+                (click)="setActiveSection('products')">
+                <mat-icon>inventory_2</mat-icon>
+                <span>Quản lý sản phẩm</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'categories'"
+                (click)="setActiveSection('categories')">
+                <mat-icon>category</mat-icon>
+                <span>Quản lý danh mục</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'users'"
+                (click)="setActiveSection('users')">
+                <mat-icon>people</mat-icon>
+                <span>Quản lý người dùng</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'orders'"
+                (click)="setActiveSection('orders')">
+                <mat-icon>shopping_bag</mat-icon>
+                <span>Quản lý đơn hàng</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'promotions'"
+                (click)="setActiveSection('promotions')">
+                <mat-icon>local_offer</mat-icon>
+                <span>Quản lý khuyến mãi</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'reports'"
+                (click)="setActiveSection('reports')">
+                <mat-icon>assessment</mat-icon>
+                <span>Báo cáo & Thống kê</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-content">
+        <!-- Dashboard Section -->
+        <div class="content-section" *ngIf="activeSection === 'dashboard'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Dashboard Thống Kê</h1>
+                <p class="section-subtitle">Tổng quan về hoạt động của hệ thống</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <mat-icon>inventory_2</mat-icon>
+                    </div>
+                    <div class="stat-content">
+                        <h3>1,234</h3>
+                        <p>Tổng sản phẩm</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <mat-icon>people</mat-icon>
+                    </div>
+                    <div class="stat-content">
+                        <h3>5,678</h3>
+                        <p>Người dùng</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <mat-icon>shopping_bag</mat-icon>
+                    </div>
+                    <div class="stat-content">
+                        <h3>2,345</h3>
+                        <p>Đơn hàng</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <mat-icon>attach_money</mat-icon>
+                    </div>
+                    <div class="stat-content">
+                        <h3>₫12.5B</h3>
+                        <p>Doanh thu</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="content-section" *ngIf="activeSection === 'products'">
+            <app-product-management></app-product-management>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="content-section" *ngIf="activeSection === 'categories'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Quản lý danh mục</h1>
+                <p class="section-subtitle">Quản lý các danh mục sản phẩm</p>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="content-section" *ngIf="activeSection === 'users'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Quản lý người dùng</h1>
+                <p class="section-subtitle">Quản lý thông tin người dùng và phân quyền</p>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="content-section" *ngIf="activeSection === 'orders'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Quản lý đơn hàng</h1>
+                <p class="section-subtitle">Theo dõi và quản lý các đơn hàng</p>
+            </div>
+        </div>
+
+        <!-- Promotions Section -->
+        <div class="content-section" *ngIf="activeSection === 'promotions'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Quản lý khuyến mãi</h1>
+                <p class="section-subtitle">Tạo và quản lý các chương trình khuyến mãi</p>
+            </div>
+        </div>
+
+        <!-- Reports Section -->
+        <div class="content-section" *ngIf="activeSection === 'reports'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Báo cáo & Thống kê</h1>
+                <p class="section-subtitle">Xuất báo cáo PDF/Excel và thống kê trực quan</p>
+            </div>
+
+            <div class="reports-actions">
+                <button mat-raised-button color="primary" class="export-btn">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    Xuất PDF
+                </button>
+                <button mat-raised-button color="accent" class="export-btn">
+                    <mat-icon>table_chart</mat-icon>
+                    Xuất Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-footer></app-footer>
