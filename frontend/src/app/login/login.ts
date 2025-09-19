@@ -2,13 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../auth.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -16,7 +17,7 @@ export class LoginComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
   private toastr = inject(ToastrService);
-  
+
   credentials = { email: '', password: '' };
   error = '';
 
@@ -27,7 +28,7 @@ export class LoginComponent implements OnInit {
         this.router.navigate(['/home']);
       }
     });
-    
+
     // Load user từ token nếu có
     this.auth.loadUserFromToken();
   }
@@ -35,7 +36,7 @@ export class LoginComponent implements OnInit {
   submit() {
     this.error = '';
     console.log('Login form submitted with:', this.credentials);
-    
+
     this.auth.login(this.credentials).subscribe({
       next: (res) => {
         console.log('Login success response in component:', res);
