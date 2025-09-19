@@ -77,6 +77,135 @@
     transform: scale(1.1);
 }
 
+/* User Avatar */
+.user-avatar {
+    position: relative;
+}
+
+.avatar-circle {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d63384, #ff6b9d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.user-avatar:hover .avatar-circle {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(214, 51, 132, 0.4);
+}
+
+/* User Dropdown Menu */
+.user-dropdown-menu {
+    min-width: 280px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 107, 157, 0.1);
+    overflow: hidden;
+}
+
+.user-menu-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #fff5f8 0%, #ffeef3 100%);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar-large {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #d63384, #ff6b9d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 500;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 15px rgba(214, 51, 132, 0.3);
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-name {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.user-email {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    color: #333;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.menu-item:hover {
+    background: rgba(255, 107, 157, 0.1);
+    color: #d63384;
+}
+
+.menu-item mat-icon {
+    color: #666;
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.menu-item:hover mat-icon {
+    color: #d63384;
+}
+
+.menu-badge {
+    background: linear-gradient(135deg, #d63384, #ff6b9d);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    margin-left: auto;
+}
+
+.logout-item {
+    color: #f44336;
+}
+
+.logout-item:hover {
+    background: rgba(244, 67, 54, 0.1);
+    color: #d32f2f;
+}
+
+.logout-item mat-icon {
+    color: #f44336;
+}
+
+.logout-item:hover mat-icon {
+    color: #d32f2f;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-content {

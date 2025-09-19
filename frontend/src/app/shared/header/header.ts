@@ -1,10 +1,12 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../auth.service';
 
 @Component({
@@ -14,7 +16,9 @@ import { AuthService } from '../../auth.service';
         MatToolbarModule,
         MatButtonModule,
         MatIconModule,
-        MatBadgeModule
+        MatBadgeModule,
+        MatMenuModule,
+        MatDividerModule
     ],
     templateUrl: './header.html',
     styleUrl: './header.css'
@@ -54,5 +58,33 @@ export class Header {
     logout() {
         this.authService.logout();
         this.router.navigate(['/login']);
+    }
+
+    navigateToProfile() {
+        this.router.navigate(['/profile']);
+    }
+
+    navigateToOrderHistory() {
+        this.router.navigate(['/order-history']);
+    }
+
+    navigateToWishlist() {
+        this.router.navigate(['/wishlist']);
+    }
+
+    navigateToSearch() {
+        this.router.navigate(['/search']);
+    }
+
+    getInitials(): string {
+        if (this.currentUser && this.currentUser.fullName) {
+            return this.currentUser.fullName
+                .split(' ')
+                .map((name: string) => name.charAt(0))
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+        }
+        return 'U';
     }
 }

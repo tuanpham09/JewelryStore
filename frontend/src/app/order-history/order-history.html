@@ -1,0 +1,196 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <span (click)="goBack()" style="cursor: pointer;">Trang chủ</span>
+    <mat-icon>chevron_right</mat-icon>
+    <span class="current">Lịch sử đơn hàng</span>
+</div>
+
+<!-- Order History Content -->
+<div class="order-history-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">Lịch sử đơn hàng</h1>
+        <p class="page-subtitle">Theo dõi và quản lý các đơn hàng của bạn</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <mat-tab-group [(selectedIndex)]="selectedTab" class="order-tabs">
+            <mat-tab label="Tất cả">
+                <div class="tab-content">
+                    <div class="orders-list" *ngIf="getOrdersByStatus('all').length > 0; else noOrders">
+                        <div class="order-card" *ngFor="let order of getOrdersByStatus('all')">
+                            <!-- Order Header -->
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <h3 class="order-number">{{ order.orderNumber }}</h3>
+                                    <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
+                                </div>
+                                <div class="order-status">
+                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                        <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
+                                        {{ order.statusText }}
+                                    </mat-chip>
+                                </div>
+                            </div>
+
+                            <!-- Order Items -->
+                            <div class="order-items">
+                                <div class="order-item" *ngFor="let item of order.items">
+                                    <div class="item-image" (click)="navigateToProduct(item.productId)">
+                                        <img [src]="item.image" [alt]="item.name" />
+                                    </div>
+                                    <div class="item-details">
+                                        <h4 class="item-name" (click)="navigateToProduct(item.productId)">{{ item.name
+                                            }}</h4>
+                                        <div class="item-options" *ngIf="item.size || item.color">
+                                            <span class="option" *ngIf="item.size">Size: {{ item.size }}</span>
+                                            <span class="option" *ngIf="item.color">Màu: {{ item.color }}</span>
+                                        </div>
+                                        <p class="item-quantity">Số lượng: {{ item.quantity }}</p>
+                                    </div>
+                                    <div class="item-price">
+                                        <span class="price">{{ (item.price * item.quantity) |
+                                            currency:'VND':'symbol':'1.0-0' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Order Summary -->
+                            <div class="order-summary">
+                                <div class="summary-row">
+                                    <span>Địa chỉ giao hàng:</span>
+                                    <span>{{ order.shippingAddress }}</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>Phương thức thanh toán:</span>
+                                    <span>{{ order.paymentMethod }}</span>
+                                </div>
+                                <div class="summary-row" *ngIf="order.trackingNumber">
+                                    <span>Mã vận đơn:</span>
+                                    <span class="tracking-number">{{ order.trackingNumber }}</span>
+                                </div>
+                                <div class="summary-row" *ngIf="order.estimatedDelivery">
+                                    <span>Dự kiến giao hàng:</span>
+                                    <span>{{ order.estimatedDelivery }}</span>
+                                </div>
+                                <mat-divider></mat-divider>
+                                <div class="summary-row total-row">
+                                    <span>Tổng cộng:</span>
+                                    <span class="total-amount">{{ order.totalAmount | currency:'VND':'symbol':'1.0-0'
+                                        }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Order Actions -->
+                            <div class="order-actions">
+                                <button mat-button class="action-btn" (click)="reorder(order)">
+                                    <mat-icon>refresh</mat-icon>
+                                    Đặt lại
+                                </button>
+                                <button mat-button class="action-btn" (click)="trackOrder(order)"
+                                    *ngIf="order.trackingNumber">
+                                    <mat-icon>track_changes</mat-icon>
+                                    Theo dõi
+                                </button>
+                                <button mat-button class="action-btn cancel-btn" (click)="cancelOrder(order)"
+                                    *ngIf="order.status === 'pending' || order.status === 'confirmed'">
+                                    <mat-icon>cancel</mat-icon>
+                                    Hủy đơn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <mat-tab label="Đang xử lý">
+                <div class="tab-content">
+                    <div class="orders-list" *ngIf="getOrdersByStatus('pending').length > 0; else noOrders">
+                        <div class="order-card" *ngFor="let order of getOrdersByStatus('pending')">
+                            <!-- Same order card structure as above -->
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <h3 class="order-number">{{ order.orderNumber }}</h3>
+                                    <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
+                                </div>
+                                <div class="order-status">
+                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                        <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
+                                        {{ order.statusText }}
+                                    </mat-chip>
+                                </div>
+                            </div>
+                            <!-- ... rest of order card content ... -->
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <mat-tab label="Đang giao">
+                <div class="tab-content">
+                    <div class="orders-list" *ngIf="getOrdersByStatus('shipping').length > 0; else noOrders">
+                        <div class="order-card" *ngFor="let order of getOrdersByStatus('shipping')">
+                            <!-- Same order card structure as above -->
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <h3 class="order-number">{{ order.orderNumber }}</h3>
+                                    <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
+                                </div>
+                                <div class="order-status">
+                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                        <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
+                                        {{ order.statusText }}
+                                    </mat-chip>
+                                </div>
+                            </div>
+                            <!-- ... rest of order card content ... -->
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <mat-tab label="Đã giao">
+                <div class="tab-content">
+                    <div class="orders-list" *ngIf="getOrdersByStatus('delivered').length > 0; else noOrders">
+                        <div class="order-card" *ngFor="let order of getOrdersByStatus('delivered')">
+                            <!-- Same order card structure as above -->
+                            <div class="order-header">
+                                <div class="order-info">
+                                    <h3 class="order-number">{{ order.orderNumber }}</h3>
+                                    <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
+                                </div>
+                                <div class="order-status">
+                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                        <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
+                                        {{ order.statusText }}
+                                    </mat-chip>
+                                </div>
+                            </div>
+                            <!-- ... rest of order card content ... -->
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
+
+    <!-- No Orders Template -->
+    <ng-template #noOrders>
+        <div class="no-orders">
+            <div class="no-orders-content">
+                <mat-icon class="no-orders-icon">shopping_bag</mat-icon>
+                <h2>Chưa có đơn hàng</h2>
+                <p>Bạn chưa có đơn hàng nào trong danh mục này. Hãy khám phá các sản phẩm tuyệt vời của chúng tôi!</p>
+                <button mat-raised-button color="primary" class="shop-now-btn" (click)="goBack()">
+                    <mat-icon>shopping_bag</mat-icon>
+                    Mua sắm ngay
+                </button>
+            </div>
+        </div>
+    </ng-template>
+</div>
+
+<app-footer></app-footer>

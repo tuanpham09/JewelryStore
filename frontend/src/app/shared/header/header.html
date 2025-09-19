@@ -22,15 +22,21 @@
 
         <!-- Right Actions -->
         <div class="nav-right">
-            <button mat-icon-button class="action-icon">
+            <button mat-icon-button class="action-icon" (click)="navigateToSearch()">
+                <mat-icon>search</mat-icon>
+            </button>
+            <button mat-icon-button class="action-icon" (click)="navigateToWishlist()">
                 <mat-icon>favorite_border</mat-icon>
             </button>
             <button mat-icon-button class="action-icon" (click)="navigateToCart()" [matBadge]="cartItemCount"
                 matBadgeColor="accent" [matBadgeHidden]="cartItemCount === 0">
                 <mat-icon>shopping_bag</mat-icon>
             </button>
-            <button mat-icon-button class="action-icon" *ngIf="currentUser; else notLoggedIn">
-                <mat-icon>account_circle</mat-icon>
+            <button mat-icon-button class="action-icon user-avatar" *ngIf="currentUser; else notLoggedIn"
+                [matMenuTriggerFor]="userMenu">
+                <div class="avatar-circle">
+                    {{ getInitials() }}
+                </div>
             </button>
             <ng-template #notLoggedIn>
                 <button mat-button (click)="navigateToLogin()">Đăng nhập</button>
@@ -38,3 +44,48 @@
         </div>
     </div>
 </mat-toolbar>
+
+<!-- User Dropdown Menu -->
+<mat-menu #userMenu="matMenu" class="user-dropdown-menu">
+    <div class="user-menu-header">
+        <div class="user-info">
+            <div class="user-avatar-large">
+                {{ getInitials() }}
+            </div>
+            <div class="user-details">
+                <h4 class="user-name">{{ currentUser?.fullName || 'Người dùng' }}</h4>
+                <p class="user-email">{{ currentUser?.email || 'user@example.com' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item (click)="navigateToProfile()" class="menu-item">
+        <mat-icon>person</mat-icon>
+        <span>Trang cá nhân</span>
+    </button>
+
+    <button mat-menu-item (click)="navigateToOrderHistory()" class="menu-item">
+        <mat-icon>history</mat-icon>
+        <span>Lịch sử đơn hàng</span>
+    </button>
+
+    <button mat-menu-item (click)="navigateToWishlist()" class="menu-item">
+        <mat-icon>favorite</mat-icon>
+        <span>Danh sách yêu thích</span>
+    </button>
+
+    <button mat-menu-item (click)="navigateToCart()" class="menu-item">
+        <mat-icon>shopping_bag</mat-icon>
+        <span>Giỏ hàng</span>
+        <span class="menu-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+    </button>
+
+    <mat-divider></mat-divider>
+
+    <button mat-menu-item (click)="logout()" class="menu-item logout-item">
+        <mat-icon>logout</mat-icon>
+        <span>Đăng xuất</span>
+    </button>
+</mat-menu>
