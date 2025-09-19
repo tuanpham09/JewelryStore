@@ -1,0 +1,226 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <span (click)="goBack()" style="cursor: pointer;">Home</span>
+    <mat-icon>chevron_right</mat-icon>
+    <span (click)="goBack()" style="cursor: pointer;">Trang sức</span>
+    <mat-icon>chevron_right</mat-icon>
+    <span class="current">{{ product?.name }}</span>
+</div>
+
+<!-- Product Detail Content -->
+<div class="product-detail-container" *ngIf="product">
+    <div class="product-main">
+        <!-- Product Images -->
+        <div class="product-images">
+            <div class="main-image">
+                <img [src]="product.images[selectedImageIndex].url" [alt]="product.images[selectedImageIndex].alt" />
+                <div class="image-overlay">
+                    <button mat-fab color="primary" class="zoom-btn">
+                        <mat-icon>zoom_in</mat-icon>
+                    </button>
+                </div>
+            </div>
+            <div class="thumbnail-images">
+                <div class="thumbnail" *ngFor="let image of product.images; let i = index"
+                    [class.active]="i === selectedImageIndex" (click)="selectImage(i)">
+                    <img [src]="image.url" [alt]="image.alt" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-info">
+            <div class="product-header">
+                <h1 class="product-title">{{ product.name }}</h1>
+                <button mat-icon-button class="favorite-btn" [class.favorited]="product.isFavorite"
+                    (click)="toggleFavorite()">
+                    <mat-icon>{{ product.isFavorite ? 'favorite' : 'favorite_border' }}</mat-icon>
+                </button>
+            </div>
+
+            <div class="product-rating">
+                <div class="stars">
+                    <mat-icon *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= product.averageRating">
+                        {{ star <= product.averageRating ? 'star' : 'star_border' }} </mat-icon>
+                </div>
+                <span class="rating-text">{{ product.averageRating }} ({{ product.totalReviews }} đánh giá)</span>
+            </div>
+
+            <div class="product-price">
+                <span class="current-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</span>
+                <span class="original-price" *ngIf="product.originalPrice">
+                    {{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}
+                </span>
+                <span class="discount" *ngIf="product.originalPrice">
+                    -{{ Math.round((1 - product.price / product.originalPrice) * 100) }}%
+                </span>
+            </div>
+
+            <div class="product-description">
+                <p>{{ product.description }}</p>
+            </div>
+
+            <!-- Product Options -->
+            <div class="product-options">
+                <div class="option-group" *ngIf="sizes.length > 0">
+                    <label class="option-label">Kích thước:</label>
+                    <div class="option-buttons">
+                        <button mat-button *ngFor="let size of sizes" [class.selected]="selectedSize === size"
+                            (click)="selectedSize = size">
+                            {{ size }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="option-group" *ngIf="colors.length > 0">
+                    <label class="option-label">Màu sắc:</label>
+                    <div class="option-buttons">
+                        <button mat-button *ngFor="let color of colors" [class.selected]="selectedColor === color"
+                            (click)="selectedColor = color">
+                            {{ color }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="quantity-selector">
+                <label class="option-label">Số lượng:</label>
+                <div class="quantity-controls">
+                    <button mat-icon-button (click)="decreaseQuantity()" [disabled]="quantity <= 1">
+                        <mat-icon>remove</mat-icon>
+                    </button>
+                    <span class="quantity-display">{{ quantity }}</span>
+                    <button mat-icon-button (click)="increaseQuantity()" [disabled]="quantity >= product.stockQuantity">
+                        <mat-icon>add</mat-icon>
+                    </button>
+                </div>
+                <span class="stock-info">Còn {{ product.stockQuantity }} sản phẩm</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button mat-raised-button color="primary" class="add-to-cart-btn" (click)="addToCart()"
+                    [disabled]="!product.inStock">
+                    <mat-icon>shopping_cart</mat-icon>
+                    Thêm vào giỏ
+                </button>
+                <button mat-raised-button color="accent" class="buy-now-btn" (click)="buyNow()"
+                    [disabled]="!product.inStock">
+                    <mat-icon>flash_on</mat-icon>
+                    Mua ngay
+                </button>
+            </div>
+
+            <!-- Product Tags -->
+            <div class="product-tags">
+                <mat-chip *ngFor="let tag of product.tags">{{ tag }}</mat-chip>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Tabs -->
+    <div class="product-details">
+        <mat-tab-group>
+            <mat-tab label="Mô tả chi tiết">
+                <div class="tab-content" [innerHTML]="product.detailedDescription"></div>
+            </mat-tab>
+            <mat-tab label="Thông số kỹ thuật">
+                <div class="tab-content">
+                    <div class="specifications">
+                        <div class="spec-item" *ngFor="let spec of product.specifications | keyvalue">
+                            <span class="spec-label">{{ spec.key }}:</span>
+                            <span class="spec-value">{{ spec.value }}</span>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+            <mat-tab label="Đánh giá ({{ product.totalReviews }})">
+                <div class="tab-content">
+                    <!-- Review Summary -->
+                    <div class="review-summary">
+                        <div class="rating-overview">
+                            <div class="average-rating">
+                                <span class="rating-number">{{ product.averageRating }}</span>
+                                <div class="stars">
+                                    <mat-icon *ngFor="let star of [1,2,3,4,5]"
+                                        [class.filled]="star <= product.averageRating">
+                                        {{ star <= product.averageRating ? 'star' : 'star_border' }} </mat-icon>
+                                </div>
+                                <span class="total-reviews">{{ product.totalReviews }} đánh giá</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Review Form -->
+                    <div class="add-review" *ngIf="currentUser">
+                        <h3>Viết đánh giá</h3>
+                        <div class="review-form">
+                            <div class="rating-input">
+                                <label>Đánh giá của bạn:</label>
+                                <div class="rating-stars">
+                                    <mat-icon *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= newReview.rating"
+                                        (click)="newReview.rating = star">
+                                        {{ star <= newReview.rating ? 'star' : 'star_border' }} </mat-icon>
+                                </div>
+                            </div>
+                            <mat-form-field class="comment-field">
+                                <mat-label>Nhận xét của bạn</mat-label>
+                                <textarea matInput [(ngModel)]="newReview.comment"
+                                    placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." rows="4"></textarea>
+                            </mat-form-field>
+                            <button mat-raised-button color="primary" (click)="submitReview()"
+                                [disabled]="!newReview.comment.trim()">
+                                Gửi đánh giá
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reviews List -->
+                    <div class="reviews-list">
+                        <div class="review-item" *ngFor="let review of product.reviews">
+                            <div class="review-header">
+                                <div class="reviewer-info">
+                                    <span class="reviewer-name">{{ review.userName }}</span>
+                                    <mat-chip *ngIf="review.verified" class="verified-chip">Đã mua hàng</mat-chip>
+                                </div>
+                                <div class="review-rating">
+                                    <div class="stars">
+                                        <mat-icon *ngFor="let star of [1,2,3,4,5]"
+                                            [class.filled]="star <= review.rating">
+                                            {{ star <= review.rating ? 'star' : 'star_border' }} </mat-icon>
+                                    </div>
+                                    <span class="review-date">{{ review.date }}</span>
+                                </div>
+                            </div>
+                            <div class="review-content">
+                                <p>{{ review.comment }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
+
+    <!-- Related Products -->
+    <div class="related-products">
+        <h2>Sản phẩm tương tự</h2>
+        <div class="related-grid">
+            <div class="related-product-card" *ngFor="let relatedProduct of relatedProducts"
+                (click)="navigateToProduct(relatedProduct.id)">
+                <div class="related-product-image">
+                    <img [src]="relatedProduct.image" [alt]="relatedProduct.name" />
+                </div>
+                <div class="related-product-info">
+                    <h3 class="related-product-name">{{ relatedProduct.name }}</h3>
+                    <p class="related-product-price">{{ relatedProduct.price | currency:'VND':'symbol':'1.0-0' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<app-footer></app-footer>

@@ -1,43 +1,80 @@
-<div class="home-container">
-  <header class="header">
-    <div class="header-content">
-      <h1>Trang Sức JS</h1>
-      <div class="user-info" *ngIf="currentUser; else notLoggedIn">
-        <span>Xin chào, {{ currentUser.fullName }}!</span>
-        <button class="logout-btn" (click)="logout()">Đăng xuất</button>
-      </div>
-      <ng-template #notLoggedIn>
-        <div class="user-info">
-          <button class="login-btn" (click)="router.navigate(['/login'])">Đăng nhập</button>
-          <button class="register-btn" (click)="router.navigate(['/register'])">Đăng ký</button>
-        </div>
-      </ng-template>
-    </div>
-  </header>
+<app-header [cartItemCount]="0"></app-header>
 
-  <main class="main-content">
-    <div class="welcome-section">
-      <h2>Chào mừng đến với cửa hàng trang sức!</h2>
-      <p>Khám phá bộ sưu tập trang sức đẹp nhất của chúng tôi.</p>
-    </div>
-
-    <div class="features-grid">
-      <div class="feature-card">
-        <h3>💍 Nhẫn</h3>
-        <p>Nhẫn cưới, nhẫn đính hôn và nhẫn trang sức cao cấp</p>
-      </div>
-      <div class="feature-card">
-        <h3>📿 Dây chuyền</h3>
-        <p>Dây chuyền vàng, bạc với thiết kế tinh tế</p>
-      </div>
-      <div class="feature-card">
-        <h3>💎 Bông tai</h3>
-        <p>Bông tai kim cương và đá quý sang trọng</p>
-      </div>
-      <div class="feature-card">
-        <h3>⌚ Đồng hồ</h3>
-        <p>Đồng hồ cao cấp cho nam và nữ</p>
-      </div>
-    </div>
-  </main>
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <span>Home</span>
+  <mat-icon>chevron_right</mat-icon>
+  <span class="current">Trang sức</span>
 </div>
+
+<!-- Hero Section -->
+<div class="hero-section">
+  <h1 class="hero-title">TRANG SỨC NỮ</h1>
+  <p class="hero-description">
+    Thêm ánh sáng cho trang phục hàng ngày của bạn với những món trang sức thanh lịch.
+    Bộ sưu tập của chúng tôi có đầy đủ từ nhẫn có thể xếp chồng và dây chuyền mặt dây
+    đến vòng tay charm. Chọn màu sắc yêu thích của bạn — vàng, vàng hồng, hoặc bạc —
+    và thêm những thiết kế sang trọng và hiện đại vào bộ sưu tập trang sức của bạn.
+  </p>
+</div>
+
+<!-- Category Navigation -->
+<div class="category-nav">
+  <button mat-button class="category-btn" [class.active]="selectedCategory === category.id"
+    *ngFor="let category of categories" (click)="selectCategory(category.id)">
+    {{ category.name }}
+  </button>
+</div>
+
+<!-- Filter and Sort Bar -->
+<div class="filter-bar">
+  <div class="filter-left">
+    <button mat-button class="filter-btn">
+      <mat-icon>tune</mat-icon>
+      BỘ LỌC
+    </button>
+    <span class="sort-label">SẮP XẾP THEO:</span>
+    <mat-select class="sort-select" [(value)]="sortBy">
+      <mat-option value="featured">Nổi bật</mat-option>
+      <mat-option value="newest">Mới nhất</mat-option>
+      <mat-option value="price-low">Giá thấp đến cao</mat-option>
+      <mat-option value="price-high">Giá cao đến thấp</mat-option>
+    </mat-select>
+  </div>
+  <div class="filter-right">
+    <span class="results-count">Hiển thị 1 - {{ products.length }} trong {{ totalProducts }} sản phẩm</span>
+    <div class="view-options">
+      <span class="view-label">XEM THEO:</span>
+      <button mat-icon-button *ngFor="let option of viewOptions" [class.active]="viewMode === option.value"
+        (click)="setViewMode(option.value)">
+        {{ option.label }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Products Grid -->
+<div class="products-grid" [class.grid-3]="viewMode === 3" [class.grid-4]="viewMode === 4"
+  [class.grid-6]="viewMode === 6">
+  <div class="product-card" *ngFor="let product of filteredProducts" (click)="navigateToProduct(product.id)">
+    <div class="product-image">
+      <img [src]="product.image" [alt]="product.name" />
+      <div class="product-overlay">
+        <button mat-fab color="primary" class="quick-view"
+          (click)="navigateToProduct(product.id); $event.stopPropagation()">
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="product-info">
+      <h3 class="product-name">{{ product.name }}</h3>
+      <p class="product-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
+      <button mat-raised-button color="primary" class="add-to-cart"
+        (click)="addToCart(product); $event.stopPropagation()">
+        Thêm vào giỏ
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

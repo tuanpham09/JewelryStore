@@ -1,0 +1,118 @@
+<!-- Footer -->
+<footer class="main-footer">
+    <div class="footer-content">
+        <!-- Newsletter Section -->
+        <div class="newsletter-section">
+            <div class="newsletter-content">
+                <h3>BE THE FIRST TO KNOW</h3>
+                <p>Đăng ký để nhận thông tin về sản phẩm mới và ưu đãi đặc biệt</p>
+                <div class="newsletter-form">
+                    <input type="email" placeholder="Nhập email của bạn" class="email-input">
+                    <button mat-raised-button color="primary" class="subscribe-btn">
+                        ĐĂNG KÝ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Footer Content -->
+        <div class="footer-main">
+            <div class="footer-grid">
+                <!-- Company Info -->
+                <div class="footer-section">
+                    <h4 class="footer-title">TRANG SỨC JS</h4>
+                    <p class="footer-description">
+                        Cửa hàng trang sức cao cấp với những thiết kế tinh tế và sang trọng.
+                        Chúng tôi cam kết mang đến cho bạn những sản phẩm chất lượng nhất.
+                    </p>
+                    <div class="social-links">
+                        <button mat-icon-button class="social-btn">
+                            <mat-icon>facebook</mat-icon>
+                        </button>
+                        <button mat-icon-button class="social-btn">
+                            <mat-icon>instagram</mat-icon>
+                        </button>
+                        <button mat-icon-button class="social-btn">
+                            <mat-icon>twitter</mat-icon>
+                        </button>
+                        <button mat-icon-button class="social-btn">
+                            <mat-icon>youtube</mat-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-section">
+                    <h4 class="footer-title">LIÊN KẾT NHANH</h4>
+                    <ul class="footer-links">
+                        <li><a (click)="navigateToHome()">Trang chủ</a></li>
+                        <li><a (click)="navigateToProduct('1')">Sản phẩm</a></li>
+                        <li><a (click)="navigateToCart()">Giỏ hàng</a></li>
+                        <li><a href="#about">Về chúng tôi</a></li>
+                        <li><a href="#contact">Liên hệ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Categories -->
+                <div class="footer-section">
+                    <h4 class="footer-title">DANH MỤC</h4>
+                    <ul class="footer-links">
+                        <li><a href="#rings">Nhẫn</a></li>
+                        <li><a href="#earrings">Bông tai</a></li>
+                        <li><a href="#necklaces">Dây chuyền</a></li>
+                        <li><a href="#bracelets">Vòng tay</a></li>
+                        <li><a href="#watches">Đồng hồ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Customer Service -->
+                <div class="footer-section">
+                    <h4 class="footer-title">HỖ TRỢ KHÁCH HÀNG</h4>
+                    <ul class="footer-links">
+                        <li><a href="#help">Trung tâm trợ giúp</a></li>
+                        <li><a href="#shipping">Vận chuyển</a></li>
+                        <li><a href="#returns">Đổi trả</a></li>
+                        <li><a href="#size-guide">Hướng dẫn chọn size</a></li>
+                        <li><a href="#faq">Câu hỏi thường gặp</a></li>
+                    </ul>
+                </div>
+
+                <!-- Account -->
+                <div class="footer-section">
+                    <h4 class="footer-title">TÀI KHOẢN</h4>
+                    <ul class="footer-links">
+                        <li><a (click)="navigateToLogin()">Đăng nhập</a></li>
+                        <li><a (click)="navigateToRegister()">Đăng ký</a></li>
+                        <li><a href="#profile">Thông tin cá nhân</a></li>
+                        <li><a href="#orders">Đơn hàng</a></li>
+                        <li><a href="#wishlist">Danh sách yêu thích</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <div class="footer-bottom-left">
+                    <p>&copy; 2024 TRANG SỨC JS. Tất cả quyền được bảo lưu.</p>
+                    <div class="footer-bottom-links">
+                        <a href="#terms">Điều khoản sử dụng</a>
+                        <a href="#privacy">Chính sách bảo mật</a>
+                        <a href="#cookies">Chính sách cookie</a>
+                    </div>
+                </div>
+                <div class="footer-bottom-right">
+                    <div class="payment-methods">
+                        <span>Phương thức thanh toán:</span>
+                        <div class="payment-icons">
+                            <mat-icon>credit_card</mat-icon>
+                            <mat-icon>account_balance</mat-icon>
+                            <mat-icon>payment</mat-icon>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

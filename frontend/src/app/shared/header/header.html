@@ -1,0 +1,40 @@
+<!-- Header Navigation -->
+<mat-toolbar class="main-header">
+    <div class="header-content">
+        <!-- Left Navigation -->
+        <div class="nav-left">
+            <button mat-button class="nav-link" *ngIf="showBackButton" (click)="goBack()">
+                <mat-icon>arrow_back</mat-icon>
+                {{ backButtonText }}
+            </button>
+            <button mat-button class="nav-link" *ngIf="!showBackButton" (click)="navigateToHome()">
+                SHOP
+            </button>
+            <button mat-button class="nav-link" *ngIf="!showBackButton" (click)="navigateToHome()">
+                NEW IN
+            </button>
+        </div>
+
+        <!-- Center Logo -->
+        <div class="logo-section">
+            <h1 class="brand-logo" (click)="navigateToHome()">TRANG SỨC JS</h1>
+        </div>
+
+        <!-- Right Actions -->
+        <div class="nav-right">
+            <button mat-icon-button class="action-icon">
+                <mat-icon>favorite_border</mat-icon>
+            </button>
+            <button mat-icon-button class="action-icon" (click)="navigateToCart()" [matBadge]="cartItemCount"
+                matBadgeColor="accent" [matBadgeHidden]="cartItemCount === 0">
+                <mat-icon>shopping_bag</mat-icon>
+            </button>
+            <button mat-icon-button class="action-icon" *ngIf="currentUser; else notLoggedIn">
+                <mat-icon>account_circle</mat-icon>
+            </button>
+            <ng-template #notLoggedIn>
+                <button mat-button (click)="navigateToLogin()">Đăng nhập</button>
+            </ng-template>
+        </div>
+    </div>
+</mat-toolbar>
