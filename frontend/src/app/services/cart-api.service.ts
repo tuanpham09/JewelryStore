@@ -117,12 +117,4 @@ export class CartApiService {
     });
   }
 
-  // POST /api/cart/sync - Đồng bộ giỏ hàng từ localStorage
-  syncCartFromLocalStorage(localCartItems: any[]): Observable<ApiResponse<CartResponse>> {
-    return this.http.post<ApiResponse<CartResponse>>(`${this.API_URL}/sync`, {
-      items: localCartItems
-    }, {
-      headers: this.getHeaders()
-    });
-  }
 }

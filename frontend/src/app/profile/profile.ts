@@ -12,6 +12,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../auth.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
@@ -116,7 +117,8 @@ export class Profile implements OnInit {
 
     constructor(
         public router: Router,
-        private authService: AuthService
+        private authService: AuthService,
+        private snackBar: MatSnackBar
     ) { }
 
     ngOnInit() {
@@ -172,11 +174,6 @@ export class Profile implements OnInit {
         };
     }
 
-    // User Info Methods
-    updateUserInfo() {
-        console.log('Updating user info:', this.userInfo);
-        // API call để cập nhật thông tin
-    }
 
     uploadAvatar(event: any) {
         const file = event.target.files[0];
@@ -251,12 +248,6 @@ export class Profile implements OnInit {
         };
     }
 
-    // Preferences Methods
-    updatePreferences() {
-        console.log('Updating preferences:', this.preferences);
-        // API call để cập nhật preferences
-    }
-
     // Navigation
     goBack() {
         this.router.navigate(['/']);
@@ -281,5 +272,13 @@ export class Profile implements OnInit {
             case 'other': return 'Khác';
             default: return type;
         }
+    }
+
+    updatePreferences() {
+        console.log('Updating preferences:', this.preferences);
+        // TODO: Implement API call to update preferences
+        this.snackBar.open('Cài đặt đã được lưu', 'Đóng', {
+            duration: 3000
+        });
     }
 }

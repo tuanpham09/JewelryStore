@@ -15,10 +15,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.Map;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -204,62 +206,7 @@ public class CartServiceImpl implements CartService {
         return getMyCart();
     }
 
-    @Override
-    @Transactional
-    public CartDto syncCartFromLocalStorage(Object localCartItems) {
-        log.info("Syncing cart from localStorage: {}", localCartItems);
-        
-        User user = getCurrentUser();
-        Cart cart = cartRepo.findByUser(user).orElseGet(() -> {
-            Cart c = new Cart();
-            c.setUser(user);
-            return cartRepo.save(c);
-        });
-        
-        // Clear existing items
-        if (cart.getItems() != null) {
-            cart.getItems().clear();
-        }
-        
-        // Add items from localStorage
-        if (localCartItems instanceof List) {
-            List<?> items = (List<?>) localCartItems;
-            for (Object itemObj : items) {
-                if (itemObj instanceof Map) {
-                    Map<?, ?> itemMap = (Map<?, ?>) itemObj;
-                    
-                    // Extract item data
-                    Long productId = Long.valueOf(itemMap.get("productId").toString());
-                    Integer quantity = Integer.valueOf(itemMap.get("quantity").toString());
-                    String sizeValue = itemMap.get("sizeValue") != null ? itemMap.get("sizeValue").toString() : null;
-                    String colorValue = itemMap.get("colorValue") != null ? itemMap.get("colorValue").toString() : null;
-                    
-                    // Find product
-                    Product product = productRepo.findById(productId).orElse(null);
-                    if (product != null) {
-                        CartItem cartItem = new CartItem();
-                        cartItem.setCart(cart);
-                        cartItem.setProduct(product);
-                        cartItem.setQuantity(quantity);
-                        cartItem.setPrice(product.getPrice());
-                        cartItem.setSizeValue(sizeValue);
-                        cartItem.setColorValue(colorValue);
-                        
-                        cart.addItem(cartItem);
-                        
-                        log.info("Added item from localStorage: productId={}, quantity={}, size={}, color={}", 
-                                productId, quantity, sizeValue, colorValue);
-                    }
-                }
-            }
-        }
-        
-        // Save cart with new items
-        cartRepo.save(cart);
-        
-        log.info("Cart synced from localStorage successfully");
-        return getMyCart();
-    }
+    
 
     private CartDto toDto(List<CartItem> items) {
         List<CartItemDto> dtoItems = items.stream()

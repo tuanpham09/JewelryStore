@@ -4,6 +4,9 @@ import { RegisterComponent } from './register/register';
 import { Home } from './home/home';
 import { ProductDetail } from './product-detail/product-detail';
 import { Cart } from './cart/cart';
+import { Checkout } from './checkout/checkout';
+import { CheckoutSuccessComponent } from './checkout/checkout-success/checkout-success.component';
+import { CheckoutCancelComponent } from './checkout/checkout-cancel/checkout-cancel.component';
 import { OrderHistory } from './order-history/order-history';
 import { Profile } from './profile/profile';
 import { Wishlist } from './wishlist/wishlist';
@@ -17,6 +20,9 @@ export const routes: Routes = [
   { path: 'home', component: Home },
   { path: 'product/:id', component: ProductDetail },
   { path: 'cart', component: Cart },
+  { path: 'checkout', component: Checkout },
+  { path: 'checkout/success', component: CheckoutSuccessComponent },
+  { path: 'checkout/cancel', component: CheckoutCancelComponent },
   { path: 'order-history', component: OrderHistory },
   { path: 'profile', component: Profile },
   { path: 'wishlist', component: Wishlist },

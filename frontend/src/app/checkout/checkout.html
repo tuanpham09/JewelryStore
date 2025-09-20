@@ -1,0 +1,125 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="cartItemCount"></app-header>
+
+<div class="checkout-container">
+    <div class="checkout-header">
+        <h1>Thanh toán</h1>
+        <p>Vui lòng điền thông tin để hoàn tất đơn hàng</p>
+    </div>
+
+    <div class="checkout-content" *ngIf="cartItems.length > 0">
+        <div class="checkout-form">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title>Thông tin giao hàng</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+                        <div class="form-row">
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Họ và tên</mat-label>
+                                <input matInput formControlName="shippingName" placeholder="Nhập họ và tên">
+                                <mat-error *ngIf="checkoutForm.get('shippingName')?.invalid && checkoutForm.get('shippingName')?.touched">
+                                    {{ getErrorMessage('shippingName') }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-row">
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Số điện thoại</mat-label>
+                                <input matInput formControlName="shippingPhone" placeholder="Nhập số điện thoại">
+                                <mat-error *ngIf="checkoutForm.get('shippingPhone')?.invalid && checkoutForm.get('shippingPhone')?.touched">
+                                    {{ getErrorMessage('shippingPhone') }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-row">
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Địa chỉ giao hàng</mat-label>
+                                <textarea matInput formControlName="shippingAddress" rows="3" placeholder="Nhập địa chỉ giao hàng chi tiết"></textarea>
+                                <mat-error *ngIf="checkoutForm.get('shippingAddress')?.invalid && checkoutForm.get('shippingAddress')?.touched">
+                                    {{ getErrorMessage('shippingAddress') }}
+                                </mat-error>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-row">
+                            <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>Ghi chú (tùy chọn)</mat-label>
+                                <textarea matInput formControlName="notes" rows="2" placeholder="Ghi chú thêm cho đơn hàng"></textarea>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-actions">
+                            <button mat-button type="button" (click)="router.navigate(['/cart'])">
+                                Quay lại giỏ hàng
+                            </button>
+                            <button mat-raised-button color="primary" type="submit" [disabled]="isProcessing">
+                                <mat-icon *ngIf="isProcessing">hourglass_empty</mat-icon>
+                                {{ isProcessing ? 'Đang xử lý...' : 'Thanh toán' }}
+                            </button>
+                        </div>
+                    </form>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <div class="order-summary">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title>Tóm tắt đơn hàng</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="order-items">
+                        <div class="order-item" *ngFor="let item of cartItems">
+                            <div class="item-image">
+                                <img [src]="item.productImage" [alt]="item.productName">
+                            </div>
+                            <div class="item-details">
+                                <h4>{{ item.productName }}</h4>
+                                <div class="item-options" *ngIf="item.sizeValue || item.colorValue">
+                                    <span *ngIf="item.sizeValue" class="option">Kích thước: {{ item.sizeValue }}</span>
+                                    <span *ngIf="item.colorValue" class="option">Màu: {{ item.colorValue }}</span>
+                                </div>
+                                <div class="item-quantity">Số lượng: {{ item.quantity }}</div>
+                            </div>
+                            <div class="item-price">
+                                {{ formatPrice(item.subtotal) }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <mat-divider></mat-divider>
+
+                    <div class="order-total">
+                        <div class="total-row">
+                            <span>Tạm tính:</span>
+                            <span>{{ formatPrice(cartTotal) }}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Phí vận chuyển:</span>
+                            <span>Miễn phí</span>
+                        </div>
+                        <mat-divider></mat-divider>
+                        <div class="total-row total">
+                            <span>Tổng cộng:</span>
+                            <span>{{ formatPrice(cartTotal) }}</span>
+                        </div>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+
+    <div class="empty-cart" *ngIf="cartItems.length === 0">
+        <mat-icon>shopping_cart</mat-icon>
+        <h2>Giỏ hàng trống</h2>
+        <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán</p>
+        <button mat-raised-button color="primary" (click)="router.navigate(['/'])">
+            Tiếp tục mua sắm
+        </button>
+    </div>
+</div>
+
+<app-footer></app-footer>

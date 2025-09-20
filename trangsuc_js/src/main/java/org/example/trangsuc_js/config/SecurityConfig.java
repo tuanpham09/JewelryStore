@@ -33,8 +33,18 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/search/**").permitAll() // ✅ Cho phép POST search
                         .requestMatchers("/api/test/**").permitAll() // ✅ Cho phép test endpoints
                         .requestMatchers("/api/cart/test").permitAll() // ✅ Cho phép test cart endpoint
+                        .requestMatchers("/api/payment/webhook").permitAll() // ✅ Cho phép webhook PayOS
+                        .requestMatchers("/api/payment/confirm-webhook").permitAll() // ✅ Cho phép confirm webhook
+                        .requestMatchers("/api/payment/create-payment-link").permitAll() // ✅ Cho phép tạo payment link
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/cart/**").authenticated() // ✅ Yêu cầu authentication cho cart
+                        .requestMatchers("/api/payment/**").authenticated() // ✅ Yêu cầu authentication cho payment
+                        .requestMatchers("/api/order/**").authenticated() // ✅ Yêu cầu authentication cho order
+                        .requestMatchers("/api/order-history/**").authenticated() // ✅ Yêu cầu authentication cho order history
+                        .requestMatchers("/api/profile/**").authenticated() // ✅ Yêu cầu authentication cho profile
+                        .requestMatchers("/api/wishlist/**").authenticated() // ✅ Yêu cầu authentication cho wishlist
+                        .requestMatchers("/api/search/**").authenticated() // ✅ Yêu cầu authentication cho search
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

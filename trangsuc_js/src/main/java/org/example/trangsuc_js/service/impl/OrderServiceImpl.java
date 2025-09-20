@@ -3,7 +3,6 @@ package org.example.trangsuc_js.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.trangsuc_js.dto.order.CheckoutDto;
 import org.example.trangsuc_js.dto.order.OrderDto;
-import org.example.trangsuc_js.dto.order.OrderItemDto;
 import org.example.trangsuc_js.entity.*;
 import org.example.trangsuc_js.repository.*;
 import org.example.trangsuc_js.service.OrderService;
@@ -72,20 +71,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderDto toDto(Order o) {
-        List<OrderItemDto> items = o.getItems().stream()
+        List<OrderDto.OrderItemDto> items = o.getItems().stream()
                 .map(oi -> {
-                    OrderItemDto dto = new OrderItemDto();
+                    OrderDto.OrderItemDto dto = new OrderDto.OrderItemDto();
                     dto.setProductId(oi.getProduct().getId());
                     dto.setProductName(oi.getProduct().getName());
                     dto.setQuantity(oi.getQuantity());
-                    dto.setPrice(oi.getPrice());
+                    dto.setUnitPrice(oi.getPrice());
+                    dto.setSubtotal(oi.getSubtotal());
+                    dto.setSizeValue(oi.getSizeValue());
+                    dto.setColorValue(oi.getColorValue());
                     return dto;
                 })
                 .collect(Collectors.toList());
 
         OrderDto orderDto = new OrderDto();
         orderDto.setId(o.getId());
-        orderDto.setStatus(o.getStatus().name());
+        orderDto.setStatus(o.getStatus());
         orderDto.setTotal(o.getTotal());
         orderDto.setCreatedAt(o.getCreatedAt());
         orderDto.setItems(items);

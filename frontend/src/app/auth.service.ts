@@ -28,11 +28,9 @@ export class AuthService {
   }
 
   login(credentials: {email: string, password: string}): Observable<any> {
-    console.log('Calling login API:', `${this.apiUrl}/login`, credentials);
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
       tap({
         next: (response: any) => {
-          console.log('Login response:', response);
           if (response.data?.token && this.isBrowser) {
             localStorage.setItem('token', response.data.token);
             this.loadCurrentUser();
@@ -46,11 +44,9 @@ export class AuthService {
   }
 
   register(userData: any): Observable<any> {
-    console.log('Calling register API:', `${this.apiUrl}/register`, userData);
     return this.http.post(`${this.apiUrl}/register`, userData).pipe(
       tap({
         next: (response: any) => {
-          console.log('Register response:', response);
           if (response.data?.token && this.isBrowser) {
             localStorage.setItem('token', response.data.token);
             this.loadCurrentUser();
@@ -68,10 +64,8 @@ export class AuthService {
     
     const token = localStorage.getItem('token');
     if (token) {
-      console.log('Calling getCurrentUser API:', `${this.apiUrl}/me`);
       this.http.get(`${this.apiUrl}/me`).subscribe({
         next: (response: any) => {
-          console.log('getCurrentUser response:', response);
           this.currentUserSubject.next(response.data);
         },
         error: (error) => {

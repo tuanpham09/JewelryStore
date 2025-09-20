@@ -29,18 +29,20 @@ export class CartService {
     private cartApiService: CartApiService,
     private authService: AuthService
   ) {
+    
     // Load cart based on current auth status
     const currentUser = this.authService.getCurrentUser();
+    
     if (currentUser) {
       this.loadCartFromServer().subscribe();
     } else {
       this.loadCartFromStorage();
     }
     
-    // Subscribe to auth changes to sync cart
+    // Subscribe to auth changes to load cart
     this.authService.currentUser$.subscribe(user => {
       if (user) {
-        this.syncCartWithServer();
+        this.loadCartFromServer().subscribe();
       } else {
         this.loadCartFromStorage();
       }
@@ -50,16 +52,22 @@ export class CartService {
   // Load cart from localStorage
   private loadCartFromStorage(): void {
     try {
-      const storedCart = localStorage.getItem(this.CART_STORAGE_KEY);
-      if (storedCart) {
-        const cartItems = JSON.parse(storedCart).map((item: any) => ({
-          ...item,
-          addedAt: new Date(item.addedAt)
-        }));
-        this.cartItemsSubject.next(cartItems);
+      // Check if we're in browser environment
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const storedCart = localStorage.getItem(this.CART_STORAGE_KEY);
+        if (storedCart) {
+          const cartItems = JSON.parse(storedCart).map((item: any) => ({
+            ...item,
+            addedAt: new Date(item.addedAt)
+          }));
+          this.cartItemsSubject.next(cartItems);
+        } else {
+          this.cartItemsSubject.next([]);
+        }
+      } else {
+        this.cartItemsSubject.next([]);
       }
     } catch (error) {
-      console.error('Error loading cart from storage:', error);
       this.cartItemsSubject.next([]);
     }
   }
@@ -67,7 +75,10 @@ export class CartService {
   // Save cart to localStorage
   private saveCartToStorage(cartItems: CartItem[]): void {
     try {
-      localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(cartItems));
+      // Check if we're in browser environment
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem(this.CART_STORAGE_KEY, JSON.stringify(cartItems));
+      }
     } catch (error) {
       console.error('Error saving cart to storage:', error);
     }
@@ -76,15 +87,14 @@ export class CartService {
   // Add item to cart
   addToCart(item: Omit<CartItem, 'id' | 'addedAt'>): Observable<boolean> {
     const currentUser = this.authService.getCurrentUser();
-    const token = localStorage.getItem('token');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     
     if (currentUser && token) {
       // User is logged in - save to database
       return this.addToServerCart(item);
     } else {
-      // User not logged in - save to localStorage
-      this.addToLocalCart(item);
-      return of(true);
+      // User not logged in - require login
+      return of(false);
     }
   }
 
@@ -98,7 +108,6 @@ export class CartService {
 
     console.log('CartService - Adding to server cart:', request);
     console.log('CartService - Current user:', this.authService.getCurrentUser());
-    console.log('CartService - Token:', localStorage.getItem('token'));
 
     return this.cartApiService.addToCart(request).pipe(
       switchMap(() => this.loadCartFromServer()),
@@ -248,7 +257,9 @@ export class CartService {
 
   private clearLocalCart(): void {
     this.cartItemsSubject.next([]);
-    localStorage.removeItem(this.CART_STORAGE_KEY);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem(this.CART_STORAGE_KEY);
+    }
   }
 
   // Get cart items
@@ -294,10 +305,8 @@ export class CartService {
 
   // Load cart from server (for logged in users)
   loadCartFromServer(): Observable<boolean> {
-    console.log('Loading cart from server...');
     return this.cartApiService.getCartItems().pipe(
       switchMap(response => {
-        console.log('Cart API response:', response);
         if (response.success) {
           const cartItems: CartItem[] = response.data.items.map(apiItem => ({
             id: apiItem.id.toString(),
@@ -311,11 +320,9 @@ export class CartService {
             colorValue: apiItem.colorValue,
             addedAt: new Date(apiItem.createdAt)
           }));
-          console.log('Mapped cart items:', cartItems);
           this.cartItemsSubject.next(cartItems);
           return of(true);
         }
-        console.log('Cart API response not successful');
         return of(false);
       }),
       catchError(error => {
@@ -325,36 +332,5 @@ export class CartService {
     );
   }
 
-  // Public method to refresh cart data
-  refreshCart(): Observable<boolean> {
-    const currentUser = this.authService.getCurrentUser();
-    if (currentUser) {
-      // User đã đăng nhập - đồng bộ với localStorage trước, sau đó load từ server
-      return this.syncCartWithServer();
-    } else {
-      // User chưa đăng nhập - chỉ load từ localStorage
-      this.loadCartFromStorage();
-      return of(true);
-    }
-  }
 
-  // Sync cart with server (for logged in users)
-  syncCartWithServer(): Observable<boolean> {
-    const localCartItems = this.cartItemsSubject.value;
-    
-    if (localCartItems.length === 0) {
-      // No local items, just load from server
-      return this.loadCartFromServer();
-    }
-
-    // Sync local cart to server
-    return this.cartApiService.syncCartFromLocalStorage(localCartItems).pipe(
-      switchMap(() => this.loadCartFromServer()),
-      catchError(error => {
-        console.error('Error syncing cart with server:', error);
-        // If sync fails, just load from server
-        return this.loadCartFromServer();
-      })
-    );
-  }
 }

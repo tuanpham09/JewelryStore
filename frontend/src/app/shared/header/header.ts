@@ -52,6 +52,7 @@ export class Header {
     }
 
     navigateToCart() {
+        console.log('Header: navigateToCart called');
         this.router.navigate(['/cart']);
     }
 

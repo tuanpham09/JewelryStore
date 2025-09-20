@@ -14,37 +14,61 @@ public class OrderItem {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne @JoinColumn(name="order_id")
+    @ManyToOne
+    @JoinColumn(name="order_id", nullable = false)
     private Order order;
 
-    @ManyToOne @JoinColumn(name="product_id")
+    @ManyToOne
+    @JoinColumn(name="product_id", nullable = false)
     private Product product;
 
-    @Column(nullable = false)
-    private Integer quantity;
-    
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(name="quantity", nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    private Integer quantity = 0;
+
+    @Column(name="unit_price", precision = 10, scale = 2, nullable = false, columnDefinition = "DECIMAL(10,2) NOT NULL DEFAULT 0.00")
+    private BigDecimal unitPrice = BigDecimal.ZERO;
+
+    @Column(name="subtotal", precision = 10, scale = 2, nullable = false, columnDefinition = "DECIMAL(10,2) NOT NULL DEFAULT 0.00")
+    private BigDecimal subtotal = BigDecimal.ZERO;
+
+    @Column(name="size_value")
+    private String sizeValue;
+
+    @Column(name="color_value")
+    private String colorValue;
+
+    // Additional fields for order tracking
+    @Column(name="product_name")
+    private String productName;
+
+    @Column(name="product_sku")
+    private String productSku;
+
+    @Column(name="price", precision = 10, scale = 2)
     private BigDecimal price;
-    
-    // Bổ sung các trường cần thiết
-    @Column(name = "product_name")
-    private String productName; // Lưu tên sản phẩm tại thời điểm mua
-    
-    @Column(name = "product_sku")
-    private String productSku; // Mã SKU sản phẩm
-    
-    @Column(name = "discount_amount", precision = 10, scale = 2)
+
+    @Column(name="discount_amount", precision = 10, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
-    
-    @Column(name = "created_at")
+
+    @Column(name="final_price", precision = 10, scale = 2)
+    private BigDecimal finalPrice;
+
+    @Column(name="created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
-    
+
     // Helper methods
     public BigDecimal getSubtotal() {
-        return price.multiply(BigDecimal.valueOf(quantity));
+        if (unitPrice != null && quantity != null) {
+            return unitPrice.multiply(BigDecimal.valueOf(quantity));
+        }
+        return BigDecimal.ZERO;
     }
-    
-    public BigDecimal getFinalPrice() {
-        return getSubtotal().subtract(discountAmount);
+
+    public void calculateSubtotal() {
+        this.subtotal = getSubtotal();
+    }
+
+    public BigDecimal getPrice() {
+        return this.unitPrice;
     }
 }

@@ -58,11 +58,6 @@ public class CartController {
         return ApiResponse.success("Cart cleared successfully", cart);
     }
 
-    @PostMapping("/sync")
-    public ApiResponse<CartDto> syncCartFromLocalStorage(@RequestBody Object localCartItems) {
-        CartDto cart = cartService.syncCartFromLocalStorage(localCartItems);
-        return ApiResponse.success("Cart synced successfully", cart);
-    }
 
     @GetMapping("/test")
     public ApiResponse<String> testCart() {

@@ -10,5 +10,4 @@ public interface CartService {
     CartDto removeItem(Long productId, String sizeValue, String colorValue);
     CartDto updateItem(Long productId, String sizeValue, String colorValue, UpdateCartItemDto dto);
     CartDto clearCart();
-    CartDto syncCartFromLocalStorage(Object localCartItems);
 }

@@ -50,7 +50,6 @@ export class LoginComponent implements OnInit {
 
     this.auth.login(this.credentials).subscribe({
       next: (res) => {
-        console.log('Login success response in component:', res);
         if (res.success) {
           this.toastr.success('Đăng nhập thành công!', 'Thành công');
           this.handleLoginSuccess();

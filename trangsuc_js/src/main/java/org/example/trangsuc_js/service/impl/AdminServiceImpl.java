@@ -200,7 +200,7 @@ public class AdminServiceImpl implements AdminService {
         List<Order> orders = orderRepo.findAll();
 
         BigDecimal totalRevenue = orders.stream()
-                .filter(o -> "DELIVERED".equals(o.getStatus()))
+                .filter(o -> Order.OrderStatus.DELIVERED.equals(o.getStatus()))
                 .map(Order::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -599,7 +599,7 @@ public class AdminServiceImpl implements AdminService {
         dto.setBillingAddress(order.getBillingAddress());
         
         // Payment info
-        dto.setPaymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod().name() : null);
+        dto.setPaymentMethod(order.getPaymentMethod());
         dto.setPaymentStatus(order.getPaymentStatus());
         dto.setPaymentReference(order.getPaymentReference());
         dto.setPaidAt(order.getPaidAt());

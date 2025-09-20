@@ -431,7 +431,6 @@ export class Search implements OnInit {
             alert('Sản phẩm hiện tại đã hết hàng!');
             return;
         }
-        console.log('Adding to cart:', product);
     }
 
     addToWishlist(product: Product) {

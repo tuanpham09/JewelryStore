@@ -215,18 +215,14 @@ export class Home implements OnInit, OnDestroy {
       }
     }
 
-    console.log('Loading products with searchDto:', searchDto);
-
     this.searchService.searchProducts(searchDto).subscribe({
       next: (response) => {
-        console.log('Products response:', response);
         if (response.success) {
           this.products = response.data.content;
           this.totalProducts = response.data.totalElements;
           this.totalPages = response.data.totalPages;
           this.hasNextPage = response.data.hasNext;
           this.hasPreviousPage = response.data.hasPrevious;
-          console.log('Products loaded:', this.products.length, 'of', this.totalProducts);
         } else {
           this.error = response.message || 'Không thể tải sản phẩm';
         }
@@ -309,14 +305,15 @@ export class Home implements OnInit, OnDestroy {
 
     this.cartService.addToCart(cartItem).subscribe(success => {
       if (success) {
-        const message = this.currentUser ? 'Đã thêm vào giỏ hàng' : 'Đã thêm vào giỏ';
-        this.snackBar.open(message, 'Đóng', {
+        this.snackBar.open('Đã thêm vào giỏ hàng', 'Đóng', {
           duration: 3000
         });
       } else {
-        this.snackBar.open('Có lỗi xảy ra khi thêm vào giỏ hàng', 'Đóng', {
+        // User not logged in - redirect to login
+        this.snackBar.open('Vui lòng đăng nhập để thêm vào giỏ hàng', 'Đóng', {
           duration: 3000
         });
+        this.router.navigate(['/login']);
       }
     });
   }
@@ -452,18 +449,15 @@ export class Home implements OnInit, OnDestroy {
       }
     }
 
-    console.log('Performing search with searchDto:', searchDto);
 
     this.searchService.searchProducts(searchDto).subscribe({
       next: (response) => {
-        console.log('Search response:', response);
         if (response.success) {
           this.products = response.data.content;
           this.totalProducts = response.data.totalElements;
           this.totalPages = response.data.totalPages;
           this.hasNextPage = response.data.hasNext;
           this.hasPreviousPage = response.data.hasPrevious;
-          console.log('Search results loaded:', this.products.length, 'of', this.totalProducts);
         } else {
           this.error = response.message || 'Không thể tìm kiếm sản phẩm';
           this.products = [];
@@ -588,10 +582,8 @@ export class Home implements OnInit, OnDestroy {
     this.isLoadingNew = true;
     this.productService.getNewProducts(0, 5).subscribe({
       next: (response: SearchResponse) => {
-        console.log('New products response:', response);
         if (response.success) {
           this.newProducts = response.data.content;
-          console.log('New products loaded:', this.newProducts);
         }
         this.isLoadingNew = false;
       },
@@ -607,10 +599,8 @@ export class Home implements OnInit, OnDestroy {
     this.isLoadingOnSale = true;
     this.productService.getOnSaleProducts(0, 8).subscribe({
       next: (response: SearchResponse) => {
-        console.log('On sale products response:', response);
         if (response.success) {
           this.onSaleProducts = response.data.content;
-          console.log('On sale products loaded:', this.onSaleProducts);
         }
         this.isLoadingOnSale = false;
       },

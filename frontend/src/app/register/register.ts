@@ -45,7 +45,6 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    console.log('Register form submitted with:', { ...this.userData, password: '***' });
 
     // Create a copy without confirmPassword
     const registerData = {
@@ -56,7 +55,6 @@ export class RegisterComponent implements OnInit {
 
     this.auth.register(registerData).subscribe({
       next: (res) => {
-        console.log('Register success response in component:', res);
         if (res.success) {
           this.toastr.success('Đăng ký thành công! Chào mừng bạn đến với Trang Sức JS!', 'Thành công');
           this.router.navigate(['/home']);

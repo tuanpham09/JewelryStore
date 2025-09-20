@@ -152,7 +152,7 @@ public class OrderTrackingServiceImpl implements OrderTrackingService {
         
         // Shipping info
         dto.setShippingAddress(order.getShippingAddress());
-        dto.setPaymentMethod(order.getPaymentMethod() != null ? order.getPaymentMethod().name() : null);
+        dto.setPaymentMethod(order.getPaymentMethod());
         dto.setPaymentStatus(order.getPaymentStatus());
         dto.setPaymentReference(order.getPaymentReference());
         dto.setPaidAt(order.getPaidAt());

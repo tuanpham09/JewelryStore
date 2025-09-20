@@ -228,9 +228,7 @@ export class ProductDetail implements OnInit {
         // Kiểm tra user và token
         const currentUser = this.authService.getCurrentUser();
         const token = localStorage.getItem('token');
-        
-        console.log('ProductDetail - Current user:', currentUser);
-        console.log('ProductDetail - Token exists:', !!token);
+
 
         if (currentUser && token) {
             // User đã đăng nhập - lưu vào giỏ hàng của user
@@ -276,19 +274,6 @@ export class ProductDetail implements OnInit {
     }
 
     private requireLoginForCart() {
-        // Lưu thông tin sản phẩm vào localStorage để callback sau khi đăng nhập
-        const pendingCartItem = {
-            productId: this.product!.id,
-            productName: this.product!.name,
-            productImage: this.getPrimaryImage(),
-            price: this.getCurrentPrice(),
-            quantity: this.quantity,
-            size: this.selectedSize || undefined,
-            color: this.selectedColor || undefined,
-            timestamp: Date.now()
-        };
-
-        localStorage.setItem('pending_cart_item', JSON.stringify(pendingCartItem));
 
         // Hiển thị dialog yêu cầu đăng nhập
         this.snackBar.open('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng', 'Đăng nhập', {

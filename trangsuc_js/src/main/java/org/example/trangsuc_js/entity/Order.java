@@ -1,6 +1,5 @@
 package org.example.trangsuc_js.entity;
 
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,88 +16,128 @@ public class Order {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne @JoinColumn(name="user_id")
+    @ManyToOne
+    @JoinColumn(name="user_id")
     private User user;
 
-    @Column(nullable = false, unique = true)
-    private String orderNumber; // Mã đơn hàng duy nhất
-    
+    @Column(name="order_number", unique = true, nullable = false)
+    private String orderNumber;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name="status", nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
-    
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal total;
-    
-    @Column(name = "subtotal", precision = 10, scale = 2)
-    private BigDecimal subtotal;
-    
-    @Column(name = "shipping_fee", precision = 10, scale = 2)
-    private BigDecimal shippingFee = BigDecimal.ZERO;
-    
-    @Column(name = "discount_amount", precision = 10, scale = 2)
-    private BigDecimal discountAmount = BigDecimal.ZERO;
-    
-    @Column(name = "created_at")
+
+    @Column(name="total_amount", precision = 10, scale = 2, nullable = false, columnDefinition = "DECIMAL(10,2) NOT NULL DEFAULT 0.00")
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+
+    @Column(name="shipping_address", columnDefinition = "TEXT")
+    private String shippingAddress;
+
+    @Column(name="shipping_phone")
+    private String shippingPhone;
+
+    @Column(name="shipping_name")
+    private String shippingName;
+
+    @Column(name="notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Payment payment;
+
+    @Column(name="created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
-    
-    @Column(name = "updated_at")
+
+    @Column(name="updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
-    
-    @Column(name = "delivered_at")
-    private LocalDateTime deliveredAt;
-    
-    @Column(name = "cancelled_at")
+
+    // Additional fields for order tracking
+    @Column(name="cancelled_at")
     private LocalDateTime cancelledAt;
-    
-    @Column(name = "cancellation_reason")
+
+    @Column(name="cancellation_reason", columnDefinition = "TEXT")
     private String cancellationReason;
 
-    @OneToMany(mappedBy="order", cascade=CascadeType.ALL, orphanRemoval = true)
-    private List<OrderItem> items = new ArrayList<>();
-    
-    // Thông tin giao hàng
-    @Column(name = "shipping_address", columnDefinition = "TEXT")
-    private String shippingAddress;
-    
-    @Column(name = "billing_address", columnDefinition = "TEXT")
-    private String billingAddress;
-    
-    @Column(name = "customer_name")
-    private String customerName;
-    
-    @Column(name = "customer_phone")
-    private String customerPhone;
-    
-    @Column(name = "customer_email")
-    private String customerEmail;
-    
-    // Thông tin thanh toán
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method")
-    private PaymentMethod paymentMethod;
-    
-    @Column(name = "payment_status")
-    private String paymentStatus = "PENDING";
-    
-    @Column(name = "payment_reference")
-    private String paymentReference;
-    
-    @Column(name = "paid_at")
+    @Column(name="delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name="paid_at")
     private LocalDateTime paidAt;
-    
-    // Ghi chú
-    @Column(name = "notes", columnDefinition = "TEXT")
-    private String notes;
-    
-    // Enum cho Order Status
-    public enum OrderStatus {
-        PENDING, PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
+
+    // Customer information
+    @Column(name="customer_name")
+    private String customerName;
+
+    @Column(name="customer_phone")
+    private String customerPhone;
+
+    @Column(name="customer_email")
+    private String customerEmail;
+
+    // Payment information
+    @Column(name="payment_method")
+    private String paymentMethod;
+
+    @Column(name="payment_status")
+    private String paymentStatus;
+
+    @Column(name="payment_reference")
+    private String paymentReference;
+
+    // Additional fields for admin service
+    @Column(name="subtotal", precision = 10, scale = 2, columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private BigDecimal subtotal = BigDecimal.ZERO;
+
+    @Column(name="shipping_fee", precision = 10, scale = 2, columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private BigDecimal shippingFee = BigDecimal.ZERO;
+
+    @Column(name="discount_amount", precision = 10, scale = 2, columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private BigDecimal discountAmount = BigDecimal.ZERO;
+
+    @Column(name="billing_address", columnDefinition = "TEXT")
+    private String billingAddress;
+
+    // Helper methods
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
     }
-    
-    // Enum cho Payment Method
-    public enum PaymentMethod {
-        COD, BANK_TRANSFER, CREDIT_CARD, PAYPAL, VNPAY, MOMO
+
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
+    }
+
+    public void calculateTotal() {
+        if (items != null && !items.isEmpty()) {
+            this.totalAmount = items.stream()
+                    .map(OrderItem::getSubtotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } else {
+            this.totalAmount = BigDecimal.ZERO;
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public BigDecimal getTotal() {
+        return this.totalAmount;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.totalAmount = total;
+    }
+
+    public enum OrderStatus {
+        PENDING,        // Chờ thanh toán
+        PAID,           // Đã thanh toán
+        PROCESSING,     // Đang xử lý
+        SHIPPED,        // Đã giao hàng
+        DELIVERED,      // Đã nhận hàng
+        CANCELLED,      // Đã hủy
+        REFUNDED,       // Đã hoàn tiền
+        CONFIRMED
     }
 }
-
