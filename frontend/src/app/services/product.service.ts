@@ -20,12 +20,33 @@ export interface Product {
   isNew?: boolean;
   isBestseller?: boolean;
   isOnSale?: boolean;
+  brand?: string;
+  material?: string;
+  color?: string;
 }
 
 export interface ProductResponse {
   success: boolean;
   message: string;
   data: Product[];
+}
+
+export interface SearchResultDto<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  totalCount: number;
+  searchTime: string;
+}
+
+export interface SearchResponse {
+  success: boolean;
+  message: string;
+  data: SearchResultDto<Product>;
 }
 
 @Injectable({
@@ -52,22 +73,22 @@ export class ProductService {
   }
 
   // Lấy sản phẩm nổi bật
-  getFeaturedProducts(): Observable<ProductResponse> {
-    return this.http.get<ProductResponse>(`${this.apiUrl}/search/products/featured`);
+  getFeaturedProducts(page: number = 0, size: number = 20): Observable<SearchResponse> {
+    return this.http.get<SearchResponse>(`${this.apiUrl}/search/products/featured?page=${page}&size=${size}`);
   }
 
   // Lấy sản phẩm mới
-  getNewProducts(): Observable<ProductResponse> {
-    return this.http.get<ProductResponse>(`${this.apiUrl}/search/products/new`);
+  getNewProducts(page: number = 0, size: number = 20): Observable<SearchResponse> {
+    return this.http.get<SearchResponse>(`${this.apiUrl}/search/products/new?page=${page}&size=${size}`);
   }
 
   // Lấy sản phẩm bán chạy
-  getBestsellerProducts(): Observable<ProductResponse> {
-    return this.http.get<ProductResponse>(`${this.apiUrl}/search/products/bestsellers`);
+  getBestsellerProducts(page: number = 0, size: number = 20): Observable<SearchResponse> {
+    return this.http.get<SearchResponse>(`${this.apiUrl}/search/products/bestsellers?page=${page}&size=${size}`);
   }
 
   // Lấy sản phẩm đang giảm giá
-  getOnSaleProducts(): Observable<ProductResponse> {
-    return this.http.get<ProductResponse>(`${this.apiUrl}/search/products/on-sale`);
+  getOnSaleProducts(page: number = 0, size: number = 20): Observable<SearchResponse> {
+    return this.http.get<SearchResponse>(`${this.apiUrl}/search/products/on-sale?page=${page}&size=${size}`);
   }
 }

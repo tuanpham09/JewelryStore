@@ -3,26 +3,54 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  salePrice?: number;
+  stock: number;
+  thumbnail: string;
+  categoryName: string;
+  averageRating?: number;
+  reviewCount?: number;
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isBestseller?: boolean;
+  isOnSale?: boolean;
+  brand?: string;
+  material?: string;
+  color?: string;
+}
+
 export interface ProductSearchDto {
+  query?: string;
   keyword?: string;
+  categoryId?: number;
   categoryIds?: number[];
   minPrice?: number;
   maxPrice?: number;
-  materials?: string[];
-  colors?: string[];
+  brand?: string;
   brands?: string[];
+  material?: string;
+  materials?: string[];
+  color?: string;
+  colors?: string[];
   isActive?: boolean;
   isFeatured?: boolean;
   isNew?: boolean;
   isBestseller?: boolean;
   isOnSale?: boolean;
   sortBy?: string;
+  sortOrder?: string;
   page?: number;
   size?: number;
 }
 
 export interface SearchResultDto<T> {
-  data: T[];
+  content: T[];
   totalElements: number;
   totalPages: number;
   currentPage: number;
@@ -37,6 +65,12 @@ export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
+}
+
+export interface SearchResponse {
+  success: boolean;
+  message: string;
+  data: SearchResultDto<Product>;
 }
 
 @Injectable({

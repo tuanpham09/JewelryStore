@@ -89,4 +89,22 @@ public class SearchController {
             "Search controller is accessible"
         ));
     }
+    
+    @GetMapping("/test-products")
+    public ResponseEntity<ApiResponse<String>> testProducts() {
+        try {
+            // Very simple test - just return a string
+            return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Products test successful",
+                "Test endpoint is working"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new ApiResponse<>(
+                false,
+                "Products test failed: " + e.getMessage(),
+                e.toString()
+            ));
+        }
+    }
 }

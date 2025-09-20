@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,8 +13,9 @@ import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
-import { ProductService, Product } from '../services/product.service';
+import { ProductService, Product, SearchResponse } from '../services/product.service';
 import { CategoryService, Category } from '../services/category.service';
+import { SearchService, ProductSearchDto } from '../services/search.service';
 
 // Sử dụng Category interface từ service
 
@@ -28,6 +30,7 @@ interface ViewOption {
   selector: 'app-home',
   imports: [
     CommonModule,
+    FormsModule,
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -61,6 +64,23 @@ export class Home implements OnInit {
   ];
 
   products: Product[] = [];
+
+  // Search properties
+  searchKeyword: string = '';
+  isSearching: boolean = false;
+  showSuggestions: boolean = false;
+  searchSuggestions: string[] = [];
+  quickSearchTags: string[] = [
+    'Nhẫn vàng', 'Bông tai kim cương', 'Vòng tay charm', 
+    'Dây chuyền bạc', 'Lắc tay vàng', 'Nhẫn cưới'
+  ];
+  isSearchMode: boolean = false;
+
+  // Product lists
+  newProducts: Product[] = [];
+  onSaleProducts: Product[] = [];
+  isLoadingNew: boolean = false;
+  isLoadingOnSale: boolean = false;
 
   get filteredProducts(): Product[] {
     let filtered = this.products;
@@ -103,7 +123,8 @@ export class Home implements OnInit {
     private authService: AuthService,
     public router: Router,
     private productService: ProductService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private searchService: SearchService
   ) { }
 
   ngOnInit() {
@@ -115,6 +136,8 @@ export class Home implements OnInit {
 
     this.loadProducts();
     this.loadCategories();
+    this.loadNewProducts();
+    this.loadOnSaleProducts();
   }
 
   loadProducts() {
@@ -192,5 +215,140 @@ export class Home implements OnInit {
 
   navigateToCart() {
     this.router.navigate(['/cart']);
+  }
+
+  // Search methods
+  onSearchInput() {
+    if (this.searchKeyword.length > 2) {
+      this.showSuggestions = true;
+      this.generateSuggestions();
+    } else {
+      this.showSuggestions = false;
+    }
+  }
+
+  generateSuggestions() {
+    // Generate suggestions based on categories and popular searches
+    const allSuggestions = [
+      ...this.categories.map(cat => cat.name),
+      'Nhẫn vàng', 'Bông tai kim cương', 'Vòng tay charm',
+      'Dây chuyền bạc', 'Lắc tay vàng', 'Nhẫn cưới',
+      'Trang sức cao cấp', 'Phụ kiện nữ'
+    ];
+    
+    this.searchSuggestions = allSuggestions
+      .filter(suggestion => 
+        suggestion.toLowerCase().includes(this.searchKeyword.toLowerCase())
+      )
+      .slice(0, 5);
+  }
+
+  selectSuggestion(suggestion: string) {
+    this.searchKeyword = suggestion;
+    this.showSuggestions = false;
+    this.performSearch();
+  }
+
+  searchByTag(tag: string) {
+    this.searchKeyword = tag;
+    this.performSearch();
+  }
+
+  performSearch() {
+    if (!this.searchKeyword.trim()) {
+      this.loadProducts(); // Load all products if search is empty
+      this.isSearchMode = false;
+      return;
+    }
+
+    this.isSearching = true;
+    this.isSearchMode = true;
+    this.showSuggestions = false;
+
+    const searchDto: ProductSearchDto = {
+      query: this.searchKeyword.trim(),
+      keyword: this.searchKeyword.trim(),
+      page: 0,
+      size: 100,
+      sortBy: this.getSortByForSearch()
+    };
+
+    this.searchService.searchProducts(searchDto).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.products = response.data.content;
+          this.totalProducts = response.data.totalElements;
+        } else {
+          this.error = response.message || 'Không thể tìm kiếm sản phẩm';
+          this.products = [];
+        }
+        this.isSearching = false;
+      },
+      error: (error) => {
+        console.error('Error searching products:', error);
+        this.error = 'Có lỗi xảy ra khi tìm kiếm sản phẩm';
+        this.products = [];
+        this.isSearching = false;
+      }
+    });
+  }
+
+  private getSortByForSearch(): string {
+    switch (this.sortBy) {
+      case 'price-low':
+        return 'price_asc';
+      case 'price-high':
+        return 'price_desc';
+      case 'newest':
+        return 'newest';
+      default:
+        return 'popularity_desc';
+    }
+  }
+
+  clearSearch() {
+    this.searchKeyword = '';
+    this.isSearchMode = false;
+    this.showSuggestions = false;
+    this.loadProducts();
+  }
+
+
+  // Load new products (for sidebar)
+  loadNewProducts() {
+    this.isLoadingNew = true;
+    this.productService.getNewProducts(0, 5).subscribe({
+      next: (response: SearchResponse) => {
+        console.log('New products response:', response);
+        if (response.success) {
+          this.newProducts = response.data.content;
+          console.log('New products loaded:', this.newProducts);
+        }
+        this.isLoadingNew = false;
+      },
+      error: (error) => {
+        console.error('Error loading new products:', error);
+        this.isLoadingNew = false;
+      }
+    });
+  }
+
+  // Load on-sale products
+  loadOnSaleProducts() {
+    this.isLoadingOnSale = true;
+    this.productService.getOnSaleProducts(0, 8).subscribe({
+      next: (response: SearchResponse) => {
+        console.log('On sale products response:', response);
+        if (response.success) {
+          this.onSaleProducts = response.data.content;
+          console.log('On sale products loaded:', this.onSaleProducts);
+        }
+        this.isLoadingOnSale = false;
+      },
+      error: (error) => {
+        console.error('Error loading on-sale products:', error);
+        this.isLoadingOnSale = false;
+      }
+    });
   }
 }

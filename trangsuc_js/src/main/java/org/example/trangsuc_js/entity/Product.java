@@ -162,7 +162,7 @@ public class Product {
     }
     
     public boolean isOnSale() {
-        return salePrice != null && salePrice.compareTo(price) < 0;
+        return salePrice != null && originalPrice != null && salePrice.compareTo(originalPrice) < 0;
     }
     
     public BigDecimal getDiscountPercentage() {
