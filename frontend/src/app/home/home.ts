@@ -151,18 +151,34 @@ export class Home implements OnInit {
     this.error = null;
     this.currentPage = page;
 
-    // Use products API with pagination
-    const sortBy = this.getSortByForProducts();
-    const sortOrder = this.getSortOrderForProducts();
+    // Use search API according to API_DOCUMENTATION.md
+    const searchDto: ProductSearchDto = {
+      page: page,
+      size: this.pageSize,
+      sortBy: this.getSortByForSearch(),
+      sortOrder: this.getSortOrderForSearch()
+    };
 
-    this.productService.getAllProducts(page, this.pageSize, sortBy, sortOrder).subscribe({
+    // Add category filter if selected
+    if (this.selectedCategory !== 'all' && this.selectedCategory !== '0') {
+      const selectedCat = this.categories.find(cat => cat.id.toString() === this.selectedCategory);
+      if (selectedCat) {
+        searchDto.categoryId = selectedCat.id;
+      }
+    }
+
+    console.log('Loading products with searchDto:', searchDto);
+
+    this.searchService.searchProducts(searchDto).subscribe({
       next: (response) => {
+        console.log('Products response:', response);
         if (response.success) {
           this.products = response.data.content;
           this.totalProducts = response.data.totalElements;
           this.totalPages = response.data.totalPages;
           this.hasNextPage = response.data.hasNext;
           this.hasPreviousPage = response.data.hasPrevious;
+          console.log('Products loaded:', this.products.length, 'of', this.totalProducts);
         } else {
           this.error = response.message || 'Không thể tải sản phẩm';
         }
@@ -270,7 +286,7 @@ export class Home implements OnInit {
     this.performSearch();
   }
 
-  performSearch() {
+  performSearch(page: number = 0) {
     if (!this.searchKeyword.trim()) {
       this.currentPage = 0;
       this.loadProducts(); // Load all products if search is empty
@@ -281,24 +297,37 @@ export class Home implements OnInit {
     this.isSearching = true;
     this.isSearchMode = true;
     this.showSuggestions = false;
-    this.currentPage = 0;
+    this.currentPage = page;
 
+    // Use search API according to API_DOCUMENTATION.md
     const searchDto: ProductSearchDto = {
       query: this.searchKeyword.trim(),
-      keyword: this.searchKeyword.trim(),
-      page: this.currentPage,
+      page: page,
       size: this.pageSize,
-      sortBy: this.getSortByForSearch()
+      sortBy: this.getSortByForSearch(),
+      sortOrder: this.getSortOrderForSearch()
     };
+
+    // Add category filter if selected
+    if (this.selectedCategory !== 'all' && this.selectedCategory !== '0') {
+      const selectedCat = this.categories.find(cat => cat.id.toString() === this.selectedCategory);
+      if (selectedCat) {
+        searchDto.categoryId = selectedCat.id;
+      }
+    }
+
+    console.log('Performing search with searchDto:', searchDto);
 
     this.searchService.searchProducts(searchDto).subscribe({
       next: (response) => {
+        console.log('Search response:', response);
         if (response.success) {
           this.products = response.data.content;
           this.totalProducts = response.data.totalElements;
           this.totalPages = response.data.totalPages;
           this.hasNextPage = response.data.hasNext;
           this.hasPreviousPage = response.data.hasPrevious;
+          console.log('Search results loaded:', this.products.length, 'of', this.totalProducts);
         } else {
           this.error = response.message || 'Không thể tìm kiếm sản phẩm';
           this.products = [];
@@ -317,13 +346,26 @@ export class Home implements OnInit {
   private getSortByForSearch(): string {
     switch (this.sortBy) {
       case 'price-low':
-        return 'price_asc';
       case 'price-high':
-        return 'price_desc';
+        return 'price';
       case 'newest':
-        return 'newest';
+        return 'createdAt';
+      case 'featured':
+        return 'isFeatured';
       default:
-        return 'popularity_desc';
+        return 'createdAt';
+    }
+  }
+
+  private getSortOrderForSearch(): string {
+    switch (this.sortBy) {
+      case 'price-low':
+        return 'asc';
+      case 'price-high':
+      case 'newest':
+      case 'featured':
+      default:
+        return 'desc';
     }
   }
 
@@ -364,7 +406,11 @@ export class Home implements OnInit {
   // Pagination methods
   goToPage(page: number) {
     if (page >= 0 && page < this.totalPages) {
-      this.loadProducts(page);
+      if (this.isSearchMode) {
+        this.performSearch(page);
+      } else {
+        this.loadProducts(page);
+      }
     }
   }
 

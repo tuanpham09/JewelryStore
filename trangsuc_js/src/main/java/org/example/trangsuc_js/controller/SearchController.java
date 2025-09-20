@@ -93,11 +93,16 @@ public class SearchController {
     @GetMapping("/test-products")
     public ResponseEntity<ApiResponse<String>> testProducts() {
         try {
-            // Very simple test - just return a string
+            // Test search with empty criteria
+            var searchDto = new org.example.trangsuc_js.dto.search.ProductSearchDto();
+            searchDto.setPage(0);
+            searchDto.setSize(5);
+            var result = searchService.searchProducts(searchDto);
+            
             return ResponseEntity.ok(new ApiResponse<>(
                 true,
                 "Products test successful",
-                "Test endpoint is working"
+                "Found " + result.getTotalElements() + " products"
             ));
         } catch (Exception e) {
             return ResponseEntity.ok(new ApiResponse<>(

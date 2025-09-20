@@ -23,23 +23,132 @@ public class SearchServiceImpl implements SearchService {
     @Override
     @Transactional(readOnly = true)
     public SearchResultDto<ProductDto> searchProducts(ProductSearchDto searchDto) {
-        // Simple implementation - just return all products
-        List<Product> allProducts = productRepo.findAll();
-        List<ProductDto> productDtos = allProducts.stream()
-            .map(this::toProductDto)
-            .collect(Collectors.toList());
+        try {
+            // Get all products
+            List<Product> allProducts = productRepo.findAll();
+            System.out.println("Total products in database: " + allProducts.size());
+            System.out.println("Search DTO: " + searchDto);
+            
+            // Apply filters
+            List<Product> filteredProducts = allProducts.stream()
+                .filter(product -> {
+                    // Only filter by isActive if explicitly set
+                    if (searchDto.getIsActive() != null) {
+                        return product.getIsActive() != null && product.getIsActive().equals(searchDto.getIsActive());
+                    }
+                    return true; // Don't filter if isActive is null
+                })
+                .filter(product -> {
+                    String searchTerm = searchDto.getQuery() != null ? searchDto.getQuery() : searchDto.getKeyword();
+                    if (searchTerm == null || searchTerm.trim().isEmpty()) {
+                        return true; // No search term, include all
+                    }
+                    return product.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
+                        (product.getDescription() != null && product.getDescription().toLowerCase().contains(searchTerm.toLowerCase()));
+                })
+                .filter(product -> searchDto.getCategoryId() == null || 
+                    (product.getCategory() != null && product.getCategory().getId().equals(searchDto.getCategoryId())))
+                .filter(product -> searchDto.getMinPrice() == null || 
+                    product.getPrice().compareTo(searchDto.getMinPrice()) >= 0)
+                .filter(product -> searchDto.getMaxPrice() == null || 
+                    product.getPrice().compareTo(searchDto.getMaxPrice()) <= 0)
+                .filter(product -> searchDto.getBrand() == null || searchDto.getBrand().trim().isEmpty() ||
+                    (product.getBrand() != null && product.getBrand().equalsIgnoreCase(searchDto.getBrand())))
+                .filter(product -> searchDto.getMaterial() == null || searchDto.getMaterial().trim().isEmpty() ||
+                    (product.getMaterial() != null && product.getMaterial().equalsIgnoreCase(searchDto.getMaterial())))
+                .filter(product -> searchDto.getColor() == null || searchDto.getColor().trim().isEmpty() ||
+                    (product.getColor() != null && product.getColor().equalsIgnoreCase(searchDto.getColor())))
+                .collect(Collectors.toList());
+            
+            System.out.println("Filtered products count: " + filteredProducts.size());
+            
+            // Debug: Print first few products
+            if (!filteredProducts.isEmpty()) {
+                System.out.println("First filtered product: " + filteredProducts.get(0).getName());
+            } else {
+                System.out.println("No products passed filtering");
+                // Debug each filter step
+                long activeCount = allProducts.stream()
+                    .filter(product -> {
+                        if (searchDto.getIsActive() != null) {
+                            return product.getIsActive() != null && product.getIsActive().equals(searchDto.getIsActive());
+                        }
+                        return true;
+                    }).count();
+                System.out.println("Products after isActive filter: " + activeCount);
+            }
+            
+            // Apply sorting
+            if (searchDto.getSortBy() != null) {
+                String sortOrder = searchDto.getSortOrder() != null ? searchDto.getSortOrder() : "desc";
+                switch (searchDto.getSortBy()) {
+                    case "price":
+                        if ("asc".equalsIgnoreCase(sortOrder)) {
+                            filteredProducts.sort((p1, p2) -> p1.getPrice().compareTo(p2.getPrice()));
+                        } else {
+                            filteredProducts.sort((p1, p2) -> p2.getPrice().compareTo(p1.getPrice()));
+                        }
+                        break;
+                    case "createdAt":
+                        if ("asc".equalsIgnoreCase(sortOrder)) {
+                            filteredProducts.sort((p1, p2) -> p1.getCreatedAt().compareTo(p2.getCreatedAt()));
+                        } else {
+                            filteredProducts.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
+                        }
+                        break;
+                    case "isFeatured":
+                        filteredProducts.sort((p1, p2) -> Boolean.compare(
+                            p2.getIsFeatured() != null ? p2.getIsFeatured() : false, 
+                            p1.getIsFeatured() != null ? p1.getIsFeatured() : false
+                        ));
+                        break;
+                }
+            }
+            
+            // Apply pagination
+            int page = searchDto.getPage() != null ? searchDto.getPage() : 0;
+            int size = searchDto.getSize() != null ? searchDto.getSize() : 12;
+            int start = page * size;
+            int end = Math.min(start + size, filteredProducts.size());
+            
+            List<Product> pagedProducts = start < filteredProducts.size() ? 
+                filteredProducts.subList(start, end) : new ArrayList<>();
+        
+        // Convert to DTOs
+            List<ProductDto> productDtos = pagedProducts.stream()
+                .map(this::toProductDto)
+                .collect(Collectors.toList());
+        
+            // Calculate pagination info
+            int totalPages = (int) Math.ceil((double) filteredProducts.size() / size);
+            boolean hasNext = (page + 1) < totalPages;
+            boolean hasPrevious = page > 0;
         
         return new SearchResultDto<>(
-            productDtos,
-            (long) allProducts.size(),
-            1,
-            0,
-            allProducts.size(),
-            false,
-            false,
-            (long) allProducts.size(),
-            "0ms"
-        );
+                productDtos,
+                (long) filteredProducts.size(),
+                totalPages,
+                page,
+                size,
+                hasNext,
+                hasPrevious,
+                (long) filteredProducts.size(),
+                "0ms"
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new SearchResultDto<>(
+                new ArrayList<>(),
+                0L,
+                0,
+                0,
+                12,
+                false,
+                false,
+                0L,
+                "0ms"
+            );
+        }
     }
     
     @Override
@@ -144,7 +253,7 @@ public class SearchServiceImpl implements SearchService {
         
         List<ProductDto> productDtos = pagedProducts.stream()
             .map(this::toProductDto)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
         
         return new SearchResultDto<>(
             productDtos,

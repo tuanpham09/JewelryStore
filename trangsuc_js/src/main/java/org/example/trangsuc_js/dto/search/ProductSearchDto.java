@@ -11,17 +11,23 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductSearchDto {
+    private String query;
     private String keyword;
+    private Long categoryId;
     private List<Long> categoryIds;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
-    private List<String> materials;
-    private List<String> colors;
+    private String brand;
     private List<String> brands;
-    private String sortBy; // price_asc, price_desc, rating_desc, popularity_desc, newest
+    private String material;
+    private List<String> materials;
+    private String color;
+    private List<String> colors;
+    private String sortBy;
+    private String sortOrder;
     private Integer page = 0;
-    private Integer size = 20;
-    private Boolean isActive = true;
+    private Integer size = 12;
+    private Boolean isActive;
     private Boolean isFeatured;
     private Boolean isNew;
     private Boolean isBestseller;

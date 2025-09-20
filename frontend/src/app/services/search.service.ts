@@ -27,22 +27,12 @@ export interface Product {
 
 export interface ProductSearchDto {
   query?: string;
-  keyword?: string;
   categoryId?: number;
-  categoryIds?: number[];
   minPrice?: number;
   maxPrice?: number;
   brand?: string;
-  brands?: string[];
   material?: string;
-  materials?: string[];
   color?: string;
-  colors?: string[];
-  isActive?: boolean;
-  isFeatured?: boolean;
-  isNew?: boolean;
-  isBestseller?: boolean;
-  isOnSale?: boolean;
   sortBy?: string;
   sortOrder?: string;
   page?: number;
