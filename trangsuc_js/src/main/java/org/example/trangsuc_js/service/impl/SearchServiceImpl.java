@@ -29,36 +29,57 @@ public class SearchServiceImpl implements SearchService {
             System.out.println("Total products in database: " + allProducts.size());
             System.out.println("Search DTO: " + searchDto);
             
-            // Apply filters
-            List<Product> filteredProducts = allProducts.stream()
-                .filter(product -> {
-                    // Only filter by isActive if explicitly set
-                    if (searchDto.getIsActive() != null) {
-                        return product.getIsActive() != null && product.getIsActive().equals(searchDto.getIsActive());
-                    }
-                    return true; // Don't filter if isActive is null
-                })
-                .filter(product -> {
-                    String searchTerm = searchDto.getQuery() != null ? searchDto.getQuery() : searchDto.getKeyword();
-                    if (searchTerm == null || searchTerm.trim().isEmpty()) {
-                        return true; // No search term, include all
-                    }
-                    return product.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                        (product.getDescription() != null && product.getDescription().toLowerCase().contains(searchTerm.toLowerCase()));
-                })
-                .filter(product -> searchDto.getCategoryId() == null || 
-                    (product.getCategory() != null && product.getCategory().getId().equals(searchDto.getCategoryId())))
-                .filter(product -> searchDto.getMinPrice() == null || 
-                    product.getPrice().compareTo(searchDto.getMinPrice()) >= 0)
-                .filter(product -> searchDto.getMaxPrice() == null || 
-                    product.getPrice().compareTo(searchDto.getMaxPrice()) <= 0)
-                .filter(product -> searchDto.getBrand() == null || searchDto.getBrand().trim().isEmpty() ||
-                    (product.getBrand() != null && product.getBrand().equalsIgnoreCase(searchDto.getBrand())))
-                .filter(product -> searchDto.getMaterial() == null || searchDto.getMaterial().trim().isEmpty() ||
-                    (product.getMaterial() != null && product.getMaterial().equalsIgnoreCase(searchDto.getMaterial())))
-                .filter(product -> searchDto.getColor() == null || searchDto.getColor().trim().isEmpty() ||
-                    (product.getColor() != null && product.getColor().equalsIgnoreCase(searchDto.getColor())))
-                .collect(Collectors.toList());
+            // Simple filtering - start with all products
+            List<Product> filteredProducts = new ArrayList<>(allProducts);
+            
+            // Apply search term filter if provided (LIKE pattern)
+            String searchTerm = searchDto.getQuery() != null ? searchDto.getQuery() : searchDto.getKeyword();
+            if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                // Split search term into words for better matching
+                String[] searchWords = searchTerm.toLowerCase().trim().split("\\s+");
+                
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> {
+                        String productName = product.getName().toLowerCase();
+                        String productDesc = product.getDescription() != null ? product.getDescription().toLowerCase() : "";
+                        String productBrand = product.getBrand() != null ? product.getBrand().toLowerCase() : "";
+                        String productMaterial = product.getMaterial() != null ? product.getMaterial().toLowerCase() : "";
+                        String productColor = product.getColor() != null ? product.getColor().toLowerCase() : "";
+                        
+                        // Check if ALL search words match in any field (AND logic)
+                        return java.util.Arrays.stream(searchWords).allMatch(word ->
+                            productName.contains(word) ||
+                            productDesc.contains(word) ||
+                            productBrand.contains(word) ||
+                            productMaterial.contains(word) ||
+                            productColor.contains(word)
+                        );
+                    }).collect(Collectors.toList());
+                System.out.println("After search term filter (LIKE pattern): " + filteredProducts.size());
+            } else {
+                System.out.println("No search term provided, returning all products: " + filteredProducts.size());
+            }
+            
+            // Apply category filter if provided
+            if (searchDto.getCategoryId() != null) {
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> product.getCategory() != null && 
+                        product.getCategory().getId().equals(searchDto.getCategoryId()))
+                    .collect(Collectors.toList());
+            }
+            
+            // Apply price filters if provided
+            if (searchDto.getMinPrice() != null) {
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> product.getPrice().compareTo(searchDto.getMinPrice()) >= 0)
+                    .collect(Collectors.toList());
+            }
+            
+            if (searchDto.getMaxPrice() != null) {
+                filteredProducts = filteredProducts.stream()
+                    .filter(product -> product.getPrice().compareTo(searchDto.getMaxPrice()) <= 0)
+                    .collect(Collectors.toList());
+            }
             
             System.out.println("Filtered products count: " + filteredProducts.size());
             

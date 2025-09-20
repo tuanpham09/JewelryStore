@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -16,6 +16,7 @@ import { Footer } from '../shared/footer/footer';
 import { ProductService, Product, SearchResponse } from '../services/product.service';
 import { CategoryService, Category } from '../services/category.service';
 import { SearchService, ProductSearchDto } from '../services/search.service';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 // Sử dụng Category interface từ service
 
@@ -45,7 +46,7 @@ interface ViewOption {
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
-export class Home implements OnInit {
+export class Home implements OnInit, OnDestroy {
   currentUser: any = null;
   selectedCategory: string = 'all';
   sortBy: string = 'featured';
@@ -87,6 +88,9 @@ export class Home implements OnInit {
   totalPages: number = 0;
   hasNextPage: boolean = false;
   hasPreviousPage: boolean = false;
+
+  // Realtime search
+  private searchSubject = new Subject<string>();
 
   get filteredProducts(): Product[] {
     let filtered = this.products;
@@ -140,10 +144,40 @@ export class Home implements OnInit {
       this.currentUser = user;
     });
 
+    // Setup realtime search with debounce
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(searchTerm => {
+        if (searchTerm.trim()) {
+          this.isSearching = true;
+          this.isSearchMode = true;
+          return this.performSearchRequest(searchTerm);
+        } else {
+          this.isSearchMode = false;
+          this.currentPage = 0;
+          return this.loadProductsRequest();
+        }
+      })
+    ).subscribe({
+      next: (response) => {
+        this.handleSearchResponse(response);
+      },
+      error: (error) => {
+        console.error('Error in realtime search:', error);
+        this.error = 'Có lỗi xảy ra khi tìm kiếm sản phẩm';
+        this.isSearching = false;
+      }
+    });
+
     this.loadProducts();
     this.loadCategories();
     this.loadNewProducts();
     this.loadOnSaleProducts();
+  }
+
+  ngOnDestroy() {
+    this.searchSubject.complete();
   }
 
   loadProducts(page: number = 0) {
@@ -158,6 +192,9 @@ export class Home implements OnInit {
       sortBy: this.getSortByForSearch(),
       sortOrder: this.getSortOrderForSearch()
     };
+    
+    // Don't send query field if we want all products
+    // Backend returns 0 if query is null/empty
 
     // Add category filter if selected
     if (this.selectedCategory !== 'all' && this.selectedCategory !== '0') {
@@ -251,12 +288,72 @@ export class Home implements OnInit {
 
   // Search methods
   onSearchInput() {
+    // Trigger realtime search with debounce
+    this.searchSubject.next(this.searchKeyword);
+    
+    // Handle suggestions
     if (this.searchKeyword.length > 2) {
       this.showSuggestions = true;
       this.generateSuggestions();
     } else {
       this.showSuggestions = false;
     }
+  }
+
+  // Helper methods for reactive search
+  private performSearchRequest(searchTerm: string) {
+    const searchDto: ProductSearchDto = {
+      query: searchTerm,
+      page: 0,
+      size: this.pageSize,
+      sortBy: this.getSortByForSearch(),
+      sortOrder: this.getSortOrderForSearch()
+    };
+
+    // Add category filter if selected
+    if (this.selectedCategory !== 'all' && this.selectedCategory !== '0') {
+      const selectedCat = this.categories.find(cat => cat.id.toString() === this.selectedCategory);
+      if (selectedCat) {
+        searchDto.categoryId = selectedCat.id;
+      }
+    }
+
+    return this.searchService.searchProducts(searchDto);
+  }
+
+  private loadProductsRequest() {
+    const searchDto: ProductSearchDto = {
+      page: 0,
+      size: this.pageSize,
+      sortBy: this.getSortByForSearch(),
+      sortOrder: this.getSortOrderForSearch()
+    };
+
+    // Add category filter if selected
+    if (this.selectedCategory !== 'all' && this.selectedCategory !== '0') {
+      const selectedCat = this.categories.find(cat => cat.id.toString() === this.selectedCategory);
+      if (selectedCat) {
+        searchDto.categoryId = selectedCat.id;
+      }
+    }
+
+    return this.searchService.searchProducts(searchDto);
+  }
+
+  private handleSearchResponse(response: any) {
+    if (response.success) {
+      this.products = response.data.content;
+      this.totalProducts = response.data.totalElements;
+      this.totalPages = response.data.totalPages;
+      this.hasNextPage = response.data.hasNext;
+      this.hasPreviousPage = response.data.hasPrevious;
+      this.currentPage = response.data.currentPage;
+    } else {
+      this.error = response.message || 'Không thể tải sản phẩm';
+      this.products = [];
+    }
+    this.isSearching = false;
+    this.isLoading = false;
   }
 
   generateSuggestions() {

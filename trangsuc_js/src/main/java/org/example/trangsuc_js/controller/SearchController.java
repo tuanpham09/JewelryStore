@@ -101,10 +101,11 @@ public class SearchController {
             
             return ResponseEntity.ok(new ApiResponse<>(
                 true,
-                "Products test successful",
-                "Found " + result.getTotalElements() + " products"
+                "Products test successful", 
+                "Found " + result.getTotalElements() + " products, content size: " + result.getContent().size()
             ));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.ok(new ApiResponse<>(
                 false,
                 "Products test failed: " + e.getMessage(),

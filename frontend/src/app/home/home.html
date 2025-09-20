@@ -22,14 +22,13 @@
     <div class="search-container">
       <div class="search-input-wrapper">
         <mat-icon class="search-icon">search</mat-icon>
-        <input 
-          type="text" 
-          class="search-input" 
-          placeholder="Tìm kiếm trang sức, nhẫn, dây chuyền..."
-          [(ngModel)]="searchKeyword"
-          (keyup.enter)="performSearch()"
-          (input)="onSearchInput()"
-        />
+              <input
+                type="text"
+                class="search-input"
+                placeholder="Tìm kiếm trang sức, nhẫn, dây chuyền..."
+                [(ngModel)]="searchKeyword"
+                (input)="onSearchInput()"
+              />
         <button 
           class="search-btn" 
           (click)="performSearch()"
