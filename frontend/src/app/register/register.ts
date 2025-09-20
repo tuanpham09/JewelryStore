@@ -2,13 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../auth.service';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule],
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
@@ -32,7 +33,7 @@ export class RegisterComponent implements OnInit {
         this.router.navigate(['/home']);
       }
     });
-    
+
     // Load user từ token nếu có
     this.auth.loadUserFromToken();
   }
@@ -44,8 +45,8 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    console.log('Register form submitted with:', {...this.userData, password: '***'});
-    
+    console.log('Register form submitted with:', { ...this.userData, password: '***' });
+
     // Create a copy without confirmPassword
     const registerData = {
       email: this.userData.email,

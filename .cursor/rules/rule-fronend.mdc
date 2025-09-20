@@ -1,0 +1,9 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+1. Đảm bảo ui ux đồng bộ với màn Home
+2. Đảm bảo tái sử dụng các component
+3. Đảm bảo sử dụng đồng bộ màu sắc
+4. Những màu nổi bật thì text đen, và ngược lại
