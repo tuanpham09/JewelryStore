@@ -14,51 +14,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../auth.service';
+import { ProductService, Product, ProductSize, ProductImage, ProductReview } from '../services/product.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
 
-interface ProductImage {
-    id: string;
-    url: string;
-    alt: string;
-}
-
-interface ProductReview {
-    id: string;
-    userName: string;
-    rating: number;
-    comment: string;
-    date: string;
-    verified: boolean;
-}
-
-interface Product {
-    id: string;
-    name: string;
-    price: number;
-    originalPrice?: number;
-    images: ProductImage[];
-    category: string;
-    description: string;
-    detailedDescription: string;
-    specifications: { [key: string]: string };
-    reviews: ProductReview[];
-    averageRating: number;
-    totalReviews: number;
-    inStock: boolean;
-    stockQuantity: number;
-    isFavorite: boolean;
-    tags: string[];
-}
-
-interface RelatedProduct {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-    category: string;
-}
 
 @Component({
     selector: 'app-product-detail',
@@ -77,6 +39,8 @@ interface RelatedProduct {
         MatInputModule,
         MatSelectModule,
         MatOptionModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
         Header,
         Footer
     ],
@@ -90,22 +54,25 @@ export class ProductDetail implements OnInit {
     quantity: number = 1;
     selectedSize: string = '';
     selectedColor: string = '';
-    relatedProducts: RelatedProduct[] = [];
+    relatedProducts: Product[] = [];
     newReview = {
         rating: 5,
         comment: ''
     };
-
-    sizes = ['S', 'M', 'L'];
-    colors = ['Vàng', 'Bạc', 'Vàng hồng'];
+    loading = false;
+    error: string | null = null;
+    hoverRating = 0;
+    sortBy = 'newest';
 
     // Expose Math to template
     Math = Math;
 
     constructor(
-        private route: ActivatedRoute,
+        public route: ActivatedRoute,
         public router: Router,
-        private authService: AuthService
+        private authService: AuthService,
+        private productService: ProductService,
+        private snackBar: MatSnackBar
     ) { }
 
     ngOnInit() {
@@ -120,119 +87,56 @@ export class ProductDetail implements OnInit {
     }
 
     loadProduct(productId: string) {
-        // Mock data - trong thực tế sẽ gọi API
-        this.product = {
-            id: productId,
-            name: 'Vòng tay ngọc trai Corrine - vàng mờ',
-            price: 990000,
-            originalPrice: 1200000,
-            images: [
-                {
-                    id: '1',
-                    url: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop&crop=center',
-                    alt: 'Vòng tay ngọc trai Corrine - vàng mờ'
-                },
-                {
-                    id: '2',
-                    url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop&crop=center',
-                    alt: 'Vòng tay ngọc trai Corrine - góc nhìn khác'
-                },
-                {
-                    id: '3',
-                    url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop&crop=center',
-                    alt: 'Vòng tay ngọc trai Corrine - chi tiết'
-                },
-                {
-                    id: '4',
-                    url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop&crop=center',
-                    alt: 'Vòng tay ngọc trai Corrine - trên tay'
-                }
-            ],
-            category: 'bracelets',
-            description: 'Vòng tay thanh lịch với ngọc trai tự nhiên và vàng mờ sang trọng, phù hợp cho mọi dịp',
-            detailedDescription: `
-        <p>Vòng tay ngọc trai Corrine là một tác phẩm nghệ thuật tinh tế, được chế tác từ những viên ngọc trai tự nhiên cao cấp nhất. Mỗi viên ngọc trai được lựa chọn kỹ lưỡng với độ bóng hoàn hảo và kích thước đồng đều.</p>
-        
-        <p>Chất liệu vàng mờ 18K tạo nên vẻ sang trọng và tinh tế, không quá lộng lẫy nhưng vẫn toát lên sự quý phái. Thiết kế đơn giản nhưng thanh lịch, phù hợp với mọi phong cách thời trang từ casual đến formal.</p>
-        
-        <p>Sản phẩm được chế tác thủ công bởi những nghệ nhân có kinh nghiệm lâu năm, đảm bảo chất lượng và độ bền cao. Vòng tay có thể điều chỉnh kích thước phù hợp với cổ tay của bạn.</p>
-      `,
-            specifications: {
-                'Chất liệu': 'Vàng mờ 18K, Ngọc trai tự nhiên',
-                'Kích thước': 'Có thể điều chỉnh 16-20cm',
-                'Trọng lượng': '8.5g',
-                'Xuất xứ': 'Việt Nam',
-                'Bảo hành': '12 tháng',
-                'Chứng nhận': 'Giấy chứng nhận vàng 18K'
-            },
-            reviews: [
-                {
-                    id: '1',
-                    userName: 'Nguyễn Thị Lan',
-                    rating: 5,
-                    comment: 'Vòng tay rất đẹp và sang trọng. Chất lượng ngọc trai rất tốt, bóng và đều. Tôi rất hài lòng với sản phẩm này.',
-                    date: '2024-01-15',
-                    verified: true
-                },
-                {
-                    id: '2',
-                    userName: 'Trần Văn Minh',
-                    rating: 4,
-                    comment: 'Sản phẩm đẹp, giao hàng nhanh. Chỉ có điều giá hơi cao nhưng chất lượng tương xứng.',
-                    date: '2024-01-10',
-                    verified: true
-                },
-                {
-                    id: '3',
-                    userName: 'Lê Thị Hoa',
-                    rating: 5,
-                    comment: 'Vòng tay rất tinh tế và thanh lịch. Phù hợp với mọi trang phục. Tôi sẽ mua thêm sản phẩm khác.',
-                    date: '2024-01-08',
-                    verified: false
-                }
-            ],
-            averageRating: 4.7,
-            totalReviews: 3,
-            inStock: true,
-            stockQuantity: 15,
-            isFavorite: false,
-            tags: ['Ngọc trai', 'Vàng mờ', 'Thanh lịch', 'Cao cấp']
-        };
+        this.loading = true;
+        this.error = null;
 
-        this.loadRelatedProducts();
+        this.productService.getProductById(+productId).subscribe({
+            next: (response) => {
+                if (response.success && response.data) {
+                    this.product = Array.isArray(response.data) ? response.data[0] : response.data;
+                    this.loadRelatedProducts();
+                    this.incrementViewCount();
+                } else {
+                    this.error = 'Không thể tải thông tin sản phẩm';
+                }
+                this.loading = false;
+            },
+            error: (error) => {
+                console.error('Error loading product:', error);
+                this.error = 'Có lỗi xảy ra khi tải sản phẩm';
+                this.loading = false;
+            }
+        });
     }
 
     loadRelatedProducts() {
-        this.relatedProducts = [
-            {
-                id: '2',
-                name: 'Nhẫn đôi liên kết ngọc trai Corrine - vàng hồng',
-                price: 550000,
-                image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=300&h=300&fit=crop&crop=center',
-                category: 'rings'
+        if (!this.product) return;
+
+        this.productService.getRelatedProducts(this.product.id, 4).subscribe({
+            next: (response) => {
+                if (response.success && response.data) {
+                    this.relatedProducts = Array.isArray(response.data) ? response.data : [response.data];
+                }
             },
-            {
-                id: '4',
-                name: 'Bông tai hoa pha lê Felicity - vàng hồng',
-                price: 1050000,
-                image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop&crop=center',
-                category: 'earrings'
-            },
-            {
-                id: '9',
-                name: 'Vòng tay charm hoa hồng - vàng hồng',
-                price: 750000,
-                image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=300&h=300&fit=crop&crop=center',
-                category: 'bracelets'
-            },
-            {
-                id: '10',
-                name: 'Dây chuyền trái tim - vàng hồng',
-                price: 850000,
-                image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=300&h=300&fit=crop&crop=center',
-                category: 'necklaces'
+            error: (error) => {
+                console.error('Error loading related products:', error);
             }
-        ];
+        });
+    }
+
+    incrementViewCount() {
+        if (!this.product) return;
+
+        this.productService.incrementViewCount(this.product.id).subscribe({
+            next: (response) => {
+                if (response.success && response.data) {
+                    this.product = Array.isArray(response.data) ? response.data[0] : response.data;
+                }
+            },
+            error: (error) => {
+                console.error('Error incrementing view count:', error);
+            }
+        });
     }
 
     selectImage(index: number) {
@@ -240,7 +144,7 @@ export class ProductDetail implements OnInit {
     }
 
     increaseQuantity() {
-        if (this.product && this.quantity < this.product.stockQuantity) {
+        if (this.product && this.quantity < this.getMaxQuantity()) {
             this.quantity++;
         }
     }
@@ -293,8 +197,11 @@ export class ProductDetail implements OnInit {
             };
 
             if (this.product) {
+                if (!this.product.reviews) {
+                    this.product.reviews = [];
+                }
                 this.product.reviews.unshift(review);
-                this.product.totalReviews++;
+                this.product.totalReviews = (this.product.totalReviews || 0) + 1;
                 this.calculateAverageRating();
             }
 
@@ -303,8 +210,8 @@ export class ProductDetail implements OnInit {
     }
 
     calculateAverageRating() {
-        if (this.product) {
-            const totalRating = this.product.reviews.reduce((sum, review) => sum + review.rating, 0);
+        if (this.product && this.product.reviews) {
+            const totalRating = this.product.reviews.reduce((sum: number, review: ProductReview) => sum + review.rating, 0);
             this.product.averageRating = totalRating / this.product.reviews.length;
         }
     }
@@ -319,5 +226,149 @@ export class ProductDetail implements OnInit {
 
     navigateToCart() {
         this.router.navigate(['/cart']);
+    }
+
+    // Helper methods
+    getAvailableSizes(): string[] {
+        if (!this.product || !this.product.sizes) return [];
+        return this.product.sizes
+            .filter(size => size.isActive && size.stock > 0)
+            .map(size => size.size);
+    }
+
+    getStockForSize(size: string): number {
+        if (!this.product || !this.product.sizes) return 0;
+        const productSize = this.product.sizes.find(s => s.size === size && s.isActive);
+        return productSize ? productSize.stock : 0;
+    }
+
+    getMaxQuantity(): number {
+        if (!this.product) return 0;
+        if (this.selectedSize) {
+            return this.getStockForSize(this.selectedSize);
+        }
+        return this.product.stock;
+    }
+
+    getProductImages(): ProductImage[] {
+        if (!this.product || !this.product.images) {
+            // Fallback to thumbnail if no images
+            return [{
+                id: 0,
+                imageUrl: this.product?.thumbnail || '',
+                altText: this.product?.name || '',
+                isPrimary: true,
+                sortOrder: 0
+            }];
+        }
+        return this.product.images.sort((a, b) => a.sortOrder - b.sortOrder);
+    }
+
+    getPrimaryImage(): string {
+        const images = this.getProductImages();
+        const primaryImage = images.find(img => img.isPrimary);
+        return primaryImage ? primaryImage.imageUrl : (images[0]?.imageUrl || '');
+    }
+
+    getCurrentPrice(): number {
+        if (!this.product) return 0;
+        return this.product.currentPrice || this.product.salePrice || this.product.price;
+    }
+
+    getDiscountPercentage(): number {
+        if (!this.product || !this.product.originalPrice) return 0;
+        const currentPrice = this.getCurrentPrice();
+        return Math.round((1 - currentPrice / this.product.originalPrice) * 100);
+    }
+
+    isInStock(): boolean {
+        if (!this.product) return false;
+        if (this.selectedSize) {
+            return this.getStockForSize(this.selectedSize) > 0;
+        }
+        return this.product.stock > 0;
+    }
+
+    getStockQuantity(): number {
+        if (!this.product) return 0;
+        if (this.selectedSize) {
+            return this.getStockForSize(this.selectedSize);
+        }
+        return this.product.stock;
+    }
+
+    // Review methods
+    getRatingText(rating: number): string {
+        const texts = {
+            1: 'Rất không hài lòng',
+            2: 'Không hài lòng',
+            3: 'Bình thường',
+            4: 'Hài lòng',
+            5: 'Rất hài lòng'
+        };
+        return texts[rating as keyof typeof texts] || '';
+    }
+
+    getRatingCount(rating: number): number {
+        if (!this.product || !this.product.reviews) return 0;
+        return this.product.reviews.filter((review: ProductReview) => review.rating === rating).length;
+    }
+
+    getRatingPercentage(rating: number): number {
+        if (!this.product || !this.product.reviews || this.product.reviews.length === 0) return 0;
+        const count = this.getRatingCount(rating);
+        return (count / this.product.reviews.length) * 100;
+    }
+
+    getSortedReviews(): ProductReview[] {
+        if (!this.product || !this.product.reviews) return [];
+        
+        const reviews = [...this.product.reviews];
+        
+        switch (this.sortBy) {
+            case 'newest':
+                return reviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            case 'oldest':
+                return reviews.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+            case 'highest':
+                return reviews.sort((a, b) => b.rating - a.rating);
+            case 'lowest':
+                return reviews.sort((a, b) => a.rating - b.rating);
+            default:
+                return reviews;
+        }
+    }
+
+    formatDate(dateString: string): string {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    resetReviewForm() {
+        this.newReview = {
+            rating: 5,
+            comment: ''
+        };
+        this.hoverRating = 0;
+    }
+
+    likeReview(reviewId: string) {
+        // TODO: Implement like functionality
+        console.log('Like review:', reviewId);
+        this.snackBar.open('Cảm ơn bạn đã đánh giá hữu ích!', 'Đóng', {
+            duration: 3000
+        });
+    }
+
+    reportReview(reviewId: string) {
+        // TODO: Implement report functionality
+        console.log('Report review:', reviewId);
+        this.snackBar.open('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét đánh giá này.', 'Đóng', {
+            duration: 3000
+        });
     }
 }

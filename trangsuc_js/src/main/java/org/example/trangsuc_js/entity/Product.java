@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter @Setter
@@ -76,7 +77,6 @@ public class Product {
     
     @Column(name = "is_active")
     private Boolean isActive = true;
-    
     @Column(name = "is_featured")
     private Boolean isFeatured = false;
     
@@ -120,6 +120,9 @@ public class Product {
     
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductSize> sizes = new ArrayList<>();
     
     // Helper methods
     public ProductImage getPrimaryImage() {
@@ -168,15 +171,45 @@ public class Product {
     public BigDecimal getDiscountPercentage() {
         if (!isOnSale()) return BigDecimal.ZERO;
         return price.subtract(salePrice)
-                .divide(price, 2, BigDecimal.ROUND_HALF_UP)
+                .divide(price, 2, java.math.RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100));
     }
     
     public boolean isLowStock() {
-        return stock <= minStock;
+        return minStock != null && stock <= minStock;
     }
     
     public boolean isOutOfStock() {
         return stock <= 0;
+    }
+    
+    // ProductSize helper methods
+    public void addSize(ProductSize size) {
+        sizes.add(size);
+        size.setProduct(this);
+    }
+    
+    public void removeSize(ProductSize size) {
+        sizes.remove(size);
+        size.setProduct(null);
+    }
+    
+    public List<String> getAvailableSizes() {
+        return sizes.stream()
+                .filter(ProductSize::getIsActive)
+                .map(ProductSize::getSize)
+                .collect(Collectors.toList());
+    }
+    
+    public ProductSize getSizeByValue(String sizeValue) {
+        return sizes.stream()
+                .filter(s -> s.getSize().equals(sizeValue) && s.getIsActive())
+                .findFirst()
+                .orElse(null);
+    }
+    
+    public Integer getStockForSize(String sizeValue) {
+        ProductSize size = getSizeByValue(sizeValue);
+        return size != null ? size.getStock() : 0;
     }
 }

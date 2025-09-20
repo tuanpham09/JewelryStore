@@ -65,4 +65,7 @@ public class ProductDto {
     
     // Images
     private List<ProductImageDto> images;
+    
+    // Sizes
+    private List<ProductSizeDto> sizes;
 }
