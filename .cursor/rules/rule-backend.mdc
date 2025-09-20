@@ -1,0 +1,23 @@
+---
+description: Guidelines for Spring Boot backend development — structure, best practices, REST API, error handling, configuration
+globs: ["src/main/java/**/*.java", "src/main/resources/**/*.yml", "src/main/resources/**/*.properties"]
+alwaysApply: true
+---
+# How to run backend? 
+```
+cd trangsuc_js; 
+& 'C:\Program Files\Java\jdk-17\bin\java.exe' '@C:\Users\Admin\AppData\Local\Temp\cp_9i5woqh9se795tjfpky775hq7.argfile' 'org.example.trangsuc_js.TrangsucJsApplication'
+```
+
+# Spring Boot Backend Best Practices
+
+- Logic xử lý phải đồng bộ kiến trúc với những API khác
+- Validation đầu vào (request) phải được thực hiện bằng `@Valid` hoặc custom validator.
+- Sử dụng `@RestControllerAdvice` để xử lý toàn cục các lỗi (exception) trả về response chuẩn.
+- Định dạng cấu hình (`application.properties` / `application.yml`) rõ ràng, sử dụng profile (`dev`, `prod`) nếu cần.
+- Báo lỗi (error response) phải có cấu trúc rõ ràng: mã lỗi (code), tin nhắn (message), thời gian (timestamp).
+- Sử dụng DTO (Data Transfer Objects) để trả dữ liệu cho client, tránh gửi entity trực tiếp.
+- Bảo mật endpoints (authentication / authorization) phải được cấu hình rõ ràng: sử dụng Spring Security.
+- Log đủ thông tin cho debugging: bao gồm request id, user id nếu có, URL, thời gian xử lý, trạng thái HTTP.
+- Gói cấu trúc project theo mô hình chuẩn: `controller`, `service`, `repository`, `config`, `model/entity`, `dto`, `exception`.
+- Tối ưu truy vấn CSDL: tránh N+1, sử dụng `@Query`, `fetch join`, pagination nếu cần.

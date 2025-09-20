@@ -9,13 +9,27 @@ import org.example.trangsuc_js.entity.Product;
 public class ProductMapper {
 
     public static ProductDto toDto(Product p) {
-        return new ProductDto(
-                p.getId(),
-                p.getName(),
-                p.getPrice(),
-                p.getStock(),
-                p.getCategory() != null ? p.getCategory().getName() : null
-        );
+        ProductDto dto = new ProductDto();
+        dto.setId(p.getId());
+        dto.setName(p.getName());
+        dto.setSlug(p.getSlug());
+        dto.setDescription(p.getDescription());
+        dto.setPrice(p.getPrice());
+        dto.setStock(p.getStock());
+        dto.setThumbnail(p.getThumbnail());
+        dto.setCategoryName(p.getCategory() != null ? p.getCategory().getName() : null);
+        
+        // Tính average rating và review count
+        if (p.getReviews() != null && !p.getReviews().isEmpty()) {
+            double avgRating = p.getReviews().stream()
+                    .mapToInt(r -> r.getRating())
+                    .average()
+                    .orElse(0.0);
+            dto.setAverageRating(avgRating);
+            dto.setReviewCount(p.getReviews().size());
+        }
+        
+        return dto;
     }
 
     public static Product toEntity(ProductUpsertDto dto, Category category) {

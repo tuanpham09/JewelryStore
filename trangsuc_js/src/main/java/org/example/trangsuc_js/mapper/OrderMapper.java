@@ -17,6 +17,6 @@ public class OrderMapper {
                         oi.getQuantity(),
                         oi.getPrice()))
                 .collect(Collectors.toList());
-        return new OrderDto(o.getId(), o.getStatus(), o.getTotal(), o.getCreatedAt(), items);
+        return new OrderDto(o.getId(), o.getStatus().name(), o.getTotal(), o.getCreatedAt(), items);
     }
 }

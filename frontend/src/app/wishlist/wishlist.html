@@ -1,0 +1,161 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+    <span (click)="goBack()" style="cursor: pointer;">Trang chủ</span>
+    <mat-icon>chevron_right</mat-icon>
+    <span class="current">Danh sách yêu thích</span>
+</div>
+
+<!-- Wishlist Content -->
+<div class="wishlist-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title gradient-text">Danh sách yêu thích</h1>
+        <p class="page-subtitle">Các sản phẩm bạn đã lưu để mua sau</p>
+    </div>
+
+    <!-- Wishlist Stats -->
+    <div class="wishlist-stats" *ngIf="wishlistItems.length > 0">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <mat-icon>favorite</mat-icon>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ getWishlistCount() }}</span>
+                <span class="stat-label">Sản phẩm yêu thích</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <mat-icon>inventory</mat-icon>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ getInStockCount() }}</span>
+                <span class="stat-label">Còn hàng</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <mat-icon>attach_money</mat-icon>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ getTotalValue() | currency:'VND':'symbol':'1.0-0' }}</span>
+                <span class="stat-label">Tổng giá trị</span>
+            </div>
+        </div>
+        <div class="stat-card" *ngIf="getTotalSavings() > 0">
+            <div class="stat-icon">
+                <mat-icon>savings</mat-icon>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ getTotalSavings() | currency:'VND':'symbol':'1.0-0' }}</span>
+                <span class="stat-label">Tiết kiệm</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wishlist Actions -->
+    <div class="wishlist-actions" *ngIf="wishlistItems.length > 0">
+        <div class="actions-left">
+            <mat-checkbox [(ngModel)]="allSelected" (change)="toggleSelectAll()" class="select-all-checkbox">
+                Chọn tất cả ({{ getSelectedCount() }}/{{ getWishlistCount() }})
+            </mat-checkbox>
+        </div>
+        <div class="actions-right">
+            <button mat-button class="action-btn" (click)="addSelectedToCart()" [disabled]="getSelectedCount() === 0">
+                <mat-icon>shopping_cart</mat-icon>
+                Thêm đã chọn vào giỏ
+            </button>
+            <button mat-button class="action-btn remove-btn" (click)="removeSelectedItems()"
+                [disabled]="getSelectedCount() === 0">
+                <mat-icon>delete</mat-icon>
+                Xóa đã chọn
+            </button>
+        </div>
+    </div>
+
+    <!-- Wishlist Items -->
+    <div class="wishlist-content" *ngIf="wishlistItems.length > 0; else emptyWishlist">
+        <div class="wishlist-grid">
+            <div class="wishlist-item" *ngFor="let item of wishlistItems">
+                <div class="item-checkbox">
+                    <mat-checkbox [checked]="selectedItems.includes(item.id)" (change)="toggleItemSelection(item.id)">
+                    </mat-checkbox>
+                </div>
+
+                <div class="item-image" (click)="navigateToProduct(item.productId)">
+                    <img [src]="item.image" [alt]="item.name" />
+                    <div class="item-overlay">
+                        <button mat-icon-button class="overlay-btn"
+                            (click)="navigateToProduct(item.productId); $event.stopPropagation()">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                    </div>
+                    <div class="item-badges">
+                        <mat-chip class="discount-chip" *ngIf="item.discount">
+                            -{{ item.discount }}%
+                        </mat-chip>
+                        <mat-chip class="out-of-stock-chip" *ngIf="!item.inStock">
+                            Hết hàng
+                        </mat-chip>
+                    </div>
+                </div>
+
+                <div class="item-info">
+                    <h3 class="item-name" (click)="navigateToProduct(item.productId)">{{ item.name }}</h3>
+                    <p class="item-description">{{ item.description }}</p>
+
+                    <div class="item-options" *ngIf="item.size || item.color">
+                        <span class="option" *ngIf="item.size">Size: {{ item.size }}</span>
+                        <span class="option" *ngIf="item.color">Màu: {{ item.color }}</span>
+                    </div>
+
+                    <div class="item-pricing">
+                        <span class="current-price">{{ item.price | currency:'VND':'symbol':'1.0-0' }}</span>
+                        <span class="original-price" *ngIf="item.originalPrice">{{ item.originalPrice |
+                            currency:'VND':'symbol':'1.0-0' }}</span>
+                    </div>
+
+                    <div class="item-meta">
+                        <span class="added-date">Thêm ngày: {{ item.addedDate }}</span>
+                        <span class="stock-status" [class]="item.inStock ? 'in-stock' : 'out-of-stock'">
+                            {{ item.inStock ? 'Còn hàng' : 'Hết hàng' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="item-actions">
+                    <button mat-raised-button color="primary" class="add-to-cart-btn" (click)="addToCart(item)"
+                        [disabled]="!item.inStock">
+                        <mat-icon>shopping_cart</mat-icon>
+                        {{ item.inStock ? 'Thêm vào giỏ' : 'Hết hàng' }}
+                    </button>
+
+                    <button mat-icon-button class="remove-btn" (click)="removeFromWishlist(item.id)"
+                        matTooltip="Xóa khỏi danh sách yêu thích">
+                        <mat-icon>favorite</mat-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty Wishlist -->
+    <ng-template #emptyWishlist>
+        <div class="empty-wishlist">
+            <div class="empty-content">
+                <mat-icon class="empty-icon">favorite_border</mat-icon>
+                <h2>Danh sách yêu thích trống</h2>
+                <p>Bạn chưa có sản phẩm nào trong danh sách yêu thích. Hãy khám phá và thêm những sản phẩm bạn thích!
+                </p>
+                <button mat-raised-button color="primary" class="shop-now-btn" (click)="goBack()">
+                    <mat-icon>shopping_bag</mat-icon>
+                    Mua sắm ngay
+                </button>
+            </div>
+        </div>
+    </ng-template>
+</div>
+
+<app-footer></app-footer>

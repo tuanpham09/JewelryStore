@@ -40,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        order.setStatus("PENDING");
+        order.setStatus(Order.OrderStatus.PENDING);
         order.setTotal(BigDecimal.ZERO);
         order = orderRepo.save(order);
 
@@ -73,13 +73,22 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderDto toDto(Order o) {
         List<OrderItemDto> items = o.getItems().stream()
-                .map(oi -> new OrderItemDto(
-                        oi.getProduct().getId(),
-                        oi.getProduct().getName(),
-                        oi.getQuantity(),
-                        oi.getPrice()))
+                .map(oi -> {
+                    OrderItemDto dto = new OrderItemDto();
+                    dto.setProductId(oi.getProduct().getId());
+                    dto.setProductName(oi.getProduct().getName());
+                    dto.setQuantity(oi.getQuantity());
+                    dto.setPrice(oi.getPrice());
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
-        return new OrderDto(o.getId(), o.getStatus(), o.getTotal(), o.getCreatedAt(), items);
+        OrderDto orderDto = new OrderDto();
+        orderDto.setId(o.getId());
+        orderDto.setStatus(o.getStatus().name());
+        orderDto.setTotal(o.getTotal());
+        orderDto.setCreatedAt(o.getCreatedAt());
+        orderDto.setItems(items);
+        return orderDto;
     }
 }

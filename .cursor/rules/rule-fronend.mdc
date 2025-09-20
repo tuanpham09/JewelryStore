@@ -1,0 +1,34 @@
+---
+description: "Đảm bảo tính đồng bộ UI/UX trong ứng dụng Angular: màu sắc, component, typography, style tương phản"
+globs: ["src/app/**/*.component.ts", "src/app/**/*.component.html", "src/app/**/*.scss"]
+alwaysApply: true
+---
+
+# Angular UI/UX Consistency Rules
+
+1. UI/UX phải đồng bộ với màn Home:  
+   - Kiểm tra font-size, kích thước button, khoảng padding/margin, style các phần header/footer/menu giống Home.  
+   - Các layout chính (grid, card, module) nếu đã có ở Home → reuse/based-on đó để tránh khác biệt.
+
+2. Tái sử dụng component:  
+   - Nếu có UI tương tự ở nhiều nơi (button, card, form input, modal…), phải dùng component chung hoặc styled component, không copy/paste code style riêng.  
+   - Components phải có props/state rõ ràng để điều chỉnh style/behavior, tránh chỉnh style riêng từng nơi.
+
+3. Màu sắc đồng bộ:  
+   - Chỉ sử dụng màu trong **palette chính** đã định (primary, secondary, accent…) trong style guide hoặc design system.  
+   - Màu background, border, shadow, hover, disabled đều follow style guide.  
+
+4. Tương phản màu (contrast):  
+   - Nếu background là màu sáng → text/dữ liệu nổi bật phải là màu tối để đảm bảo đọc được.  
+   - Nếu background là màu tối → text phải sáng.  
+   - Tuân thủ các tiêu chuẩn accessibility (ví dụ độ tương phản WCAG) nếu cần.  
+   - Màu “nổi bật” được định nghĩa rõ: ví dụ màu accent / primary dùng để thu hút sự chú ý → text/dữ liệu trên đó phải rõ ràng.
+
+5. Typography và spacing:  
+   - Font family, font weight, line-height, font-size phải thống nhất: có heading, body, caption,…  
+   - Gap / padding / margin giữa các phần: dùng hệ thống spacing (spacing small, medium, large) để đồng bộ layout.  
+
+6. Iconography & Button:  
+   - Icons sử dụng chung library, style (size, color) phải giống nhau nơi tương tự.  
+   - Button style hover, disabled, kích hoạt phải consistent toàn bộ app.
+
