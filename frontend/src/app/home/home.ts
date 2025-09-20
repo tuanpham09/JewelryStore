@@ -16,6 +16,7 @@ import { Footer } from '../shared/footer/footer';
 import { ProductService, Product, SearchResponse } from '../services/product.service';
 import { CategoryService, Category } from '../services/category.service';
 import { SearchService, ProductSearchDto } from '../services/search.service';
+import { CartService } from '../services/cart.service';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 // Sử dụng Category interface từ service
@@ -48,6 +49,7 @@ interface ViewOption {
 })
 export class Home implements OnInit, OnDestroy {
   currentUser: any = null;
+  cartItemCount = 0;
   selectedCategory: string = 'all';
   sortBy: string = 'featured';
   viewMode: number = 4;
@@ -134,7 +136,8 @@ export class Home implements OnInit, OnDestroy {
     public router: Router,
     private productService: ProductService,
     private categoryService: CategoryService,
-    private searchService: SearchService
+    private searchService: SearchService,
+    private cartService: CartService
   ) { }
 
   ngOnInit() {
@@ -142,6 +145,11 @@ export class Home implements OnInit, OnDestroy {
 
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+    });
+
+    // Subscribe to cart changes
+    this.cartService.cartItems$.subscribe(cartItems => {
+      this.cartItemCount = this.cartService.getCartItemCount();
     });
 
     // Setup realtime search with debounce

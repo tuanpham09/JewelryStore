@@ -18,6 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../auth.service';
 import { ProductService, Product, ProductSize, ProductImage, ProductReview } from '../services/product.service';
+import { CartService, CartItem } from '../services/cart.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
 
@@ -63,6 +64,7 @@ export class ProductDetail implements OnInit {
     error: string | null = null;
     hoverRating = 0;
     sortBy = 'newest';
+    cartItemCount = 0;
 
     // Expose Math to template
     Math = Math;
@@ -72,12 +74,18 @@ export class ProductDetail implements OnInit {
         public router: Router,
         private authService: AuthService,
         private productService: ProductService,
+        private cartService: CartService,
         private snackBar: MatSnackBar
     ) { }
 
     ngOnInit() {
         this.authService.currentUser$.subscribe(user => {
             this.currentUser = user;
+        });
+
+        // Subscribe to cart changes
+        this.cartService.cartItems$.subscribe(cartItems => {
+            this.cartItemCount = this.cartService.getCartItemCount();
         });
 
         this.route.params.subscribe(params => {
@@ -162,27 +170,69 @@ export class ProductDetail implements OnInit {
     }
 
     addToCart() {
-        if (this.product) {
-            // Logic thêm vào giỏ hàng
-            console.log('Added to cart:', {
-                product: this.product,
-                quantity: this.quantity,
-                size: this.selectedSize,
-                color: this.selectedColor
+        if (!this.product || !this.isInStock()) {
+            this.snackBar.open('Sản phẩm không có sẵn', 'Đóng', {
+                duration: 3000
             });
+            return;
+        }
+
+        if (this.currentUser) {
+            // User đã đăng nhập - lưu vào giỏ hàng của user
+            this.addToUserCart();
+        } else {
+            // User chưa đăng nhập - lưu vào localStorage
+            this.addToLocalCart();
         }
     }
 
+    private addToUserCart() {
+        // TODO: Implement API call to add to user's cart
+        // For now, also add to local cart as fallback
+        this.addToLocalCart();
+        
+        this.snackBar.open('Đã thêm vào giỏ hàng', 'Đóng', {
+            duration: 3000
+        });
+    }
+
+    private addToLocalCart() {
+        if (!this.product) return;
+
+        const cartItem: Omit<CartItem, 'id' | 'addedAt'> = {
+            productId: this.product.id,
+            productName: this.product.name,
+            productImage: this.getPrimaryImage(),
+            price: this.getCurrentPrice(),
+            quantity: this.quantity,
+            size: this.selectedSize || undefined,
+            color: this.selectedColor || undefined
+        };
+
+        this.cartService.addToCart(cartItem);
+        
+        this.snackBar.open('Đã thêm vào giỏ', 'Đóng', {
+            duration: 3000
+        });
+    }
+
     buyNow() {
-        if (this.product) {
-            // Logic mua ngay
-            console.log('Buy now:', {
-                product: this.product,
-                quantity: this.quantity,
-                size: this.selectedSize,
-                color: this.selectedColor
+        if (!this.product || !this.isInStock()) {
+            this.snackBar.open('Sản phẩm không có sẵn', 'Đóng', {
+                duration: 3000
             });
+            return;
         }
+
+        // Thêm vào giỏ hàng trước
+        if (this.currentUser) {
+            this.addToUserCart();
+        } else {
+            this.addToLocalCart();
+        }
+
+        // Chuyển đến trang checkout
+        this.router.navigate(['/checkout']);
     }
 
     submitReview() {
