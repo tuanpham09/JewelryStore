@@ -57,9 +57,15 @@ export class ProductService {
 
   constructor(private http: HttpClient) { }
 
-  // Lấy tất cả sản phẩm
-  getAllProducts(): Observable<ProductResponse> {
-    return this.http.get<ProductResponse>(`${this.apiUrl}/products`);
+  // Lấy tất cả sản phẩm với pagination
+  getAllProducts(page: number = 0, size: number = 12, sortBy: string = 'createdAt', sortOrder: string = 'desc'): Observable<SearchResponse> {
+    const params = {
+      page: page.toString(),
+      size: size.toString(),
+      sortBy: sortBy,
+      sortOrder: sortOrder
+    };
+    return this.http.get<SearchResponse>(`${this.apiUrl}/products`, { params });
   }
 
   // Lấy sản phẩm theo ID

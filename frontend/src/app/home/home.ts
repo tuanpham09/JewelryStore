@@ -60,7 +60,6 @@ export class Home implements OnInit {
   viewOptions: ViewOption[] = [
     { value: 3, label: '3' },
     { value: 4, label: '4' },
-    { value: 6, label: '6' }
   ];
 
   products: Product[] = [];
@@ -81,6 +80,13 @@ export class Home implements OnInit {
   onSaleProducts: Product[] = [];
   isLoadingNew: boolean = false;
   isLoadingOnSale: boolean = false;
+
+  // Pagination
+  currentPage: number = 0;
+  pageSize: number = 12;
+  totalPages: number = 0;
+  hasNextPage: boolean = false;
+  hasPreviousPage: boolean = false;
 
   get filteredProducts(): Product[] {
     let filtered = this.products;
@@ -140,23 +146,31 @@ export class Home implements OnInit {
     this.loadOnSaleProducts();
   }
 
-  loadProducts() {
+  loadProducts(page: number = 0) {
     this.isLoading = true;
     this.error = null;
+    this.currentPage = page;
 
-    this.productService.getAllProducts().subscribe({
+    // Use products API with pagination
+    const sortBy = this.getSortByForProducts();
+    const sortOrder = this.getSortOrderForProducts();
+
+    this.productService.getAllProducts(page, this.pageSize, sortBy, sortOrder).subscribe({
       next: (response) => {
         if (response.success) {
-          this.products = response.data;
-          this.totalProducts = this.products.length;
+          this.products = response.data.content;
+          this.totalProducts = response.data.totalElements;
+          this.totalPages = response.data.totalPages;
+          this.hasNextPage = response.data.hasNext;
+          this.hasPreviousPage = response.data.hasPrevious;
         } else {
-          this.error = response.message || 'Không thể tải danh sách sản phẩm';
+          this.error = response.message || 'Không thể tải sản phẩm';
         }
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading products:', error);
-        this.error = 'Có lỗi xảy ra khi tải danh sách sản phẩm';
+        this.error = 'Có lỗi xảy ra khi tải sản phẩm';
         this.isLoading = false;
       }
     });
@@ -193,6 +207,8 @@ export class Home implements OnInit {
 
   selectCategory(categoryId: string | number) {
     this.selectedCategory = categoryId.toString();
+    this.currentPage = 0;
+    this.loadProducts();
   }
 
   setViewMode(mode: number) {
@@ -256,6 +272,7 @@ export class Home implements OnInit {
 
   performSearch() {
     if (!this.searchKeyword.trim()) {
+      this.currentPage = 0;
       this.loadProducts(); // Load all products if search is empty
       this.isSearchMode = false;
       return;
@@ -264,12 +281,13 @@ export class Home implements OnInit {
     this.isSearching = true;
     this.isSearchMode = true;
     this.showSuggestions = false;
+    this.currentPage = 0;
 
     const searchDto: ProductSearchDto = {
       query: this.searchKeyword.trim(),
       keyword: this.searchKeyword.trim(),
-      page: 0,
-      size: 100,
+      page: this.currentPage,
+      size: this.pageSize,
       sortBy: this.getSortByForSearch()
     };
 
@@ -278,6 +296,9 @@ export class Home implements OnInit {
         if (response.success) {
           this.products = response.data.content;
           this.totalProducts = response.data.totalElements;
+          this.totalPages = response.data.totalPages;
+          this.hasNextPage = response.data.hasNext;
+          this.hasPreviousPage = response.data.hasPrevious;
         } else {
           this.error = response.message || 'Không thể tìm kiếm sản phẩm';
           this.products = [];
@@ -306,11 +327,77 @@ export class Home implements OnInit {
     }
   }
 
+  private getSortByForProducts(): string {
+    switch (this.sortBy) {
+      case 'price-low':
+      case 'price-high':
+        return 'price';
+      case 'newest':
+        return 'createdAt';
+      case 'featured':
+        return 'isFeatured';
+      default:
+        return 'createdAt';
+    }
+  }
+
+  private getSortOrderForProducts(): string {
+    switch (this.sortBy) {
+      case 'price-low':
+        return 'asc';
+      case 'price-high':
+      case 'newest':
+      case 'featured':
+      default:
+        return 'desc';
+    }
+  }
+
   clearSearch() {
     this.searchKeyword = '';
     this.isSearchMode = false;
     this.showSuggestions = false;
+    this.currentPage = 0;
     this.loadProducts();
+  }
+
+  // Pagination methods
+  goToPage(page: number) {
+    if (page >= 0 && page < this.totalPages) {
+      this.loadProducts(page);
+    }
+  }
+
+  goToNextPage() {
+    if (this.hasNextPage) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  goToPreviousPage() {
+    if (this.hasPreviousPage) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  goToFirstPage() {
+    this.goToPage(0);
+  }
+
+  goToLastPage() {
+    this.goToPage(this.totalPages - 1);
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const start = Math.max(0, this.currentPage - 2);
+    const end = Math.min(this.totalPages - 1, this.currentPage + 2);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   }
 
 

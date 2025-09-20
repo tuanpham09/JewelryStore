@@ -146,7 +146,7 @@
         </mat-select>
       </div>
       <div class="filter-right">
-        <span class="results-count">Hiển thị 1 - {{ products.length }} trong {{ totalProducts }} sản phẩm</span>
+        <span class="results-count">Hiển thị {{ (currentPage * pageSize) + 1 }} - {{ (currentPage * pageSize) + products.length }} trong {{ totalProducts }} sản phẩm</span>
         <div class="view-options">
           <span class="view-label">XEM THEO:</span>
           <button mat-icon-button *ngFor="let option of viewOptions" [class.active]="viewMode === option.value"
@@ -216,6 +216,67 @@
               Thêm vào giỏ
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!isLoading && !error && totalPages > 1" class="pagination-container">
+        <div class="pagination">
+          <!-- First page -->
+          <button 
+            mat-icon-button 
+            [disabled]="currentPage === 0"
+            (click)="goToFirstPage()"
+            class="pagination-btn"
+          >
+            <mat-icon>first_page</mat-icon>
+          </button>
+
+          <!-- Previous page -->
+          <button 
+            mat-icon-button 
+            [disabled]="!hasPreviousPage"
+            (click)="goToPreviousPage()"
+            class="pagination-btn"
+          >
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          <!-- Page numbers -->
+          <button 
+            *ngFor="let pageNum of getPageNumbers()"
+            mat-button
+            [class.active]="pageNum === currentPage"
+            (click)="goToPage(pageNum)"
+            class="pagination-number"
+          >
+            {{ pageNum + 1 }}
+          </button>
+
+          <!-- Next page -->
+          <button 
+            mat-icon-button 
+            [disabled]="!hasNextPage"
+            (click)="goToNextPage()"
+            class="pagination-btn"
+          >
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+
+          <!-- Last page -->
+          <button 
+            mat-icon-button 
+            [disabled]="currentPage === totalPages - 1"
+            (click)="goToLastPage()"
+            class="pagination-btn"
+          >
+            <mat-icon>last_page</mat-icon>
+          </button>
+        </div>
+
+        <!-- Page info -->
+        <div class="pagination-info">
+          <span>Trang {{ currentPage + 1 }} / {{ totalPages }} - Hiển thị {{ products.length }} / {{ totalProducts }} sản phẩm</span>
         </div>
       </div>
     </div>
