@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,4 +23,28 @@ public class Cart {
     
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
+    
+    // Bổ sung các trường cần thiết
+    @Column(name = "total_amount", precision = 10, scale = 2)
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    
+    @Column(name = "item_count")
+    private Integer itemCount = 0;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+    
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+    
+    // Helper methods
+    public void calculateTotal() {
+        this.totalAmount = items.stream()
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.itemCount = items.stream()
+                .mapToInt(CartItem::getQuantity)
+                .sum();
+        this.updatedAt = LocalDateTime.now();
+    }
 }

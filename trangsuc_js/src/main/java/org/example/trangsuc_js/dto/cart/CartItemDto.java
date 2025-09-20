@@ -1,17 +1,25 @@
 package org.example.trangsuc_js.dto.cart;
 
-
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-@Getter @Setter
+@Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class CartItemDto {
+    private Long id;
+    private Long cartId;
     private Long productId;
     private String productName;
-    private int quantity;
-    private BigDecimal price;
+    private String productSku;
+    private String productImage;
+    private BigDecimal unitPrice;
+    private Integer quantity;
+    private BigDecimal subtotal;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
