@@ -14,7 +14,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/currency")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class CurrencyController {
     
     private final CurrencyService currencyService;

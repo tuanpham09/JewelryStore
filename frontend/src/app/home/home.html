@@ -16,14 +16,72 @@
     đến vòng tay charm. Chọn màu sắc yêu thích của bạn — vàng, vàng hồng, hoặc bạc —
     và thêm những thiết kế sang trọng và hiện đại vào bộ sưu tập trang sức của bạn.
   </p>
+  
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input 
+          type="text" 
+          class="search-input" 
+          placeholder="Tìm kiếm trang sức, nhẫn, dây chuyền..."
+          [(ngModel)]="searchKeyword"
+          (keyup.enter)="performSearch()"
+          (input)="onSearchInput()"
+        />
+        <button 
+          class="search-btn" 
+          (click)="performSearch()"
+          [disabled]="isSearching"
+        >
+          <mat-icon *ngIf="!isSearching">search</mat-icon>
+          <mat-spinner *ngIf="isSearching" diameter="20"></mat-spinner>
+        </button>
+      </div>
+      
+      <!-- Search Suggestions -->
+      <div class="search-suggestions" *ngIf="showSuggestions && searchSuggestions.length > 0">
+        <div 
+          class="suggestion-item" 
+          *ngFor="let suggestion of searchSuggestions"
+          (click)="selectSuggestion(suggestion)"
+        >
+          <mat-icon>search</mat-icon>
+          <span>{{ suggestion }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Search Tags -->
+    <div class="quick-search-tags">
+      <span class="tags-label">Tìm kiếm nhanh:</span>
+      <button 
+        class="tag-btn" 
+        *ngFor="let tag of quickSearchTags"
+        (click)="searchByTag(tag)"
+      >
+        {{ tag }}
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Category Navigation -->
 <div class="category-nav">
-  <button mat-button class="category-btn" [class.active]="selectedCategory === category.id"
-    *ngFor="let category of categories" (click)="selectCategory(category.id)">
-    {{ category.name }}
-  </button>
+  <!-- Loading state for categories -->
+  <div *ngIf="isLoadingCategories" class="category-loading">
+    <mat-spinner diameter="20"></mat-spinner>
+    <span>Đang tải danh mục...</span>
+  </div>
+  
+  <!-- Categories -->
+  <div *ngIf="!isLoadingCategories" class="category-buttons">
+    <button mat-button class="category-btn" [class.active]="selectedCategory === category.id.toString()"
+      *ngFor="let category of categories" (click)="selectCategory(category.id)">
+      {{ category.name }}
+    </button>
+  </div>
 </div>
 
 <!-- Filter and Sort Bar -->
@@ -49,28 +107,72 @@
   </div>
 </div>
 
+<!-- Loading State -->
+<div *ngIf="isLoading" class="loading-container">
+  <mat-spinner diameter="50"></mat-spinner>
+  <p>Đang tải sản phẩm...</p>
+</div>
+
+<!-- Error State -->
+<div *ngIf="error && !isLoading" class="error-container">
+  <mat-icon class="error-icon">error_outline</mat-icon>
+  <h3>Không thể tải sản phẩm</h3>
+  <p>{{ error }}</p>
+  <button mat-raised-button color="primary" (click)="loadProducts()">
+    Thử lại
+  </button>
+</div>
+
 <!-- Products Grid -->
-<div class="products-grid" [class.grid-3]="viewMode === 3" [class.grid-4]="viewMode === 4"
+<div *ngIf="!isLoading && !error" class="products-grid" [class.grid-3]="viewMode === 3" [class.grid-4]="viewMode === 4"
   [class.grid-6]="viewMode === 6">
   <div class="product-card" *ngFor="let product of filteredProducts" (click)="navigateToProduct(product.id)">
     <div class="product-image">
-      <img [src]="product.image" [alt]="product.name" />
+      <img [src]="product.thumbnail || 'https://via.placeholder.com/300x300?text=No+Image'" [alt]="product.name" />
       <div class="product-overlay">
         <button mat-fab color="primary" class="quick-view"
           (click)="navigateToProduct(product.id); $event.stopPropagation()">
           <mat-icon>visibility</mat-icon>
         </button>
       </div>
+      <!-- Sale badge -->
+      <div *ngIf="product.isOnSale" class="sale-badge">GIẢM GIÁ</div>
+      <!-- New badge -->
+      <div *ngIf="product.isNew" class="new-badge">MỚI</div>
     </div>
     <div class="product-info">
       <h3 class="product-name">{{ product.name }}</h3>
-      <p class="product-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
+      <p class="product-category">{{ product.categoryName }}</p>
+      <div class="price-container">
+        <p class="product-price" *ngIf="!product.isOnSale">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
+        <div *ngIf="product.isOnSale" class="sale-price-container">
+          <p class="sale-price">{{ product.salePrice | currency:'VND':'symbol':'1.0-0' }}</p>
+          <p class="original-price">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</p>
+        </div>
+      </div>
+      <div class="rating-container" *ngIf="product.averageRating">
+        <div class="stars">
+          <span *ngFor="let star of [1,2,3,4,5]" 
+                [class.filled]="star <= product.averageRating!">★</span>
+        </div>
+        <span class="review-count">({{ product.reviewCount }})</span>
+      </div>
       <button mat-raised-button color="primary" class="add-to-cart"
         (click)="addToCart(product); $event.stopPropagation()">
         Thêm vào giỏ
       </button>
     </div>
   </div>
+</div>
+
+<!-- No Products Found -->
+<div *ngIf="!isLoading && !error && filteredProducts.length === 0" class="no-products">
+  <mat-icon class="no-products-icon">inventory_2</mat-icon>
+  <h3>Không tìm thấy sản phẩm</h3>
+  <p>Không có sản phẩm nào phù hợp với bộ lọc hiện tại.</p>
+  <button mat-raised-button color="primary" (click)="selectedCategory = 'all'">
+    Xem tất cả sản phẩm
+  </button>
 </div>
 
 <app-footer></app-footer>

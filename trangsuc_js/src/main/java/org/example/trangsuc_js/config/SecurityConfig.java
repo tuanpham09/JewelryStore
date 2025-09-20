@@ -29,7 +29,9 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // ✅ Cho phép login & register
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/search/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/search/**").permitAll() // ✅ Cho phép POST search
+                        .requestMatchers("/api/test/**").permitAll() // ✅ Cho phép test endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

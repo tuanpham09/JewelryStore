@@ -2,6 +2,8 @@
 
 ## 🔐 Authentication APIs
 
+ENPOINT: http://localhost:8080/
+
 ### POST `/api/auth/register`
 Đăng ký tài khoản mới
 
@@ -394,6 +396,61 @@ Authorization: Bearer <token>
 
 ---
 
+## 📂 Category APIs
+
+### GET `/api/categories`
+Lấy danh sách tất cả danh mục sản phẩm
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Categories retrieved successfully",
+  "data": [
+    {
+      "id": 1,
+      "name": "Nhẫn",
+      "slug": "nhan",
+      "description": "Danh mục nhẫn vàng, bạc...",
+      "imageUrl": "https://example.com/category.jpg",
+      "isActive": true,
+      "sortOrder": 1
+    },
+    {
+      "id": 2,
+      "name": "Bông tai",
+      "slug": "bong-tai",
+      "description": "Danh mục bông tai đẹp...",
+      "imageUrl": "https://example.com/earrings.jpg",
+      "isActive": true,
+      "sortOrder": 2
+    }
+  ]
+}
+```
+
+### GET `/api/categories/{id}`
+Lấy thông tin chi tiết danh mục
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Category retrieved successfully",
+  "data": {
+    "id": 1,
+    "name": "Nhẫn",
+    "slug": "nhan",
+    "description": "Danh mục nhẫn vàng, bạc...",
+    "imageUrl": "https://example.com/category.jpg",
+    "isActive": true,
+    "sortOrder": 1
+  }
+}
+```
+
+---
+
 ## 🛍️ Product APIs
 
 ### GET `/api/products`
@@ -530,7 +587,7 @@ Authorization: Bearer <token>
     {
       "id": 1,
       "cartId": 1,
-      "productId": 1,
+  "productId": 1,
       "productName": "Nhẫn vàng 18k",
       "productSku": "N18K001",
       "productImage": "https://example.com/image.jpg",

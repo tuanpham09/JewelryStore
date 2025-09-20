@@ -50,11 +50,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * ✅ Bỏ qua filter cho các endpoint auth (login, register)
+     * ✅ Bỏ qua filter cho các endpoint auth (login, register) và test
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth");
+        return path.startsWith("/api/auth") || path.startsWith("/api/test");
     }
 }

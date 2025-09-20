@@ -1,7 +1,7 @@
 ---
 description: "Trước khi gọi API từ Angular, phải xác nhận rằng endpoint tương ứng đã có trong backend Spring Boot"
 globs: ["src/app/**/*.ts", "src/environments/**/*.ts"]
-alwaysApply: true
+alwaysApply: false
 ---
 
 # Angular → Backend API Verification Rule

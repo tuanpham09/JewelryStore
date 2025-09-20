@@ -7,17 +7,18 @@ import org.example.trangsuc_js.dto.product.ProductDto;
 import org.example.trangsuc_js.service.SearchService;
 import org.example.trangsuc_js.util.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class SearchController {
     
     private final SearchService searchService;
     
     @PostMapping("/products")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<SearchResultDto<ProductDto>>> searchProducts(
             @RequestBody ProductSearchDto searchDto) {
         SearchResultDto<ProductDto> result = searchService.searchProducts(searchDto);
@@ -29,6 +30,7 @@ public class SearchController {
     }
     
     @GetMapping("/products/featured")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<SearchResultDto<ProductDto>>> getFeaturedProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -41,6 +43,7 @@ public class SearchController {
     }
     
     @GetMapping("/products/new")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<SearchResultDto<ProductDto>>> getNewProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -53,6 +56,7 @@ public class SearchController {
     }
     
     @GetMapping("/products/bestsellers")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<SearchResultDto<ProductDto>>> getBestsellerProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -65,6 +69,7 @@ public class SearchController {
     }
     
     @GetMapping("/products/on-sale")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<SearchResultDto<ProductDto>>> getOnSaleProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -73,6 +78,15 @@ public class SearchController {
             true,
             "On-sale products retrieved successfully",
             result
+        ));
+    }
+    
+    @GetMapping("/test")
+    public ResponseEntity<ApiResponse<String>> testSearch() {
+        return ResponseEntity.ok(new ApiResponse<>(
+            true,
+            "Search API is working",
+            "Search controller is accessible"
         ));
     }
 }
