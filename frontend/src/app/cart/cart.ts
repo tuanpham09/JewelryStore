@@ -39,28 +39,58 @@ export class Cart implements OnInit {
     ) { }
 
     ngOnInit() {
+        console.log('Cart component initialized');
+        
+        // Force refresh cart data when component loads
+        this.cartService.refreshCart().subscribe(success => {
+            console.log('Cart refresh result:', success);
+        });
+        
         this.cartService.cartItems$.subscribe(cartItems => {
+            console.log('Cart items updated:', cartItems);
             this.cartItems = cartItems;
             this.cartItemCount = this.cartService.getCartItemCount();
             this.cartTotal = this.cartService.getCartTotal();
+            console.log('Cart item count:', this.cartItemCount);
+            console.log('Cart total:', this.cartTotal);
         });
     }
 
     updateQuantity(itemId: string, quantity: number) {
-        this.cartService.updateQuantity(itemId, quantity);
+        this.cartService.updateQuantity(itemId, quantity).subscribe(success => {
+            if (!success) {
+                this.snackBar.open('Có lỗi xảy ra khi cập nhật số lượng', 'Đóng', {
+                    duration: 3000
+                });
+            }
+        });
     }
 
     removeItem(itemId: string) {
-        this.cartService.removeFromCart(itemId);
-        this.snackBar.open('Đã xóa sản phẩm khỏi giỏ hàng', 'Đóng', {
-            duration: 3000
+        this.cartService.removeFromCart(itemId).subscribe(success => {
+            if (success) {
+                this.snackBar.open('Đã xóa sản phẩm khỏi giỏ hàng', 'Đóng', {
+                    duration: 3000
+                });
+            } else {
+                this.snackBar.open('Có lỗi xảy ra khi xóa sản phẩm', 'Đóng', {
+                    duration: 3000
+                });
+            }
         });
     }
 
     clearCart() {
-        this.cartService.clearCart();
-        this.snackBar.open('Đã xóa tất cả sản phẩm khỏi giỏ hàng', 'Đóng', {
-            duration: 3000
+        this.cartService.clearCart().subscribe(success => {
+            if (success) {
+                this.snackBar.open('Đã xóa tất cả sản phẩm khỏi giỏ hàng', 'Đóng', {
+                    duration: 3000
+                });
+            } else {
+                this.snackBar.open('Có lỗi xảy ra khi xóa giỏ hàng', 'Đóng', {
+                    duration: 3000
+                });
+            }
         });
     }
 

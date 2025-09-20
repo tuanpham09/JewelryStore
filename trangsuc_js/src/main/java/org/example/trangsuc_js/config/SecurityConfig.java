@@ -32,7 +32,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/search/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/search/**").permitAll() // ✅ Cho phép POST search
                         .requestMatchers("/api/test/**").permitAll() // ✅ Cho phép test endpoints
+                        .requestMatchers("/api/cart/test").permitAll() // ✅ Cho phép test cart endpoint
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/cart/**").authenticated() // ✅ Yêu cầu authentication cho cart
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

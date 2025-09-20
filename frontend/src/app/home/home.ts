@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 import { Header } from '../shared/header/header';
@@ -41,6 +42,7 @@ interface ViewOption {
     MatOptionModule,
     MatFormFieldModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
     Header,
     Footer
   ],
@@ -137,7 +139,8 @@ export class Home implements OnInit, OnDestroy {
     private productService: ProductService,
     private categoryService: CategoryService,
     private searchService: SearchService,
-    private cartService: CartService
+    private cartService: CartService,
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit() {
@@ -286,8 +289,36 @@ export class Home implements OnInit, OnDestroy {
   }
 
   addToCart(product: Product) {
-    // Logic thêm vào giỏ hàng
-    console.log('Added to cart:', product);
+    if (!product || !product.id) {
+      this.snackBar.open('Sản phẩm không hợp lệ', 'Đóng', {
+        duration: 3000
+      });
+      return;
+    }
+
+    const cartItem = {
+      productId: product.id,
+      productName: product.name,
+      productImage: product.thumbnail || product.primaryImageUrl || '',
+      unitPrice: product.currentPrice || product.salePrice || product.price,
+      quantity: 1,
+      subtotal: product.currentPrice || product.salePrice || product.price,
+      sizeValue: undefined,
+      colorValue: undefined
+    };
+
+    this.cartService.addToCart(cartItem).subscribe(success => {
+      if (success) {
+        const message = this.currentUser ? 'Đã thêm vào giỏ hàng' : 'Đã thêm vào giỏ';
+        this.snackBar.open(message, 'Đóng', {
+          duration: 3000
+        });
+      } else {
+        this.snackBar.open('Có lỗi xảy ra khi thêm vào giỏ hàng', 'Đóng', {
+          duration: 3000
+        });
+      }
+    });
   }
 
   navigateToCart() {

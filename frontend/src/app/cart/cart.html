@@ -17,11 +17,11 @@
                 
                 <div class="item-details">
                     <h3 class="item-name">{{ item.productName }}</h3>
-                    <div class="item-options" *ngIf="item.size || item.color">
-                        <span *ngIf="item.size" class="option">Kích thước: {{ item.size }}</span>
-                        <span *ngIf="item.color" class="option">Màu: {{ item.color }}</span>
+                    <div class="item-options" *ngIf="item.sizeValue || item.colorValue">
+                        <span *ngIf="item.sizeValue" class="option">Kích thước: {{ item.sizeValue }}</span>
+                        <span *ngIf="item.colorValue" class="option">Màu: {{ item.colorValue }}</span>
                     </div>
-                    <div class="item-price">{{ formatPrice(item.price) }}</div>
+                    <div class="item-price">{{ formatPrice(item.unitPrice) }}</div>
                 </div>
 
                 <div class="item-quantity">
@@ -35,7 +35,7 @@
                 </div>
 
                 <div class="item-total">
-                    {{ formatPrice(item.price * item.quantity) }}
+                    {{ formatPrice(item.subtotal) }}
                 </div>
 
                 <div class="item-actions">

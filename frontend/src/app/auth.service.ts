@@ -90,11 +90,19 @@ export class AuthService {
   logout() {
     if (this.isBrowser) {
       localStorage.removeItem('token');
+      localStorage.removeItem('pending_cart_item');
+      localStorage.removeItem('callback_url');
     }
     this.currentUserSubject.next(null);
   }
 
   isLoggedIn(): boolean {
     return this.isBrowser ? !!localStorage.getItem('token') : false;
+  }
+
+  getCurrentUser(): any {
+    const user = this.currentUserSubject.value;
+    console.log('AuthService.getCurrentUser() called, returning:', user);
+    return user;
   }
 }

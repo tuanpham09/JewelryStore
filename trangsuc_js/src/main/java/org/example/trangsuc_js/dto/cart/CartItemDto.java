@@ -20,6 +20,8 @@ public class CartItemDto {
     private BigDecimal unitPrice;
     private Integer quantity;
     private BigDecimal subtotal;
+    private String sizeValue;
+    private String colorValue;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

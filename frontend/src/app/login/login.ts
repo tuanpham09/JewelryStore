@@ -25,12 +25,23 @@ export class LoginComponent implements OnInit {
     // Kiểm tra nếu đã đăng nhập thì chuyển về home
     this.auth.currentUser$.subscribe(user => {
       if (user) {
-        this.router.navigate(['/home']);
+        this.handleLoginSuccess();
       }
     });
 
     // Load user từ token nếu có
     this.auth.loadUserFromToken();
+  }
+
+  private handleLoginSuccess() {
+    // Kiểm tra callback URL
+    const callbackUrl = localStorage.getItem('callback_url');
+    if (callbackUrl) {
+      localStorage.removeItem('callback_url');
+      this.router.navigateByUrl(callbackUrl);
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   submit() {
@@ -42,7 +53,7 @@ export class LoginComponent implements OnInit {
         console.log('Login success response in component:', res);
         if (res.success) {
           this.toastr.success('Đăng nhập thành công!', 'Thành công');
-          this.router.navigate(['/home']); // Redirect to home page
+          this.handleLoginSuccess();
         } else {
           this.error = res.message || 'Login failed';
           this.toastr.error(this.error, 'Lỗi đăng nhập');

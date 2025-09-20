@@ -21,10 +21,17 @@ public class CartItem {
     private Product product;
 
     @Column(nullable = false)
-    private Integer quantity;
+    private Integer quantity = 0;
     
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
+    private BigDecimal price = BigDecimal.ZERO;
+    
+    // Size and color support
+    @Column(name = "size_value")
+    private String sizeValue;
+    
+    @Column(name = "color_value")
+    private String colorValue;
     
     // Bổ sung các trường cần thiết
     @Column(name = "created_at")

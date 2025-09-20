@@ -2,14 +2,21 @@ package org.example.trangsuc_js.service.impl;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.trangsuc_js.dto.cart.AddCartItemDto;
 import org.example.trangsuc_js.dto.cart.CartDto;
 import org.example.trangsuc_js.dto.cart.CartItemDto;
+import org.example.trangsuc_js.dto.cart.UpdateCartItemDto;
 import org.example.trangsuc_js.entity.*;
 import org.example.trangsuc_js.repository.*;
 import org.example.trangsuc_js.service.CartService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Map;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,11 +24,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartServiceImpl implements CartService {
     private final UserRepository userRepo;
     private final ProductRepository productRepo;
     private final CartRepository cartRepo;
-    private final CartItemRepository cartItemRepo;
 
     private User getCurrentUser() {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -29,6 +36,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CartDto getMyCart() {
         User user = getCurrentUser();
         Cart cart = cartRepo.findByUser(user).orElseGet(() -> {
@@ -37,40 +45,219 @@ public class CartServiceImpl implements CartService {
             return cartRepo.save(c);
         });
 
-        List<CartItem> items = cartItemRepo.findAll()
-                .stream().filter(i -> i.getCart().equals(cart)).toList();
+        // Sử dụng quan hệ @OneToMany để lấy items
+        List<CartItem> items = cart.getItems() != null ? cart.getItems() : new ArrayList<>();
+
+        log.info("Cart items loaded: {}", items.size());
+        
+        // Cập nhật total và count
+        cart.calculateTotal();
+        cartRepo.save(cart);
 
         return toDto(items);
     }
 
     @Override
+    @Transactional
     public CartDto addItem(AddCartItemDto dto) {
+        log.info("Adding item to cart: productId={}, quantity={}, sizeValue={}, colorValue={}", 
+                dto.getProductId(), dto.getQuantity(), dto.getSizeValue(), dto.getColorValue());
+        
+        User user = getCurrentUser();
+        log.info("Current user: {}", user.getEmail());
+        
+        Cart cart = cartRepo.findByUser(user).orElseGet(() -> {
+            Cart c = new Cart();
+            c.setUser(user);
+            return cartRepo.save(c);
+        });
+        log.info("Cart ID: {}", cart.getId());
+
+        Product product = productRepo.findById(dto.getProductId()).orElseThrow();
+        log.info("Product found: {}", product.getName());
+
+        // Tìm item theo productId, sizeValue, colorValue để phân biệt variant
+        log.info("Searching for existing cart item: cartId={}, productId={}, sizeValue={}, colorValue={}", 
+                cart.getId(), product.getId(), dto.getSizeValue(), dto.getColorValue());
+        
+        // Sử dụng quan hệ @OneToMany để tìm item trong cart
+        CartItem existingItem = null;
+        if (cart.getItems() != null) {
+            existingItem = cart.getItems().stream()
+                    .filter(item -> item.getProduct().getId().equals(product.getId()) &&
+                                   Objects.equals(item.getSizeValue(), dto.getSizeValue()) &&
+                                   Objects.equals(item.getColorValue(), dto.getColorValue()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        
+        log.info("Searching in cart items: cartId={}, productId={}, sizeValue={}, colorValue={}", 
+                cart.getId(), product.getId(), dto.getSizeValue(), dto.getColorValue());
+        
+        if (existingItem != null) {
+            // Item đã tồn tại (cùng variant) - cộng dồn quantity
+            log.info("Found existing item: id={}, quantity={}, sizeValue={}, colorValue={}", 
+                    existingItem.getId(), existingItem.getQuantity(), existingItem.getSizeValue(), existingItem.getColorValue());
+            
+            Integer currentQuantity = existingItem.getQuantity();
+            if (currentQuantity == null) {
+                currentQuantity = 0;
+            }
+            existingItem.setQuantity(currentQuantity + dto.getQuantity());
+            log.info("Updating existing cart item: id={}, new quantity={}", existingItem.getId(), existingItem.getQuantity());
+        } else {
+            // Item mới (variant mới) - tạo mới và thêm vào cart
+            CartItem newItem = new CartItem();
+            newItem.setCart(cart);
+            newItem.setProduct(product);
+            newItem.setSizeValue(dto.getSizeValue());
+            newItem.setColorValue(dto.getColorValue());
+            newItem.setPrice(product.getPrice());
+            newItem.setQuantity(dto.getQuantity());
+            
+            // Thêm vào cart sử dụng helper method
+            cart.addItem(newItem);
+            
+            log.info("Creating new cart item variant: productId={}, size={}, color={}, quantity={}", 
+                    product.getId(), dto.getSizeValue(), dto.getColorValue(), dto.getQuantity());
+        }
+        
+        // Lưu cart (sẽ cascade save items)
+        cartRepo.save(cart);
+
+        return getMyCart();
+    }
+
+    @Override
+    @Transactional
+    public CartDto removeItem(Long productId, String sizeValue, String colorValue) {
+        User user = getCurrentUser();
+        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        
+        // Sử dụng quan hệ @OneToMany để tìm item trong cart
+        CartItem itemToRemove = null;
+        if (cart.getItems() != null) {
+            itemToRemove = cart.getItems().stream()
+                    .filter(item -> item.getProduct().getId().equals(productId) &&
+                                   Objects.equals(item.getSizeValue(), sizeValue) &&
+                                   Objects.equals(item.getColorValue(), colorValue))
+                    .findFirst()
+                    .orElse(null);
+        }
+        
+        if (itemToRemove != null) {
+            log.info("Removing cart item variant: productId={}, size={}, color={}", 
+                    productId, sizeValue, colorValue);
+            
+            // Sử dụng helper method để remove item
+            cart.removeItem(itemToRemove);
+            cartRepo.save(cart);
+        }
+        
+        return getMyCart();
+    }
+
+    @Override
+    @Transactional
+    public CartDto updateItem(Long productId, String sizeValue, String colorValue, UpdateCartItemDto dto) {
+        User user = getCurrentUser();
+        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        
+        // Sử dụng quan hệ @OneToMany để tìm item trong cart
+        CartItem itemToUpdate = null;
+        if (cart.getItems() != null) {
+            itemToUpdate = cart.getItems().stream()
+                    .filter(item -> item.getProduct().getId().equals(productId) &&
+                                   Objects.equals(item.getSizeValue(), sizeValue) &&
+                                   Objects.equals(item.getColorValue(), colorValue))
+                    .findFirst()
+                    .orElse(null);
+        }
+        
+        if (itemToUpdate != null) {
+            log.info("Updating cart item variant: productId={}, size={}, color={}, newQuantity={}", 
+                    productId, sizeValue, colorValue, dto.getQuantity());
+            
+            itemToUpdate.setQuantity(dto.getQuantity());
+            
+            // Cập nhật total và count
+            cart.calculateTotal();
+            cartRepo.save(cart);
+        }
+        
+        return getMyCart();
+    }
+
+    @Override
+    @Transactional
+    public CartDto clearCart() {
+        User user = getCurrentUser();
+        Cart cart = cartRepo.findByUser(user).orElseThrow();
+        
+        // Sử dụng quan hệ @OneToMany để clear items
+        if (cart.getItems() != null) {
+            cart.getItems().clear();
+            cart.calculateTotal();
+            cartRepo.save(cart);
+        }
+        
+        return getMyCart();
+    }
+
+    @Override
+    @Transactional
+    public CartDto syncCartFromLocalStorage(Object localCartItems) {
+        log.info("Syncing cart from localStorage: {}", localCartItems);
+        
         User user = getCurrentUser();
         Cart cart = cartRepo.findByUser(user).orElseGet(() -> {
             Cart c = new Cart();
             c.setUser(user);
             return cartRepo.save(c);
         });
-
-        Product product = productRepo.findById(dto.getProductId()).orElseThrow();
-
-        CartItem item = cartItemRepo.findByCartIdAndProductId(cart.getId(), product.getId())
-                .orElse(new CartItem());
-        item.setCart(cart);
-        item.setProduct(product);
-        item.setQuantity(item.getQuantity() + dto.getQuantity());
-        item.setPrice(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
-        cartItemRepo.save(item);
-
-        return getMyCart();
-    }
-
-    @Override
-    public CartDto removeItem(Long productId) {
-        User user = getCurrentUser();
-        Cart cart = cartRepo.findByUser(user).orElseThrow();
-        CartItem item = cartItemRepo.findByCartIdAndProductId(cart.getId(), productId).orElseThrow();
-        cartItemRepo.delete(item);
+        
+        // Clear existing items
+        if (cart.getItems() != null) {
+            cart.getItems().clear();
+        }
+        
+        // Add items from localStorage
+        if (localCartItems instanceof List) {
+            List<?> items = (List<?>) localCartItems;
+            for (Object itemObj : items) {
+                if (itemObj instanceof Map) {
+                    Map<?, ?> itemMap = (Map<?, ?>) itemObj;
+                    
+                    // Extract item data
+                    Long productId = Long.valueOf(itemMap.get("productId").toString());
+                    Integer quantity = Integer.valueOf(itemMap.get("quantity").toString());
+                    String sizeValue = itemMap.get("sizeValue") != null ? itemMap.get("sizeValue").toString() : null;
+                    String colorValue = itemMap.get("colorValue") != null ? itemMap.get("colorValue").toString() : null;
+                    
+                    // Find product
+                    Product product = productRepo.findById(productId).orElse(null);
+                    if (product != null) {
+                        CartItem cartItem = new CartItem();
+                        cartItem.setCart(cart);
+                        cartItem.setProduct(product);
+                        cartItem.setQuantity(quantity);
+                        cartItem.setPrice(product.getPrice());
+                        cartItem.setSizeValue(sizeValue);
+                        cartItem.setColorValue(colorValue);
+                        
+                        cart.addItem(cartItem);
+                        
+                        log.info("Added item from localStorage: productId={}, quantity={}, size={}, color={}", 
+                                productId, quantity, sizeValue, colorValue);
+                    }
+                }
+            }
+        }
+        
+        // Save cart with new items
+        cartRepo.save(cart);
+        
+        log.info("Cart synced from localStorage successfully");
         return getMyCart();
     }
 
@@ -87,6 +274,8 @@ public class CartServiceImpl implements CartService {
                     dto.setUnitPrice(i.getPrice());
                     dto.setQuantity(i.getQuantity());
                     dto.setSubtotal(i.getSubtotal());
+                    dto.setSizeValue(i.getSizeValue());
+                    dto.setColorValue(i.getColorValue());
                     dto.setCreatedAt(i.getCreatedAt());
                     dto.setUpdatedAt(i.getUpdatedAt());
                     return dto;

@@ -39,12 +39,34 @@ public class Cart {
     
     // Helper methods
     public void calculateTotal() {
-        this.totalAmount = items.stream()
-                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        this.itemCount = items.stream()
-                .mapToInt(CartItem::getQuantity)
-                .sum();
+        if (items == null || items.isEmpty()) {
+            this.totalAmount = BigDecimal.ZERO;
+            this.itemCount = 0;
+        } else {
+            this.totalAmount = items.stream()
+                    .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            this.itemCount = items.stream()
+                    .mapToInt(CartItem::getQuantity)
+                    .sum();
+        }
         this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Add item to cart
+    public void addItem(CartItem item) {
+        if (items == null) {
+            items = new ArrayList<>();
+        }
+        items.add(item);
+        calculateTotal();
+    }
+    
+    // Remove item from cart
+    public void removeItem(CartItem item) {
+        if (items != null) {
+            items.remove(item);
+            calculateTotal();
+        }
     }
 }
