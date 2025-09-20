@@ -76,18 +76,37 @@ public class CartServiceImpl implements CartService {
 
     private CartDto toDto(List<CartItem> items) {
         List<CartItemDto> dtoItems = items.stream()
-                .map(i -> new CartItemDto(
-                        i.getProduct().getId(),
-                        i.getProduct().getName(),
-                        i.getQuantity(),
-                        i.getPrice()
-                ))
+                .map(i -> {
+                    CartItemDto dto = new CartItemDto();
+                    dto.setId(i.getId());
+                    dto.setCartId(i.getCart().getId());
+                    dto.setProductId(i.getProduct().getId());
+                    dto.setProductName(i.getProduct().getName());
+                    dto.setProductSku(i.getProduct().getSku());
+                    dto.setProductImage(i.getProduct().getThumbnail());
+                    dto.setUnitPrice(i.getPrice());
+                    dto.setQuantity(i.getQuantity());
+                    dto.setSubtotal(i.getSubtotal());
+                    dto.setCreatedAt(i.getCreatedAt());
+                    dto.setUpdatedAt(i.getUpdatedAt());
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
         BigDecimal total = dtoItems.stream()
-                .map(CartItemDto::getPrice)
+                .map(CartItemDto::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return new CartDto(dtoItems, total);
+        CartDto cartDto = new CartDto();
+        cartDto.setItems(dtoItems);
+        cartDto.setTotalAmount(total);
+        cartDto.setItemCount(dtoItems.size());
+        if (!items.isEmpty()) {
+            cartDto.setId(items.get(0).getCart().getId());
+            cartDto.setUserId(items.get(0).getCart().getUser().getId());
+            cartDto.setCreatedAt(items.get(0).getCart().getCreatedAt());
+            cartDto.setUpdatedAt(items.get(0).getCart().getUpdatedAt());
+        }
+        return cartDto;
     }
 }

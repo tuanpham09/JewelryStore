@@ -12,19 +12,21 @@ import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     
-    Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId ORDER BY n.createdAt DESC")
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId, Pageable pageable);
     
-    List<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(Long userId);
+    @Query("SELECT n FROM Notification n WHERE n.user.id = :userId AND n.isRead = false ORDER BY n.createdAt DESC")
+    List<Notification> findByUserIdAndIsReadFalseOrderByCreatedAtDesc(@Param("userId") Long userId);
     
     @Query("SELECT n FROM Notification n WHERE n.user IS NULL ORDER BY n.createdAt DESC")
     Page<Notification> findGlobalNotifications(Pageable pageable);
     
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.userId = :userId AND n.isRead = false")
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.id = :userId AND n.isRead = false")
     Long countUnreadByUserId(@Param("userId") Long userId);
     
     @Query("SELECT n FROM Notification n WHERE n.expiresAt IS NULL OR n.expiresAt > :now ORDER BY n.createdAt DESC")
     List<Notification> findActiveNotifications(@Param("now") LocalDateTime now);
     
-    @Query("SELECT n FROM Notification n WHERE n.type = :type AND (n.userId = :userId OR n.user IS NULL) ORDER BY n.createdAt DESC")
+    @Query("SELECT n FROM Notification n WHERE n.type = :type AND (n.user.id = :userId OR n.user IS NULL) ORDER BY n.createdAt DESC")
     List<Notification> findByTypeAndUserId(@Param("type") Notification.NotificationType type, @Param("userId") Long userId);
 }

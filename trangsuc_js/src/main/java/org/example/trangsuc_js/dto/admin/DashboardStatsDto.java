@@ -22,6 +22,8 @@ public class DashboardStatsDto {
     private Long totalProducts;
     private Long lowStockProducts;
     private Long outOfStockProducts;
+    private Long pendingOrders;
+    private Long activePromotions;
     private List<TopProductDto> topSellingProducts;
     private List<TopCustomerDto> topCustomers;
     private List<RevenueChartDto> revenueChart;

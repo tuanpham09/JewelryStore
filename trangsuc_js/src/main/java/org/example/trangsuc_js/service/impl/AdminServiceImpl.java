@@ -625,8 +625,10 @@ public class AdminServiceImpl implements AdminService {
         dto.setProductId(item.getProduct().getId());
         dto.setProductName(item.getProductName());
         dto.setProductSku(item.getProductSku());
+        dto.setProductThumbnail(item.getProduct().getThumbnail());
         dto.setQuantity(item.getQuantity());
         dto.setUnitPrice(item.getPrice());
+        dto.setPrice(item.getPrice());
         dto.setDiscountAmount(item.getDiscountAmount());
         dto.setSubtotal(item.getSubtotal());
         dto.setCreatedAt(item.getCreatedAt());
@@ -813,7 +815,7 @@ public class AdminServiceImpl implements AdminService {
     // ========== SHIPPING MANAGEMENT ==========
     @Override
     @Transactional(readOnly = true)
-    public List<ShippingDto> getAllShipping(Pageable pageable) {
+    public List<ShippingDto> getAllShippings(Pageable pageable) {
         return shippingRepo.findAll(pageable).getContent().stream()
                 .map(this::toShippingDto)
                 .collect(Collectors.toList());
@@ -894,31 +896,6 @@ public class AdminServiceImpl implements AdminService {
         return toShippingDto(shipping);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ShippingDto> getShippingByStatus(String status, Pageable pageable) {
-        try {
-            Shipping.ShippingStatus shippingStatus = Shipping.ShippingStatus.valueOf(status.toUpperCase());
-            return shippingRepo.findByStatus(shippingStatus, pageable).getContent().stream()
-                    .map(this::toShippingDto)
-                    .collect(Collectors.toList());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid shipping status: " + status);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ShippingDto> getShippingByMethod(String method, Pageable pageable) {
-        try {
-            Shipping.ShippingMethod shippingMethod = Shipping.ShippingMethod.valueOf(method.toUpperCase());
-            return shippingRepo.findByShippingMethod(shippingMethod, pageable).getContent().stream()
-                    .map(this::toShippingDto)
-                    .collect(Collectors.toList());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Invalid shipping method: " + method);
-        }
-    }
 
     private ShippingDto toShippingDto(Shipping shipping) {
         ShippingDto dto = new ShippingDto();
@@ -1018,7 +995,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(readOnly = true)
     public List<ProductDto> getTopSellingProducts(int limit) {
         return productRepo.findAll().stream()
-                .sorted((p1, p2) -> Integer.compare(p2.getSoldCount(), p1.getSoldCount()))
+                .sorted((p1, p2) -> Long.compare(p2.getSoldCount(), p1.getSoldCount()))
                 .limit(limit)
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -1133,14 +1110,28 @@ public class AdminServiceImpl implements AdminService {
 
 
     @Override
-    public List<ShippingDto> getShippingByStatus(String status, Pageable pageable) {
-        // TODO: Implement get shippings by status
-        throw new UnsupportedOperationException("Get shippings by status not implemented yet");
+    @Transactional(readOnly = true)
+    public List<ShippingDto> getShippingsByStatus(String status, Pageable pageable) {
+        try {
+            Shipping.ShippingStatus shippingStatus = Shipping.ShippingStatus.valueOf(status.toUpperCase());
+            return shippingRepo.findByStatus(shippingStatus, pageable).getContent().stream()
+                    .map(this::toShippingDto)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid shipping status: " + status);
+        }
     }
 
     @Override
-    public List<ShippingDto> getShippingByMethod(String method, Pageable pageable) {
-        // TODO: Implement get shippings by method
-        throw new UnsupportedOperationException("Get shippings by method not implemented yet");
+    @Transactional(readOnly = true)
+    public List<ShippingDto> getShippingsByMethod(String method, Pageable pageable) {
+        try {
+            Shipping.ShippingMethod shippingMethod = Shipping.ShippingMethod.valueOf(method.toUpperCase());
+            return shippingRepo.findByShippingMethod(shippingMethod, pageable).getContent().stream()
+                    .map(this::toShippingDto)
+                    .collect(Collectors.toList());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid shipping method: " + method);
+        }
     }
 }

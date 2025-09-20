@@ -76,7 +76,7 @@ public class AdminController {
         return ResponseEntity.ok(images);
     }
 
-    @PostMapping("/products/{id}/images")
+    @PostMapping("/products/{id}/images/url")
     public ResponseEntity<ProductImageDto> addProductImage(
             @PathVariable Long id,
             @RequestParam String imageUrl,

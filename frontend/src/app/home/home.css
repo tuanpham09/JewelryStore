@@ -160,10 +160,10 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: white;
-  border-bottom: 1px solid #eee;
   flex-wrap: wrap;
   gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .filter-left {
@@ -186,7 +186,8 @@
   font-weight: 500;
   color: #333;
   text-transform: uppercase;
-  font-size: 0.9rem;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .sort-select {

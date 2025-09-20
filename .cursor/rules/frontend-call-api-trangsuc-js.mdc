@@ -1,0 +1,26 @@
+---
+description: "Trước khi gọi API từ Angular, phải xác nhận rằng endpoint tương ứng đã có trong backend Spring Boot"
+globs: ["src/app/**/*.ts", "src/environments/**/*.ts"]
+alwaysApply: true
+---
+
+# Angular → Backend API Verification Rule
+
+- Khi viết code trong Angular để gọi API (sử dụng HttpClient hoặc các dịch vụ API), trước tiên phải tìm trong phần backend Spring Boot endpoint tương ứng, bao gồm:
+  1. Tên path URL (ví dụ `/api/users`, `/api/orders/{id}`, v.v.)
+  2. Phương thức HTTP (GET, POST, PUT, DELETE, PATCH…)
+  3. Các tham số/format dữ liệu đầu vào (path params, query params, body) nếu có
+
+- Nếu không tìm được endpoint tương ứng trong Spring Boot:
+  - Không commit hoặc không deploy frontend có call đó
+  - Hoặc mở issue/ticket Backend để tạo endpoint trước
+
+- Angular service gọi API nên được viết với interface hoặc type rõ ràng để mô tả request & response
+- Document endpoint trong backend rõ ràng (ví dụ bằng Swagger / OpenAPI) để frontend dev có thể kiểm tra nhanh
+
+- Test case hoặc mock backend có thể được dùng khi backend chưa hoàn thiện, nhưng phải có plan backend sẽ cung cấp endpoint trước khi ra bản production
+
+- Nếu dùng môi trường `dev` hoặc `mock`, cần gắn rõ comment như “// TODO: verify backend endpoint exists” hoặc tương tự
+
+---
+
