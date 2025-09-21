@@ -124,7 +124,7 @@
                 <ng-container matColumnDef="totalAmount">
                     <th mat-header-cell *matHeaderCellDef>Tổng tiền</th>
                     <td mat-cell *matCellDef="let order">
-                        <div class="amount-text">{{ formatCurrency(order.totalAmount) }}</div>
+                        <div class="amount-text">{{ formatCurrency(order.total) }}</div>
                     </td>
                 </ng-container>
 
