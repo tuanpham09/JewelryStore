@@ -108,6 +108,21 @@ export interface CategoryDto {
     productCount?: number;
 }
 
+export interface AdminUserDto {
+    id: number;
+    email: string;
+    fullName: string;
+    phoneNumber?: string;
+    address?: string;
+    enabled: boolean;
+    roles: string[];
+    createdAt: string;
+    updatedAt: string;
+    lastLoginAt?: string;
+    orderCount?: number;
+    totalSpent?: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -221,5 +236,32 @@ export class AdminService {
     // Delete category
     deleteCategory(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/categories/${id}`);
+    }
+
+    // ========== USER MANAGEMENT ==========
+    
+    // Get all users
+    getUsers(page: number = 0, size: number = 20): Observable<AdminUserDto[]> {
+        return this.http.get<AdminUserDto[]>(`${this.apiUrl}/users?page=${page}&size=${size}`);
+    }
+
+    // Get user by ID
+    getUserById(id: number): Observable<AdminUserDto> {
+        return this.http.get<AdminUserDto>(`${this.apiUrl}/users/${id}`);
+    }
+
+    // Update user status
+    updateUserStatus(id: number, enabled: boolean): Observable<AdminUserDto> {
+        return this.http.put<AdminUserDto>(`${this.apiUrl}/users/${id}/status?enabled=${enabled}`, {});
+    }
+
+    // Update user roles
+    updateUserRoles(id: number, roles: string[]): Observable<AdminUserDto> {
+        return this.http.put<AdminUserDto>(`${this.apiUrl}/users/${id}/roles`, roles);
+    }
+
+    // Delete user
+    deleteUser(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/users/${id}`);
     }
 }

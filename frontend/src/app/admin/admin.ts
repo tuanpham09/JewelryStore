@@ -18,6 +18,7 @@ import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
 import { ProductManagementComponent } from './product-management/product-management';
 import { CategoryManagementComponent } from './category-management/category-management';
+import { UserManagementComponent } from './user-management/user-management';
 
 interface Product {
     id: string;
@@ -74,7 +75,8 @@ interface ProductForm {
         Header,
         Footer,
         ProductManagementComponent,
-        CategoryManagementComponent
+        CategoryManagementComponent,
+        UserManagementComponent
     ],
     templateUrl: './admin.html',
     styleUrl: './admin.css'

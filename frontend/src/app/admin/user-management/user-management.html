@@ -1,0 +1,213 @@
+<!-- User Management Component -->
+<div class="user-management">
+    <!-- Controls -->
+    <div class="controls-section">
+        <div class="search-controls">
+            <div class="search-bar">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Tìm kiếm người dùng..." [(ngModel)]="searchTerm"
+                    (input)="filterUsers()" class="search-input" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2>Danh sách người dùng</h2>
+            <span class="count-badge">{{ filteredUsers.length }} người dùng</span>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoading; else loadingTemplate">
+            <table mat-table [dataSource]="filteredUsers" class="users-table">
+                <!-- User Column -->
+                <ng-container matColumnDef="user">
+                    <th mat-header-cell *matHeaderCellDef>Người dùng</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="user-info">
+                            <div class="user-name">{{ user.fullName }}</div>
+                            <div class="user-email">{{ user.email }}</div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Email Column -->
+                <ng-container matColumnDef="email">
+                    <th mat-header-cell *matHeaderCellDef>Email</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="email-text">{{ user.email }}</div>
+                    </td>
+                </ng-container>
+
+                <!-- Roles Column -->
+                <ng-container matColumnDef="roles">
+                    <th mat-header-cell *matHeaderCellDef>Quyền</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="roles-container">
+                            <span class="role-chip" *ngFor="let role of user.roles">
+                                {{ getRoleDisplayName(role) }}
+                            </span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Trạng thái</th>
+                    <td mat-cell *matCellDef="let user">
+                        <span class="status-badge" [class.active]="user.enabled" [class.inactive]="!user.enabled">
+                            {{ user.enabled ? 'Hoạt động' : 'Bị khóa' }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Created At Column -->
+                <ng-container matColumnDef="createdAt">
+                    <th mat-header-cell *matHeaderCellDef>Ngày tạo</th>
+                    <td mat-cell *matCellDef="let user">
+                        <span class="date-text">{{ formatDate(user.createdAt) }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Thao tác</th>
+                    <td mat-cell *matCellDef="let user">
+                        <div class="action-buttons">
+                            <button mat-icon-button color="primary" (click)="openEditDialog(user)" 
+                                matTooltip="Chỉnh sửa quyền" class="edit-btn">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button [color]="user.enabled ? 'warn' : 'primary'" 
+                                (click)="toggleUserStatus(user)" 
+                                [matTooltip]="user.enabled ? 'Khóa tài khoản' : 'Kích hoạt tài khoản'" 
+                                class="toggle-btn">
+                                <mat-icon>{{ user.enabled ? 'lock' : 'lock_open' }}</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="deleteUser(user)" 
+                                matTooltip="Xóa người dùng" class="delete-btn">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+
+        <!-- Loading Template -->
+        <ng-template #loadingTemplate>
+            <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Đang tải danh sách người dùng...</p>
+            </div>
+        </ng-template>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="!isLoading && filteredUsers.length === 0">
+            <mat-icon>people</mat-icon>
+            <h3>Chưa có người dùng nào</h3>
+            <p>Danh sách người dùng sẽ hiển thị ở đây</p>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator 
+            *ngIf="!isLoading && filteredUsers.length > 0"
+            [length]="totalUsers"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [pageSizeOptions]="[10, 20, 50]"
+            (page)="onPageChange($event)"
+            showFirstLastButtons>
+        </mat-paginator>
+    </div>
+</div>
+
+<!-- Edit User Dialog -->
+<div class="dialog-overlay" *ngIf="isEditDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>edit</mat-icon>
+                Chỉnh sửa quyền người dùng
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <form class="user-form" (ngSubmit)="saveUser()">
+            <!-- User Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>person</mat-icon>
+                    Thông tin người dùng
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Họ và tên</mat-label>
+                        <input matInput [(ngModel)]="userForm.fullName" name="fullName" readonly>
+                    </mat-form-field>
+
+                    <mat-form-field class="half-width">
+                        <mat-label>Email</mat-label>
+                        <input matInput [(ngModel)]="userForm.email" name="email" readonly>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Số điện thoại</mat-label>
+                        <input matInput [(ngModel)]="userForm.phoneNumber" name="phoneNumber" readonly>
+                    </mat-form-field>
+
+                    <mat-form-field class="half-width">
+                        <mat-label>Địa chỉ</mat-label>
+                        <input matInput [(ngModel)]="userForm.address" name="address" readonly>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Roles Management -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>admin_panel_settings</mat-icon>
+                    Quản lý quyền
+                </h3>
+
+                <div class="form-row">
+                    <mat-checkbox [(ngModel)]="userForm.enabled" name="enabled">
+                        Tài khoản hoạt động
+                    </mat-checkbox>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Quyền người dùng</mat-label>
+                        <mat-select [(ngModel)]="userForm.roles" name="roles" multiple>
+                            <mat-option *ngFor="let role of availableRoles" [value]="role">
+                                {{ getRoleDisplayName(role) }}
+                            </mat-option>
+                        </mat-select>
+                        <mat-hint>Chọn các quyền cho người dùng</mat-hint>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" mat-button (click)="closeDialogs()" class="cancel-btn">
+                    Hủy
+                </button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    <mat-icon *ngIf="!isLoading">save</mat-icon>
+                    Cập nhật
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
