@@ -12,6 +12,7 @@ import { Profile } from './profile/profile';
 import { Wishlist } from './wishlist/wishlist';
 import { Search } from './search/search';
 import { AdminComponent } from './admin/admin';
+import { NotFoundComponent } from './not-found/not-found';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -28,6 +29,7 @@ export const routes: Routes = [
   { path: 'wishlist', component: Wishlist },
   { path: 'search', component: Search },
   { path: 'admin', component: AdminComponent },
+  { path: '404', component: NotFoundComponent },
   // Wildcard route để xử lý tất cả các routes không khớp
-  { path: '**', redirectTo: 'home' }
+  { path: '**', redirectTo: '404' }
 ];

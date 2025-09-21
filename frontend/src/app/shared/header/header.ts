@@ -92,4 +92,22 @@ export class Header {
         }
         return 'U';
     }
+
+    isAdmin(): boolean {
+        if (!this.currentUser) return false;
+        
+        // Kiểm tra nếu user có roles array và chứa ROLE_ADMIN
+        if (this.currentUser.roles && Array.isArray(this.currentUser.roles)) {
+            return this.currentUser.roles.some((role: any) => 
+                role.name === 'ROLE_ADMIN' || role === 'ROLE_ADMIN'
+            );
+        }
+        
+        // Kiểm tra nếu user có role trực tiếp
+        if (this.currentUser.role === 'ROLE_ADMIN') {
+            return true;
+        }
+        
+        return false;
+    }
 }

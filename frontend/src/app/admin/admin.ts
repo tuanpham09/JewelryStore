@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,6 +23,7 @@ import { UserManagementComponent } from './user-management/user-management';
 import { OrderManagementComponent } from './order-management/order-management';
 import { PromotionManagementComponent } from './promotion-management/promotion-management';
 import { DashboardComponent } from './dashboard/dashboard';
+import { AuthService } from '../auth.service';
 
 interface Product {
     id: string;
@@ -163,12 +165,64 @@ export class AdminComponent implements OnInit {
 
     constructor(
         private dialog: MatDialog,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private router: Router,
+        private authService: AuthService
     ) { }
 
     ngOnInit() {
+        // Kiểm tra quyền admin trước khi cho phép truy cập
+        this.checkAdminPermission();
+        
         // Initialize with dashboard section
         this.activeSection = 'dashboard';
+    }
+
+    private checkAdminPermission() {
+        const currentUser = this.authService.getCurrentUser();
+        
+        if (!currentUser) {
+            // Chưa đăng nhập
+            this.redirectToHome('Bạn cần đăng nhập để truy cập trang quản trị');
+            return;
+        }
+
+        // Kiểm tra role admin
+        if (!this.isAdmin(currentUser)) {
+            // Không có quyền admin
+            this.redirectToHome('Bạn không có quyền truy cập trang quản trị');
+            return;
+        }
+    }
+
+    private isAdmin(user: any): boolean {
+        if (!user) return false;
+        
+        // Kiểm tra nếu user có roles array và chứa ROLE_ADMIN
+        if (user.roles && Array.isArray(user.roles)) {
+            return user.roles.some((role: any) => 
+                role.name === 'ROLE_ADMIN' || role === 'ROLE_ADMIN'
+            );
+        }
+        
+        // Kiểm tra nếu user có role trực tiếp
+        if (user.role === 'ROLE_ADMIN') {
+            return true;
+        }
+        
+        return false;
+    }
+
+    private redirectToHome(message: string) {
+        this.snackBar.open(message, 'Đóng', { 
+            duration: 2000,
+            panelClass: ['error-snackbar']
+        });
+        
+        // Redirect đến trang 404 sau 1 giây
+        setTimeout(() => {
+            this.router.navigate(['/404']);
+        }, 1000);
     }
 
     setActiveSection(section: string) {

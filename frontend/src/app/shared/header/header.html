@@ -82,7 +82,7 @@
         <span class="menu-badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
     </button>
 
-    <button mat-menu-item (click)="navigateToAdmin()" class="menu-item">
+    <button mat-menu-item (click)="navigateToAdmin()" class="menu-item" *ngIf="isAdmin()">
         <mat-icon>admin_panel_settings</mat-icon>
         <span>Quản trị</span>
     </button>
