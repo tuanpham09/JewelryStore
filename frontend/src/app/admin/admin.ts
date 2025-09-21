@@ -19,6 +19,8 @@ import { Footer } from '../shared/footer/footer';
 import { ProductManagementComponent } from './product-management/product-management';
 import { CategoryManagementComponent } from './category-management/category-management';
 import { UserManagementComponent } from './user-management/user-management';
+import { OrderManagementComponent } from './order-management/order-management';
+import { PromotionManagementComponent } from './promotion-management/promotion-management';
 
 interface Product {
     id: string;
@@ -76,7 +78,9 @@ interface ProductForm {
         Footer,
         ProductManagementComponent,
         CategoryManagementComponent,
-        UserManagementComponent
+        UserManagementComponent,
+        OrderManagementComponent,
+        PromotionManagementComponent
     ],
     templateUrl: './admin.html',
     styleUrl: './admin.css'

@@ -123,6 +123,54 @@ export interface AdminUserDto {
     totalSpent?: number;
 }
 
+export interface AdminOrderDto {
+    id: number;
+    orderNumber: string;
+    customerId: number;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    status: string;
+    totalAmount: number;
+    paymentMethod: string;
+    paymentStatus: string;
+    shippingAddress: string;
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+    items: OrderItemDto[];
+}
+
+export interface OrderItemDto {
+    id: number;
+    productId: number;
+    productName: string;
+    productImage?: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+}
+
+export interface PromotionDto {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+    value: number;
+    minOrderAmount: number;
+    code: string;
+    startDate: string;
+    endDate: string;
+    active: boolean;
+    usageLimit: number;
+    usedCount: number;
+    applicableProducts: string;
+    applicableCategories?: string;
+    applicableProductIds?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -263,5 +311,59 @@ export class AdminService {
     // Delete user
     deleteUser(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/users/${id}`);
+    }
+
+    // ========== ORDER MANAGEMENT ==========
+    
+    // Get all orders
+    getOrders(page: number = 0, size: number = 20): Observable<AdminOrderDto[]> {
+        return this.http.get<AdminOrderDto[]>(`${this.apiUrl}/orders?page=${page}&size=${size}`);
+    }
+
+    // Get order by ID
+    getOrderById(id: number): Observable<AdminOrderDto> {
+        return this.http.get<AdminOrderDto>(`${this.apiUrl}/orders/${id}`);
+    }
+
+    // Update order status
+    updateOrderStatus(id: number, status: string): Observable<AdminOrderDto> {
+        return this.http.put<AdminOrderDto>(`${this.apiUrl}/orders/${id}/status?status=${status}`, {});
+    }
+
+    // Cancel order
+    cancelOrder(id: number, reason: string): Observable<AdminOrderDto> {
+        return this.http.put<AdminOrderDto>(`${this.apiUrl}/orders/${id}/cancel?reason=${encodeURIComponent(reason)}`, {});
+    }
+
+    // Get orders by status
+    getOrdersByStatus(status: string, page: number = 0, size: number = 20): Observable<AdminOrderDto[]> {
+        return this.http.get<AdminOrderDto[]>(`${this.apiUrl}/orders/status/${status}?page=${page}&size=${size}`);
+    }
+
+    // ========== PROMOTION MANAGEMENT ==========
+    
+    // Get all promotions
+    getPromotions(): Observable<PromotionDto[]> {
+        return this.http.get<PromotionDto[]>(`${this.apiUrl}/promotions`);
+    }
+
+    // Create promotion
+    createPromotion(promotion: PromotionDto): Observable<PromotionDto> {
+        return this.http.post<PromotionDto>(`${this.apiUrl}/promotions`, promotion);
+    }
+
+    // Update promotion
+    updatePromotion(id: number, promotion: PromotionDto): Observable<PromotionDto> {
+        return this.http.put<PromotionDto>(`${this.apiUrl}/promotions/${id}`, promotion);
+    }
+
+    // Delete promotion
+    deletePromotion(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/promotions/${id}`);
+    }
+
+    // Toggle promotion status
+    togglePromotionStatus(id: number): Observable<PromotionDto> {
+        return this.http.put<PromotionDto>(`${this.apiUrl}/promotions/${id}/toggle`, {});
     }
 }

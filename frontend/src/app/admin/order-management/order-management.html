@@ -1,0 +1,407 @@
+<!-- Order Management Component -->
+<div class="order-management">
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <mat-icon>shopping_cart</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ orderStats.total }}</div>
+                    <div class="stat-label">Tổng đơn hàng</div>
+                </div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-icon">
+                    <mat-icon>schedule</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ orderStats.pending }}</div>
+                    <div class="stat-label">Chờ xử lý</div>
+                </div>
+            </div>
+            <div class="stat-card processing">
+                <div class="stat-icon">
+                    <mat-icon>build</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ orderStats.processing }}</div>
+                    <div class="stat-label">Đang xử lý</div>
+                </div>
+            </div>
+            <div class="stat-card shipped">
+                <div class="stat-icon">
+                    <mat-icon>local_shipping</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ orderStats.shipped }}</div>
+                    <div class="stat-label">Đã giao hàng</div>
+                </div>
+            </div>
+            <div class="stat-card delivered">
+                <div class="stat-icon">
+                    <mat-icon>check_circle</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ orderStats.delivered }}</div>
+                    <div class="stat-label">Đã nhận hàng</div>
+                </div>
+            </div>
+            <div class="stat-card cancelled">
+                <div class="stat-icon">
+                    <mat-icon>cancel</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ orderStats.cancelled }}</div>
+                    <div class="stat-label">Đã hủy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-section">
+        <div class="search-controls">
+            <div class="search-bar">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Tìm kiếm đơn hàng..." [(ngModel)]="searchTerm"
+                    (input)="filterOrders()" class="search-input" />
+            </div>
+            <mat-form-field class="status-filter">
+                <mat-label>Lọc theo trạng thái</mat-label>
+                <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onStatusFilterChange()">
+                    <mat-option *ngFor="let status of statusFilters" [value]="status">
+                        {{ status === 'ALL' ? 'Tất cả' : getStatusDisplayName(status) }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2>Danh sách đơn hàng</h2>
+            <span class="count-badge">{{ filteredOrders.length }} đơn hàng</span>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoading; else loadingTemplate">
+            <table mat-table [dataSource]="filteredOrders" class="orders-table">
+                <!-- Order Number Column -->
+                <ng-container matColumnDef="orderNumber">
+                    <th mat-header-cell *matHeaderCellDef>Mã đơn hàng</th>
+                    <td mat-cell *matCellDef="let order">
+                        <div class="order-number">
+                            <strong>#{{ order.orderNumber }}</strong>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Customer Column -->
+                <ng-container matColumnDef="customer">
+                    <th mat-header-cell *matHeaderCellDef>Khách hàng</th>
+                    <td mat-cell *matCellDef="let order">
+                        <div class="customer-info">
+                            <div class="customer-name">{{ order.customerName }}</div>
+                            <div class="customer-email">{{ order.customerEmail }}</div>
+                            <div class="customer-phone">{{ order.customerPhone }}</div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Trạng thái</th>
+                    <td mat-cell *matCellDef="let order">
+                        <span class="status-badge" [style.background-color]="getStatusColor(order.status)">
+                            {{ getStatusDisplayName(order.status) }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Total Amount Column -->
+                <ng-container matColumnDef="totalAmount">
+                    <th mat-header-cell *matHeaderCellDef>Tổng tiền</th>
+                    <td mat-cell *matCellDef="let order">
+                        <div class="amount-text">{{ formatCurrency(order.totalAmount) }}</div>
+                    </td>
+                </ng-container>
+
+                <!-- Payment Status Column -->
+                <ng-container matColumnDef="paymentStatus">
+                    <th mat-header-cell *matHeaderCellDef>Thanh toán</th>
+                    <td mat-cell *matCellDef="let order">
+                        <span class="payment-status-badge" [style.background-color]="getPaymentStatusColor(order.paymentStatus)">
+                            {{ getPaymentStatusDisplayName(order.paymentStatus) }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Created At Column -->
+                <ng-container matColumnDef="createdAt">
+                    <th mat-header-cell *matHeaderCellDef>Ngày tạo</th>
+                    <td mat-cell *matCellDef="let order">
+                        <span class="date-text">{{ formatDate(order.createdAt) }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Thao tác</th>
+                    <td mat-cell *matCellDef="let order">
+                        <div class="action-buttons">
+                            <button mat-icon-button color="primary" (click)="openDetailDialog(order)" 
+                                matTooltip="Xem chi tiết" class="detail-btn">
+                                <mat-icon>visibility</mat-icon>
+                            </button>
+                            <button mat-icon-button color="accent" (click)="openStatusDialog(order)" 
+                                [disabled]="!canUpdateStatus(order)"
+                                matTooltip="Cập nhật trạng thái" class="status-btn">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="openCancelDialog(order)" 
+                                [disabled]="!canCancelOrder(order)"
+                                matTooltip="Hủy đơn hàng" class="cancel-btn">
+                                <mat-icon>cancel</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+
+        <!-- Loading Template -->
+        <ng-template #loadingTemplate>
+            <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Đang tải danh sách đơn hàng...</p>
+            </div>
+        </ng-template>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="!isLoading && filteredOrders.length === 0">
+            <mat-icon>shopping_cart</mat-icon>
+            <h3>Chưa có đơn hàng nào</h3>
+            <p>Danh sách đơn hàng sẽ hiển thị ở đây</p>
+        </div>
+
+        <!-- Pagination -->
+        <mat-paginator 
+            *ngIf="!isLoading && filteredOrders.length > 0"
+            [length]="totalOrders"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIndex"
+            [pageSizeOptions]="[10, 20, 50]"
+            (page)="onPageChange($event)"
+            showFirstLastButtons>
+        </mat-paginator>
+    </div>
+</div>
+
+<!-- Order Detail Dialog -->
+<div class="dialog-overlay" *ngIf="isDetailDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content large" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>receipt</mat-icon>
+                Chi tiết đơn hàng #{{ selectedOrder?.orderNumber }}
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <div class="order-detail" *ngIf="selectedOrder">
+            <!-- Order Info -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>info</mat-icon>
+                    Thông tin đơn hàng
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Mã đơn hàng:</label>
+                        <span>#{{ selectedOrder.orderNumber }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Trạng thái:</label>
+                        <span class="status-badge" [style.background-color]="getStatusColor(selectedOrder.status)">
+                            {{ getStatusDisplayName(selectedOrder.status) }}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Ngày tạo:</label>
+                        <span>{{ formatDate(selectedOrder.createdAt) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Tổng tiền:</label>
+                        <span class="amount-text">{{ formatCurrency(selectedOrder.totalAmount) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>person</mat-icon>
+                    Thông tin khách hàng
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Tên khách hàng:</label>
+                        <span>{{ selectedOrder.customerName }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Email:</label>
+                        <span>{{ selectedOrder.customerEmail }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Số điện thoại:</label>
+                        <span>{{ selectedOrder.customerPhone }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Địa chỉ giao hàng:</label>
+                        <span>{{ selectedOrder.shippingAddress }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>shopping_bag</mat-icon>
+                    Sản phẩm đã đặt
+                </h3>
+                <div class="items-list">
+                    <div class="item-header">
+                        <div class="item-name">Sản phẩm</div>
+                        <div class="item-quantity">Số lượng</div>
+                        <div class="item-price">Đơn giá</div>
+                        <div class="item-total">Thành tiền</div>
+                    </div>
+                    <div class="item-row" *ngFor="let item of selectedOrder.items">
+                        <div class="item-name">
+                            <div class="product-name">{{ item.productName }}</div>
+                        </div>
+                        <div class="item-quantity">{{ item.quantity }}</div>
+                        <div class="item-price">{{ formatCurrency(item.unitPrice) }}</div>
+                        <div class="item-total">{{ formatCurrency(item.totalPrice) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>payment</mat-icon>
+                    Thông tin thanh toán
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Phương thức thanh toán:</label>
+                        <span>{{ selectedOrder.paymentMethod }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Trạng thái thanh toán:</label>
+                        <span class="payment-status-badge" [style.background-color]="getPaymentStatusColor(selectedOrder.paymentStatus)">
+                            {{ getPaymentStatusDisplayName(selectedOrder.paymentStatus) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Dialog -->
+<div class="dialog-overlay" *ngIf="isStatusDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>edit</mat-icon>
+                Cập nhật trạng thái đơn hàng
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <form class="order-form" (ngSubmit)="updateOrderStatus()">
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>update</mat-icon>
+                    Trạng thái mới
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Trạng thái đơn hàng</mat-label>
+                        <mat-select [(ngModel)]="orderForm.status" name="status" required>
+                            <mat-option *ngFor="let status of availableStatuses" [value]="status">
+                                {{ getStatusDisplayName(status) }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" mat-button (click)="closeDialogs()" class="cancel-btn">
+                    Hủy
+                </button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    <mat-icon *ngIf="!isLoading">save</mat-icon>
+                    Cập nhật
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Cancel Order Dialog -->
+<div class="dialog-overlay" *ngIf="isCancelDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>cancel</mat-icon>
+                Hủy đơn hàng
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <form class="order-form" (ngSubmit)="cancelOrder()">
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>warning</mat-icon>
+                    Lý do hủy đơn hàng
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Lý do hủy đơn hàng</mat-label>
+                        <textarea matInput [(ngModel)]="orderForm.cancelReason" name="cancelReason" 
+                            rows="4" placeholder="Nhập lý do hủy đơn hàng..." required></textarea>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" mat-button (click)="closeDialogs()" class="cancel-btn">
+                    Hủy
+                </button>
+                <button type="submit" mat-raised-button color="warn" [disabled]="isLoading" class="save-btn">
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    <mat-icon *ngIf="!isLoading">cancel</mat-icon>
+                    Hủy đơn hàng
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

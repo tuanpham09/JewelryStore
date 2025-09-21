@@ -1,0 +1,530 @@
+<!-- Promotion Management Component -->
+<div class="promotion-management">
+    <!-- Statistics Cards -->
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-icon">
+                    <mat-icon>local_offer</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ promotionStats.total }}</div>
+                    <div class="stat-label">Tổng khuyến mãi</div>
+                </div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-icon">
+                    <mat-icon>check_circle</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ promotionStats.active }}</div>
+                    <div class="stat-label">Đang hoạt động</div>
+                </div>
+            </div>
+            <div class="stat-card inactive">
+                <div class="stat-icon">
+                    <mat-icon>pause_circle</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ promotionStats.inactive }}</div>
+                    <div class="stat-label">Không hoạt động</div>
+                </div>
+            </div>
+            <div class="stat-card expired">
+                <div class="stat-icon">
+                    <mat-icon>schedule</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ promotionStats.expired }}</div>
+                    <div class="stat-label">Hết hạn</div>
+                </div>
+            </div>
+            <div class="stat-card upcoming">
+                <div class="stat-icon">
+                    <mat-icon>schedule</mat-icon>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ promotionStats.upcoming }}</div>
+                    <div class="stat-label">Sắp diễn ra</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-section">
+        <div class="search-controls">
+            <div class="search-bar">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Tìm kiếm khuyến mãi..." [(ngModel)]="searchTerm"
+                    (input)="filterPromotions()" class="search-input" />
+            </div>
+            <mat-form-field class="status-filter">
+                <mat-label>Lọc theo trạng thái</mat-label>
+                <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onStatusFilterChange()">
+                    <mat-option *ngFor="let status of statusFilters" [value]="status">
+                        {{ status === 'ALL' ? 'Tất cả' : getStatusDisplayName(status) }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <button mat-raised-button color="primary" (click)="openAddDialog()" class="add-btn">
+            <mat-icon>add</mat-icon>
+            Tạo khuyến mãi mới
+        </button>
+    </div>
+
+    <!-- Promotions Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2>Danh sách khuyến mãi</h2>
+            <span class="count-badge">{{ filteredPromotions.length }} khuyến mãi</span>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoading; else loadingTemplate">
+            <table mat-table [dataSource]="filteredPromotions" class="promotions-table">
+                <!-- Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Tên khuyến mãi</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <div class="promotion-info">
+                            <div class="promotion-name">{{ promotion.name }}</div>
+                            <div class="promotion-description">{{ promotion.description }}</div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Type Column -->
+                <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef>Loại</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <span class="type-badge">{{ getTypeDisplayName(promotion.type) }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Value Column -->
+                <ng-container matColumnDef="value">
+                    <th mat-header-cell *matHeaderCellDef>Giá trị</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <div class="value-text">
+                            <span *ngIf="promotion.type === 'PERCENTAGE'">{{ promotion.value }}%</span>
+                            <span *ngIf="promotion.type === 'FIXED_AMOUNT'">{{ formatCurrency(promotion.value) }}</span>
+                            <span *ngIf="promotion.type === 'FREE_SHIPPING'">Miễn phí vận chuyển</span>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Code Column -->
+                <ng-container matColumnDef="code">
+                    <th mat-header-cell *matHeaderCellDef>Mã khuyến mãi</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <span class="code-text">{{ promotion.code }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Trạng thái</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <span class="status-badge" [style.background-color]="getStatusColor(getPromotionStatus(promotion))">
+                            {{ getStatusDisplayName(getPromotionStatus(promotion)) }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Usage Column -->
+                <ng-container matColumnDef="usage">
+                    <th mat-header-cell *matHeaderCellDef>Sử dụng</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <div class="usage-info">
+                            <div class="usage-text">{{ promotion.usedCount }}/{{ promotion.usageLimit }}</div>
+                            <div class="usage-bar">
+                                <div class="usage-progress" [style.width.%]="(promotion.usedCount / promotion.usageLimit) * 100"></div>
+                            </div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Dates Column -->
+                <ng-container matColumnDef="dates">
+                    <th mat-header-cell *matHeaderCellDef>Thời gian</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <div class="dates-info">
+                            <div class="date-item">
+                                <mat-icon>play_arrow</mat-icon>
+                                <span>{{ formatDate(promotion.startDate) }}</span>
+                            </div>
+                            <div class="date-item">
+                                <mat-icon>stop</mat-icon>
+                                <span>{{ formatDate(promotion.endDate) }}</span>
+                            </div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Thao tác</th>
+                    <td mat-cell *matCellDef="let promotion">
+                        <div class="action-buttons">
+                            <button mat-icon-button color="primary" (click)="openDetailDialog(promotion)" 
+                                matTooltip="Xem chi tiết" class="detail-btn">
+                                <mat-icon>visibility</mat-icon>
+                            </button>
+                            <button mat-icon-button color="accent" (click)="openEditDialog(promotion)" 
+                                matTooltip="Chỉnh sửa" class="edit-btn">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button [color]="promotion.active ? 'warn' : 'primary'" 
+                                (click)="togglePromotionStatus(promotion)" 
+                                [matTooltip]="promotion.active ? 'Vô hiệu hóa' : 'Kích hoạt'" 
+                                class="toggle-btn">
+                                <mat-icon>{{ promotion.active ? 'pause' : 'play_arrow' }}</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="deletePromotion(promotion)" 
+                                matTooltip="Xóa khuyến mãi" class="delete-btn">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+
+        <!-- Loading Template -->
+        <ng-template #loadingTemplate>
+            <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Đang tải danh sách khuyến mãi...</p>
+            </div>
+        </ng-template>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="!isLoading && filteredPromotions.length === 0">
+            <mat-icon>local_offer</mat-icon>
+            <h3>Chưa có khuyến mãi nào</h3>
+            <p>Danh sách khuyến mãi sẽ hiển thị ở đây</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Promotion Dialog -->
+<div class="dialog-overlay" *ngIf="isAddDialogOpen || isEditDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content large" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>{{ isAddDialogOpen ? 'add' : 'edit' }}</mat-icon>
+                {{ isAddDialogOpen ? 'Tạo khuyến mãi mới' : 'Chỉnh sửa khuyến mãi' }}
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <form class="promotion-form" (ngSubmit)="savePromotion()">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>info</mat-icon>
+                    Thông tin cơ bản
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Tên khuyến mãi</mat-label>
+                        <input matInput [(ngModel)]="promotionForm.name" name="name" required>
+                    </mat-form-field>
+
+                    <mat-form-field class="half-width">
+                        <mat-label>Mã khuyến mãi</mat-label>
+                        <input matInput [(ngModel)]="promotionForm.code" name="code" required>
+                        <button mat-icon-button matSuffix (click)="onGenerateCode()" type="button">
+                            <mat-icon>refresh</mat-icon>
+                        </button>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Mô tả</mat-label>
+                        <textarea matInput [(ngModel)]="promotionForm.description" name="description" rows="3"></textarea>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Promotion Settings -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>settings</mat-icon>
+                    Cài đặt khuyến mãi
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Loại khuyến mãi</mat-label>
+                        <mat-select [(ngModel)]="promotionForm.type" name="type" required>
+                            <mat-option *ngFor="let type of promotionTypes" [value]="type">
+                                {{ getTypeDisplayName(type) }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field class="half-width">
+                        <mat-label>Giá trị khuyến mãi</mat-label>
+                        <input matInput type="number" [(ngModel)]="promotionForm.value" name="value" required>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Đơn hàng tối thiểu</mat-label>
+                        <input matInput type="number" [(ngModel)]="promotionForm.minOrderAmount" name="minOrderAmount">
+                    </mat-form-field>
+
+                    <mat-form-field class="half-width">
+                        <mat-label>Giới hạn sử dụng</mat-label>
+                        <input matInput type="number" [(ngModel)]="promotionForm.usageLimit" name="usageLimit">
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>schedule</mat-icon>
+                    Thời gian áp dụng
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Ngày bắt đầu</mat-label>
+                        <input matInput [matDatepicker]="startPicker" [(ngModel)]="promotionForm.startDate" name="startDate" required>
+                        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #startPicker></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field class="half-width">
+                        <mat-label>Ngày kết thúc</mat-label>
+                        <input matInput [matDatepicker]="endPicker" [(ngModel)]="promotionForm.endDate" name="endDate" required>
+                        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                        <mat-datepicker #endPicker></mat-datepicker>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Applicable Products -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>shopping_bag</mat-icon>
+                    Sản phẩm áp dụng
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Phạm vi áp dụng</mat-label>
+                        <mat-select [(ngModel)]="promotionForm.applicableProducts" name="applicableProducts">
+                            <mat-option *ngFor="let option of applicableProductsOptions" [value]="option">
+                                {{ option === 'ALL' ? 'Tất cả sản phẩm' : 
+                                   option === 'CATEGORIES' ? 'Theo danh mục' : 'Theo sản phẩm cụ thể' }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row" *ngIf="promotionForm.applicableProducts === 'CATEGORIES'">
+                    <mat-form-field class="full-width">
+                        <mat-label>Danh mục áp dụng</mat-label>
+                        <input matInput [(ngModel)]="promotionForm.applicableCategories" name="applicableCategories" 
+                            placeholder="Nhập ID danh mục, phân cách bằng dấu phẩy">
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row" *ngIf="promotionForm.applicableProducts === 'PRODUCTS'">
+                    <mat-form-field class="full-width">
+                        <mat-label>Sản phẩm áp dụng</mat-label>
+                        <input matInput [(ngModel)]="promotionForm.applicableProductIds" name="applicableProductIds" 
+                            placeholder="Nhập ID sản phẩm, phân cách bằng dấu phẩy">
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>toggle_on</mat-icon>
+                    Trạng thái
+                </h3>
+
+                <div class="form-row">
+                    <mat-checkbox [(ngModel)]="promotionForm.active" name="active">
+                        Kích hoạt khuyến mãi
+                    </mat-checkbox>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" mat-button (click)="closeDialogs()" class="cancel-btn">
+                    Hủy
+                </button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    <mat-icon *ngIf="!isLoading">save</mat-icon>
+                    {{ isAddDialogOpen ? 'Tạo' : 'Cập nhật' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Promotion Detail Dialog -->
+<div class="dialog-overlay" *ngIf="isDetailDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content large" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>local_offer</mat-icon>
+                Chi tiết khuyến mãi: {{ selectedPromotion?.name }}
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <div class="promotion-detail" *ngIf="selectedPromotion">
+            <!-- Basic Info -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>info</mat-icon>
+                    Thông tin cơ bản
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Tên khuyến mãi:</label>
+                        <span>{{ selectedPromotion.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Mã khuyến mãi:</label>
+                        <span class="code-text">{{ selectedPromotion.code }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Mô tả:</label>
+                        <span>{{ selectedPromotion.description }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Trạng thái:</label>
+                        <span class="status-badge" [style.background-color]="getStatusColor(getPromotionStatus(selectedPromotion))">
+                            {{ getStatusDisplayName(getPromotionStatus(selectedPromotion)) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotion Settings -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>settings</mat-icon>
+                    Cài đặt khuyến mãi
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Loại khuyến mãi:</label>
+                        <span>{{ getTypeDisplayName(selectedPromotion.type) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Giá trị:</label>
+                        <span class="value-text">
+                            <span *ngIf="selectedPromotion.type === 'PERCENTAGE'">{{ selectedPromotion.value }}%</span>
+                            <span *ngIf="selectedPromotion.type === 'FIXED_AMOUNT'">{{ formatCurrency(selectedPromotion.value) }}</span>
+                            <span *ngIf="selectedPromotion.type === 'FREE_SHIPPING'">Miễn phí vận chuyển</span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Đơn hàng tối thiểu:</label>
+                        <span>{{ formatCurrency(selectedPromotion.minOrderAmount) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Giới hạn sử dụng:</label>
+                        <span>{{ selectedPromotion.usageLimit }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Statistics -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>analytics</mat-icon>
+                    Thống kê sử dụng
+                </h3>
+                <div class="usage-stats">
+                    <div class="usage-item">
+                        <div class="usage-label">Đã sử dụng:</div>
+                        <div class="usage-value">{{ selectedPromotion.usedCount }}</div>
+                    </div>
+                    <div class="usage-item">
+                        <div class="usage-label">Còn lại:</div>
+                        <div class="usage-value">{{ selectedPromotion.usageLimit - selectedPromotion.usedCount }}</div>
+                    </div>
+                    <div class="usage-item">
+                        <div class="usage-label">Tỷ lệ sử dụng:</div>
+                        <div class="usage-value">{{ ((selectedPromotion.usedCount / selectedPromotion.usageLimit) * 100).toFixed(1) }}%</div>
+                    </div>
+                </div>
+                <div class="usage-bar">
+                    <div class="usage-progress" [style.width.%]="(selectedPromotion.usedCount / selectedPromotion.usageLimit) * 100"></div>
+                </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>schedule</mat-icon>
+                    Thời gian áp dụng
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Ngày bắt đầu:</label>
+                        <span>{{ formatDate(selectedPromotion.startDate) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Ngày kết thúc:</label>
+                        <span>{{ formatDate(selectedPromotion.endDate) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Ngày tạo:</label>
+                        <span>{{ formatDate(selectedPromotion.createdAt) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Cập nhật lần cuối:</label>
+                        <span>{{ formatDate(selectedPromotion.updatedAt) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applicable Products -->
+            <div class="detail-section">
+                <h3 class="section-title">
+                    <mat-icon>shopping_bag</mat-icon>
+                    Sản phẩm áp dụng
+                </h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Phạm vi áp dụng:</label>
+                        <span>{{ selectedPromotion.applicableProducts === 'ALL' ? 'Tất cả sản phẩm' : 
+                               selectedPromotion.applicableProducts === 'CATEGORIES' ? 'Theo danh mục' : 'Theo sản phẩm cụ thể' }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="selectedPromotion.applicableCategories">
+                        <label>Danh mục áp dụng:</label>
+                        <span>{{ selectedPromotion.applicableCategories }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="selectedPromotion.applicableProductIds">
+                        <label>Sản phẩm áp dụng:</label>
+                        <span>{{ selectedPromotion.applicableProductIds }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -122,18 +122,12 @@
 
         <!-- Orders Section -->
         <div class="content-section" *ngIf="activeSection === 'orders'">
-            <div class="section-header">
-                <h1 class="section-title gradient-text">Quản lý đơn hàng</h1>
-                <p class="section-subtitle">Theo dõi và quản lý các đơn hàng</p>
-            </div>
+            <app-order-management></app-order-management>
         </div>
 
         <!-- Promotions Section -->
         <div class="content-section" *ngIf="activeSection === 'promotions'">
-            <div class="section-header">
-                <h1 class="section-title gradient-text">Quản lý khuyến mãi</h1>
-                <p class="section-subtitle">Tạo và quản lý các chương trình khuyến mãi</p>
-            </div>
+            <app-promotion-management></app-promotion-management>
         </div>
 
         <!-- Reports Section -->
