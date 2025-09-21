@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/wishlist/**").authenticated() // ✅ Yêu cầu authentication cho wishlist
                         .requestMatchers("/api/search/**").authenticated() // ✅ Yêu cầu authentication cho search
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -13,7 +13,9 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { AuthService } from '../auth.service';
+import { CustomerProfileService, CustomerProfileDto, UpdateProfileRequest, ChangePasswordRequest, UserStats } from '../services/customer-profile.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
 
@@ -52,6 +54,7 @@ interface UserPreferences {
         MatOptionModule,
         MatDividerModule,
         MatChipsModule,
+        MatSlideToggleModule,
         Header,
         Footer
     ],
@@ -61,18 +64,33 @@ interface UserPreferences {
 export class Profile implements OnInit {
     currentUser: any = null;
     selectedTab: number = 0;
+    isLoading = false;
+    error: string | null = null;
 
     // Expose document to template
     document = document;
 
-    // User Info
-    userInfo = {
-        fullName: '',
+    // User Info - sử dụng CustomerProfileDto
+    userInfo: CustomerProfileDto = {
+        id: 0,
         email: '',
-        phone: '',
+        fullName: '',
+        phoneNumber: '',
         dateOfBirth: '',
         gender: '',
-        avatar: ''
+        avatarUrl: '',
+        address: '',
+        city: '',
+        province: '',
+        postalCode: '',
+        country: '',
+        preferredLanguage: 'vi',
+        preferredCurrency: 'VND',
+        emailVerified: false,
+        phoneVerified: false,
+        createdAt: '',
+        updatedAt: '',
+        lastLoginAt: ''
     };
 
     // Address Management
@@ -108,7 +126,7 @@ export class Profile implements OnInit {
     };
 
     // Statistics
-    userStats = {
+    userStats: UserStats = {
         totalOrders: 0,
         totalSpent: 0,
         memberSince: '',
@@ -118,6 +136,7 @@ export class Profile implements OnInit {
     constructor(
         public router: Router,
         private authService: AuthService,
+        private customerProfileService: CustomerProfileService,
         private snackBar: MatSnackBar
     ) { }
 
@@ -131,14 +150,78 @@ export class Profile implements OnInit {
     }
 
     loadUserData() {
-        // Mock data - trong thực tế sẽ gọi API
+        this.isLoading = true;
+        this.error = null;
+
+        console.log('Loading user profile from API...');
+        
+        // Load profile data
+        this.customerProfileService.getProfile().subscribe({
+            next: (response) => {
+                console.log('Profile loaded:', response);
+                if (response.success) {
+                    this.userInfo = response.data;
+                } else {
+                    this.error = response.message || 'Không thể tải thông tin profile';
+                }
+                this.isLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading profile:', error);
+                this.error = 'Có lỗi xảy ra khi tải thông tin profile';
+                this.isLoading = false;
+                
+                // Fallback to mock data for development
+                this.loadMockUserData();
+            }
+        });
+
+        // Load user stats
+        this.customerProfileService.getUserStats().subscribe({
+            next: (response) => {
+                if (response.success) {
+                    this.userStats = response.data;
+                }
+            },
+            error: (error) => {
+                console.error('Error loading user stats:', error);
+                // Fallback to mock stats
+                this.loadMockStats();
+            }
+        });
+    }
+
+    private loadMockUserData() {
+        // Mock data - fallback khi API không hoạt động
         this.userInfo = {
-            fullName: this.currentUser?.fullName || 'Nguyễn Văn A',
+            id: 1,
             email: this.currentUser?.email || 'user@example.com',
-            phone: '0123456789',
+            fullName: this.currentUser?.fullName || 'Nguyễn Văn A',
+            phoneNumber: '0123456789',
             dateOfBirth: '1990-01-01',
             gender: 'male',
-            avatar: ''
+            avatarUrl: '',
+            address: '123 Đường ABC',
+            city: 'TP. Hồ Chí Minh',
+            province: 'TP. Hồ Chí Minh',
+            postalCode: '700000',
+            country: 'Việt Nam',
+            preferredLanguage: 'vi',
+            preferredCurrency: 'VND',
+            emailVerified: true,
+            phoneVerified: false,
+            createdAt: '2023-01-15T00:00:00Z',
+            updatedAt: '2024-01-20T00:00:00Z',
+            lastLoginAt: '2024-01-20T10:00:00Z'
+        };
+    }
+
+    private loadMockStats() {
+        this.userStats = {
+            totalOrders: 12,
+            totalSpent: 15400000,
+            memberSince: '2023-01-15',
+            lastLogin: '2024-01-20'
         };
 
         this.addresses = [
@@ -178,9 +261,92 @@ export class Profile implements OnInit {
     uploadAvatar(event: any) {
         const file = event.target.files[0];
         if (file) {
-            // Logic upload avatar
             console.log('Uploading avatar:', file);
+            
+            this.customerProfileService.uploadAvatar(file).subscribe({
+                next: (response) => {
+                    if (response.success) {
+                        this.userInfo.avatarUrl = response.data.avatarUrl;
+                        this.snackBar.open('Ảnh đại diện đã được cập nhật', 'Đóng', {
+                            duration: 3000
+                        });
+                    } else {
+                        this.snackBar.open('Không thể upload ảnh: ' + response.message, 'Đóng', {
+                            duration: 5000
+                        });
+                    }
+                },
+                error: (error) => {
+                    console.error('Error uploading avatar:', error);
+                    this.snackBar.open('Có lỗi xảy ra khi upload ảnh', 'Đóng', {
+                        duration: 3000
+                    });
+                }
+            });
         }
+    }
+
+    updateUserInfo() {
+        if (!this.validateUserInfo()) {
+            return;
+        }
+
+        const updateData: UpdateProfileRequest = {
+            fullName: this.userInfo.fullName,
+            phoneNumber: this.userInfo.phoneNumber,
+            dateOfBirth: this.userInfo.dateOfBirth,
+            gender: this.userInfo.gender,
+            address: this.userInfo.address,
+            city: this.userInfo.city,
+            province: this.userInfo.province,
+            postalCode: this.userInfo.postalCode,
+            country: this.userInfo.country,
+            preferredLanguage: this.userInfo.preferredLanguage,
+            preferredCurrency: this.userInfo.preferredCurrency
+        };
+
+        console.log('Updating user info:', updateData);
+
+        this.customerProfileService.updateProfile(updateData).subscribe({
+            next: (response) => {
+                if (response.success) {
+                    this.snackBar.open('Thông tin đã được cập nhật thành công', 'Đóng', {
+                        duration: 3000
+                    });
+                    // Reload user data to get updated info
+                    this.loadUserData();
+                } else {
+                    this.snackBar.open('Không thể cập nhật thông tin: ' + response.message, 'Đóng', {
+                        duration: 5000
+                    });
+                }
+            },
+            error: (error) => {
+                console.error('Error updating profile:', error);
+                this.snackBar.open('Có lỗi xảy ra khi cập nhật thông tin', 'Đóng', {
+                    duration: 3000
+                });
+            }
+        });
+    }
+
+    private validateUserInfo(): boolean {
+        if (!this.userInfo.fullName.trim()) {
+            this.snackBar.open('Vui lòng nhập họ và tên', 'Đóng', { duration: 3000 });
+            return false;
+        }
+
+        if (!this.customerProfileService.isValidEmail(this.userInfo.email)) {
+            this.snackBar.open('Email không hợp lệ', 'Đóng', { duration: 3000 });
+            return false;
+        }
+
+        if (this.userInfo.phoneNumber && !this.customerProfileService.isValidPhone(this.userInfo.phoneNumber)) {
+            this.snackBar.open('Số điện thoại không hợp lệ', 'Đóng', { duration: 3000 });
+            return false;
+        }
+
+        return true;
     }
 
     // Address Methods
@@ -234,18 +400,58 @@ export class Profile implements OnInit {
 
     // Password Methods
     changePassword() {
-        if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-            alert('Mật khẩu mới không khớp!');
+        if (!this.passwordForm.currentPassword.trim()) {
+            this.snackBar.open('Vui lòng nhập mật khẩu hiện tại', 'Đóng', { duration: 3000 });
             return;
         }
 
-        console.log('Changing password:', this.passwordForm);
-        // API call để đổi mật khẩu
-        this.passwordForm = {
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
+        if (!this.passwordForm.newPassword.trim()) {
+            this.snackBar.open('Vui lòng nhập mật khẩu mới', 'Đóng', { duration: 3000 });
+            return;
+        }
+
+        if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+            this.snackBar.open('Mật khẩu mới không khớp!', 'Đóng', { duration: 3000 });
+            return;
+        }
+
+        if (this.passwordForm.newPassword.length < 6) {
+            this.snackBar.open('Mật khẩu mới phải có ít nhất 6 ký tự', 'Đóng', { duration: 3000 });
+            return;
+        }
+
+        const passwordData: ChangePasswordRequest = {
+            currentPassword: this.passwordForm.currentPassword,
+            newPassword: this.passwordForm.newPassword
         };
+
+        console.log('Changing password...');
+
+        this.customerProfileService.changePassword(passwordData).subscribe({
+            next: (response) => {
+                if (response.success) {
+                    this.snackBar.open('Mật khẩu đã được thay đổi thành công', 'Đóng', {
+                        duration: 3000
+                    });
+                    // Reset form
+                    this.passwordForm = {
+                        currentPassword: '',
+                        newPassword: '',
+                        confirmPassword: ''
+                    };
+                } else {
+                    this.snackBar.open('Không thể đổi mật khẩu: ' + response.message, 'Đóng', {
+                        duration: 5000
+                    });
+                }
+            },
+            error: (error) => {
+                console.error('Error changing password:', error);
+                this.snackBar.open('Có lỗi xảy ra khi đổi mật khẩu', 'Đóng', {
+                    duration: 3000
+                });
+            }
+        });
     }
 
     // Navigation
@@ -254,15 +460,15 @@ export class Profile implements OnInit {
     }
 
     getInitials(): string {
-        if (this.userInfo.fullName) {
-            return this.userInfo.fullName
-                .split(' ')
-                .map(name => name.charAt(0))
-                .join('')
-                .toUpperCase()
-                .substring(0, 2);
-        }
-        return 'U';
+        return this.customerProfileService.getInitials(this.userInfo.fullName);
+    }
+
+    formatDate(dateString: string): string {
+        return this.customerProfileService.formatDate(dateString);
+    }
+
+    formatCurrency(amount: number): string {
+        return this.customerProfileService.formatCurrency(amount);
     }
 
     getAddressTypeLabel(type: string): string {

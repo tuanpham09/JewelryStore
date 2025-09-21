@@ -3,12 +3,30 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    background: linear-gradient(135deg, #fff5f8 0%, #ffeef3 50%, #ffffff 100%);
+    min-height: 100vh;
 }
 
 /* Page Header */
 .page-header {
     text-align: center;
     margin-bottom: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #d63384, #ff6b9d);
 }
 
 .page-title {
@@ -16,6 +34,7 @@
     font-weight: 300;
     margin: 0 0 1rem 0;
     letter-spacing: 1px;
+    position: relative;
 }
 
 .page-subtitle {
@@ -96,33 +115,182 @@ mat-chip {
 }
 
 .status-pending {
-    background: rgba(255, 193, 7, 0.1);
-    color: #f57c00;
-    border: 1px solid rgba(255, 193, 7, 0.3);
+    background: linear-gradient(135deg, #ff9800, #ffb74d) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.status-pending:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4) !important;
 }
 
 .status-confirmed {
-    background: rgba(33, 150, 243, 0.1);
-    color: #1976d2;
-    border: 1px solid rgba(33, 150, 243, 0.3);
+    background: linear-gradient(135deg, #2196f3, #42a5f5) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.status-confirmed:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4) !important;
 }
 
 .status-shipping {
-    background: rgba(156, 39, 176, 0.1);
-    color: #7b1fa2;
-    border: 1px solid rgba(156, 39, 176, 0.3);
+    background: linear-gradient(135deg, #3f51b5, #5c6bc0) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 8px rgba(63, 81, 181, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.status-shipping:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(63, 81, 181, 0.4) !important;
 }
 
 .status-delivered {
-    background: rgba(76, 175, 80, 0.1);
-    color: #388e3c;
-    border: 1px solid rgba(76, 175, 80, 0.3);
+    background: linear-gradient(135deg, #4caf50, #66bb6a) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.status-delivered:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4) !important;
 }
 
 .status-cancelled {
-    background: rgba(244, 67, 54, 0.1);
-    color: #d32f2f;
-    border: 1px solid rgba(244, 67, 54, 0.3);
+    background: linear-gradient(135deg, #f44336, #ef5350) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 8px 16px !important;
+    font-weight: 500 !important;
+    font-size: 0.85rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.status-cancelled:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4) !important;
+}
+
+/* Status Icon Alignment */
+.status-pending mat-icon,
+.status-confirmed mat-icon,
+.status-shipping mat-icon,
+.status-delivered mat-icon,
+.status-cancelled mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+    vertical-align: middle !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Order Status Section */
+.order-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.order-status mat-chip {
+    min-height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+}
+
+/* Order Header Improvements */
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem;
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 1rem;
+}
+
+.order-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.order-info h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.order-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+    .order-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .order-status {
+        justify-content: flex-start;
+    }
 }
 
 /* Order Items */

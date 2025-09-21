@@ -45,8 +45,8 @@ import { Footer } from '../shared/footer/footer';
         Header,
         Footer
     ],
-    templateUrl: './product-detail.html',
-    styleUrl: './product-detail.css'
+    templateUrl: 'product-detail.html',
+    styleUrl: 'product-detail.css'
 })
 export class ProductDetail implements OnInit {
     currentUser: any = null;

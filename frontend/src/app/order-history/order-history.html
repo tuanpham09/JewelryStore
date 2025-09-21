@@ -15,8 +15,23 @@
         <p class="page-subtitle">Theo dõi và quản lý các đơn hàng của bạn</p>
     </div>
 
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+        <mat-icon class="loading-icon">refresh</mat-icon>
+        <p>Đang tải danh sách đơn hàng...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="error-container">
+        <mat-icon class="error-icon">error</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" (click)="loadOrders()">
+            Thử lại
+        </button>
+    </div>
+
     <!-- Tabs -->
-    <div class="tabs-container">
+    <div class="tabs-container" *ngIf="!isLoading && !error">
         <mat-tab-group [(selectedIndex)]="selectedTab" class="order-tabs">
             <mat-tab label="Tất cả">
                 <div class="tab-content">
@@ -26,12 +41,12 @@
                             <div class="order-header">
                                 <div class="order-info">
                                     <h3 class="order-number">{{ order.orderNumber }}</h3>
-                                    <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
+                                    <p class="order-date">Đặt ngày: {{ formatDate(order.createdAt) }}</p>
                                 </div>
                                 <div class="order-status">
-                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                    <mat-chip [class]="getStatusChipClass(order.status)" [style.background-color]="getStatusColor(order.status)">
                                         <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
-                                        {{ order.statusText }}
+                                        {{ order.statusDescription }}
                                     </mat-chip>
                                 </div>
                             </div>
@@ -40,20 +55,18 @@
                             <div class="order-items">
                                 <div class="order-item" *ngFor="let item of order.items">
                                     <div class="item-image" (click)="navigateToProduct(item.productId)">
-                                        <img [src]="item.image" [alt]="item.name" />
+                                        <img [src]="item.productImage" [alt]="item.productName || 'Product'" />
                                     </div>
                                     <div class="item-details">
-                                        <h4 class="item-name" (click)="navigateToProduct(item.productId)">{{ item.name
-                                            }}</h4>
-                                        <div class="item-options" *ngIf="item.size || item.color">
-                                            <span class="option" *ngIf="item.size">Size: {{ item.size }}</span>
-                                            <span class="option" *ngIf="item.color">Màu: {{ item.color }}</span>
+                                        <h4 class="item-name" (click)="navigateToProduct(item.productId)">{{ item.productName || 'Sản phẩm #' + item.productId }}</h4>
+                                        <div class="item-options" *ngIf="item.sizeValue || item.colorValue">
+                                            <span class="option" *ngIf="item.sizeValue">Size: {{ item.sizeValue }}</span>
+                                            <span class="option" *ngIf="item.colorValue">Màu: {{ item.colorValue }}</span>
                                         </div>
                                         <p class="item-quantity">Số lượng: {{ item.quantity }}</p>
                                     </div>
                                     <div class="item-price">
-                                        <span class="price">{{ (item.price * item.quantity) |
-                                            currency:'VND':'symbol':'1.0-0' }}</span>
+                                        <span class="price">{{ formatPrice(item.subtotal) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -64,9 +77,13 @@
                                     <span>Địa chỉ giao hàng:</span>
                                     <span>{{ order.shippingAddress }}</span>
                                 </div>
-                                <div class="summary-row">
+                                <div class="summary-row" *ngIf="order.paymentMethod">
                                     <span>Phương thức thanh toán:</span>
                                     <span>{{ order.paymentMethod }}</span>
+                                </div>
+                                <div class="summary-row" *ngIf="order.paymentStatus">
+                                    <span>Trạng thái thanh toán:</span>
+                                    <span>{{ order.paymentStatus }}</span>
                                 </div>
                                 <div class="summary-row" *ngIf="order.trackingNumber">
                                     <span>Mã vận đơn:</span>
@@ -79,8 +96,7 @@
                                 <mat-divider></mat-divider>
                                 <div class="summary-row total-row">
                                     <span>Tổng cộng:</span>
-                                    <span class="total-amount">{{ order.totalAmount | currency:'VND':'symbol':'1.0-0'
-                                        }}</span>
+                                    <span class="total-amount">{{ formatPrice(order.total) }}</span>
                                 </div>
                             </div>
 
@@ -90,15 +106,19 @@
                                     <mat-icon>refresh</mat-icon>
                                     Đặt lại
                                 </button>
-                                <button mat-button class="action-btn" (click)="trackOrder(order)"
-                                    *ngIf="order.trackingNumber">
+                                <button mat-button class="action-btn" (click)="trackOrder(order)">
                                     <mat-icon>track_changes</mat-icon>
                                     Theo dõi
                                 </button>
                                 <button mat-button class="action-btn cancel-btn" (click)="cancelOrder(order)"
-                                    *ngIf="order.status === 'pending' || order.status === 'confirmed'">
+                                    *ngIf="canCancelOrder(order)">
                                     <mat-icon>cancel</mat-icon>
                                     Hủy đơn
+                                </button>
+                                <button mat-button class="action-btn return-btn" (click)="requestReturn(order)"
+                                    *ngIf="canReturnOrder(order)">
+                                    <mat-icon>undo</mat-icon>
+                                    Trả hàng
                                 </button>
                             </div>
                         </div>
@@ -117,9 +137,9 @@
                                     <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
                                 </div>
                                 <div class="order-status">
-                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                    <mat-chip [class]="getStatusChipClass(order.status)" [style.background-color]="getStatusColor(order.status)">
                                         <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
-                                        {{ order.statusText }}
+                                        {{ order.statusDescription }}
                                     </mat-chip>
                                 </div>
                             </div>
@@ -140,9 +160,9 @@
                                     <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
                                 </div>
                                 <div class="order-status">
-                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                    <mat-chip [class]="getStatusChipClass(order.status)" [style.background-color]="getStatusColor(order.status)">
                                         <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
-                                        {{ order.statusText }}
+                                        {{ order.statusDescription }}
                                     </mat-chip>
                                 </div>
                             </div>
@@ -163,9 +183,9 @@
                                     <p class="order-date">Đặt ngày: {{ order.orderDate }}</p>
                                 </div>
                                 <div class="order-status">
-                                    <mat-chip [class]="getStatusChipClass(order.status)">
+                                    <mat-chip [class]="getStatusChipClass(order.status)" [style.background-color]="getStatusColor(order.status)">
                                         <mat-icon>{{ getStatusIcon(order.status) }}</mat-icon>
-                                        {{ order.statusText }}
+                                        {{ order.statusDescription }}
                                     </mat-chip>
                                 </div>
                             </div>

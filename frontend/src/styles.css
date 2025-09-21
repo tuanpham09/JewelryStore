@@ -18,6 +18,30 @@ body {
     text-rendering: optimizeLegibility;
 }
 
+/* Cancel Order Dialog Styles */
+.cancel-order-dialog-container {
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+.cancel-order-dialog-container .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+/* Return Order Dialog Styles */
+.return-order-dialog-container {
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+.return-order-dialog-container .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
 /* Fix gradient text rendering */
 .gradient-text {
     background: linear-gradient(135deg, #d63384, #ff6b9d);
