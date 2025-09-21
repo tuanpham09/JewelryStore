@@ -21,6 +21,7 @@ import { CategoryManagementComponent } from './category-management/category-mana
 import { UserManagementComponent } from './user-management/user-management';
 import { OrderManagementComponent } from './order-management/order-management';
 import { PromotionManagementComponent } from './promotion-management/promotion-management';
+import { DashboardComponent } from './dashboard/dashboard';
 
 interface Product {
     id: string;
@@ -80,7 +81,8 @@ interface ProductForm {
         CategoryManagementComponent,
         UserManagementComponent,
         OrderManagementComponent,
-        PromotionManagementComponent
+        PromotionManagementComponent,
+        DashboardComponent
     ],
     templateUrl: './admin.html',
     styleUrl: './admin.css'

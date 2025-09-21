@@ -171,6 +171,54 @@ export interface PromotionDto {
     updatedAt: string;
 }
 
+export interface DashboardStatsDto {
+    totalRevenue: number;
+    todayRevenue: number;
+    monthlyRevenue: number;
+    totalOrders: number;
+    todayOrders: number;
+    monthlyOrders: number;
+    totalCustomers: number;
+    newCustomersToday: number;
+    totalProducts: number;
+    lowStockProducts: number;
+    outOfStockProducts: number;
+    pendingOrders: number;
+    activePromotions: number;
+    topSellingProducts: TopProductDto[];
+    topCustomers: TopCustomerDto[];
+    revenueChart: RevenueChartDto[];
+    orderStatusStats: OrderStatusDto[];
+}
+
+export interface TopProductDto {
+    productId: number;
+    productName: string;
+    productThumbnail?: string;
+    totalSold: number;
+    totalRevenue: number;
+}
+
+export interface TopCustomerDto {
+    customerId: number;
+    customerName: string;
+    customerEmail: string;
+    totalOrders: number;
+    totalSpent: number;
+}
+
+export interface RevenueChartDto {
+    date: string;
+    revenue: number;
+    orders: number;
+}
+
+export interface OrderStatusDto {
+    status: string;
+    count: number;
+    totalValue: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -365,5 +413,22 @@ export class AdminService {
     // Toggle promotion status
     togglePromotionStatus(id: number): Observable<PromotionDto> {
         return this.http.put<PromotionDto>(`${this.apiUrl}/promotions/${id}/toggle`, {});
+    }
+
+    // ========== DASHBOARD & STATISTICS ==========
+    
+    // Get dashboard statistics
+    getDashboardStats(): Observable<DashboardStatsDto> {
+        return this.http.get<DashboardStatsDto>(`${this.apiUrl}/dashboard/stats`);
+    }
+
+    // Get revenue report
+    getRevenueReport(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/reports/revenue`);
+    }
+
+    // Get revenue report by date range
+    getRevenueReportByDateRange(startDate: string, endDate: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/reports/revenue/date-range?startDate=${startDate}&endDate=${endDate}`);
     }
 }

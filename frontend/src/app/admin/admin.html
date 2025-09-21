@@ -45,11 +45,6 @@
                 <span>Quản lý khuyến mãi</span>
             </button>
 
-            <button mat-button class="nav-item" [class.active]="activeSection === 'reports'"
-                (click)="setActiveSection('reports')">
-                <mat-icon>assessment</mat-icon>
-                <span>Báo cáo & Thống kê</span>
-            </button>
         </nav>
     </div>
 
@@ -57,52 +52,7 @@
     <div class="admin-content">
         <!-- Dashboard Section -->
         <div class="content-section" *ngIf="activeSection === 'dashboard'">
-            <div class="section-header">
-                <h1 class="section-title gradient-text">Dashboard Thống Kê</h1>
-                <p class="section-subtitle">Tổng quan về hoạt động của hệ thống</p>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <mat-icon>inventory_2</mat-icon>
-                    </div>
-                    <div class="stat-content">
-                        <h3>1,234</h3>
-                        <p>Tổng sản phẩm</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <mat-icon>people</mat-icon>
-                    </div>
-                    <div class="stat-content">
-                        <h3>5,678</h3>
-                        <p>Người dùng</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <mat-icon>shopping_bag</mat-icon>
-                    </div>
-                    <div class="stat-content">
-                        <h3>2,345</h3>
-                        <p>Đơn hàng</p>
-                    </div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon">
-                        <mat-icon>attach_money</mat-icon>
-                    </div>
-                    <div class="stat-content">
-                        <h3>₫12.5B</h3>
-                        <p>Doanh thu</p>
-                    </div>
-                </div>
-            </div>
+            <app-dashboard></app-dashboard>
         </div>
 
         <!-- Products Section -->

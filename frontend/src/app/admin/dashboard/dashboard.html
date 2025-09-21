@@ -1,0 +1,351 @@
+<!-- Dashboard Component -->
+<div class="dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="dashboard-title">
+                <mat-icon>dashboard</mat-icon>
+                Dashboard Thống Kê
+            </h1>
+            <p class="dashboard-subtitle">Tổng quan về hoạt động kinh doanh</p>
+        </div>
+        <div class="header-actions">
+            <button mat-raised-button class="export-btn pdf-btn" (click)="exportPDF()" [disabled]="isLoading">
+                <mat-icon>picture_as_pdf</mat-icon>
+                Export PDF
+            </button>
+            <button mat-raised-button class="export-btn excel-btn" (click)="exportExcel()" [disabled]="isLoading">
+                <mat-icon>table_chart</mat-icon>
+                Export Excel
+            </button>
+            <button mat-raised-button color="primary" (click)="refreshStats()" [disabled]="isLoading" class="refresh-btn">
+                <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                <mat-icon *ngIf="!isLoading">refresh</mat-icon>
+                Làm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" *ngIf="isLoading && !dashboardStats">
+        <mat-spinner diameter="60"></mat-spinner>
+        <p>Đang tải thống kê dashboard...</p>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content" *ngIf="dashboardStats">
+        <!-- Key Metrics Cards -->
+        <div class="metrics-section">
+            <div class="metrics-grid">
+                <!-- Revenue Cards -->
+                <div class="metric-card revenue">
+                    <div class="metric-icon">
+                        <mat-icon>attach_money</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatCurrency(dashboardStats.totalRevenue) }}</div>
+                        <div class="metric-label">Tổng doanh thu</div>
+                        <div class="metric-change" [style.color]="getChangeColor(getPercentageChange(dashboardStats.totalRevenue, dashboardStats.monthlyRevenue))">
+                            <mat-icon>{{ getChangeIcon(getPercentageChange(dashboardStats.totalRevenue, dashboardStats.monthlyRevenue)) }}</mat-icon>
+                            <span>{{ getPercentageChange(dashboardStats.totalRevenue, dashboardStats.monthlyRevenue).toFixed(1) }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card today-revenue">
+                    <div class="metric-icon">
+                        <mat-icon>today</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatCurrency(dashboardStats.todayRevenue) }}</div>
+                        <div class="metric-label">Doanh thu hôm nay</div>
+                        <div class="metric-change" [style.color]="getChangeColor(getPercentageChange(dashboardStats.todayRevenue, dashboardStats.monthlyRevenue / 30))">
+                            <mat-icon>{{ getChangeIcon(getPercentageChange(dashboardStats.todayRevenue, dashboardStats.monthlyRevenue / 30)) }}</mat-icon>
+                            <span>{{ getPercentageChange(dashboardStats.todayRevenue, dashboardStats.monthlyRevenue / 30).toFixed(1) }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card monthly-revenue">
+                    <div class="metric-icon">
+                        <mat-icon>calendar_month</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatCurrency(dashboardStats.monthlyRevenue) }}</div>
+                        <div class="metric-label">Doanh thu tháng này</div>
+                        <div class="metric-change positive">
+                            <mat-icon>trending_up</mat-icon>
+                            <span>Tháng hiện tại</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders Cards -->
+                <div class="metric-card orders">
+                    <div class="metric-icon">
+                        <mat-icon>shopping_cart</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.totalOrders) }}</div>
+                        <div class="metric-label">Tổng đơn hàng</div>
+                        <div class="metric-change" [style.color]="getChangeColor(getPercentageChange(dashboardStats.totalOrders, dashboardStats.monthlyOrders))">
+                            <mat-icon>{{ getChangeIcon(getPercentageChange(dashboardStats.totalOrders, dashboardStats.monthlyOrders)) }}</mat-icon>
+                            <span>{{ getPercentageChange(dashboardStats.totalOrders, dashboardStats.monthlyOrders).toFixed(1) }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card today-orders">
+                    <div class="metric-icon">
+                        <mat-icon>today</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.todayOrders) }}</div>
+                        <div class="metric-label">Đơn hàng hôm nay</div>
+                        <div class="metric-change" [style.color]="getChangeColor(getPercentageChange(dashboardStats.todayOrders, dashboardStats.monthlyOrders / 30))">
+                            <mat-icon>{{ getChangeIcon(getPercentageChange(dashboardStats.todayOrders, dashboardStats.monthlyOrders / 30)) }}</mat-icon>
+                            <span>{{ getPercentageChange(dashboardStats.todayOrders, dashboardStats.monthlyOrders / 30).toFixed(1) }}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card pending-orders">
+                    <div class="metric-icon">
+                        <mat-icon>schedule</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.pendingOrders) }}</div>
+                        <div class="metric-label">Đơn hàng chờ xử lý</div>
+                        <div class="metric-change warning">
+                            <mat-icon>warning</mat-icon>
+                            <span>Cần xử lý</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customers Cards -->
+                <div class="metric-card customers">
+                    <div class="metric-icon">
+                        <mat-icon>people</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.totalCustomers) }}</div>
+                        <div class="metric-label">Tổng khách hàng</div>
+                        <div class="metric-change positive">
+                            <mat-icon>trending_up</mat-icon>
+                            <span>+{{ formatNumber(dashboardStats.newCustomersToday) }} hôm nay</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Cards -->
+                <div class="metric-card products">
+                    <div class="metric-icon">
+                        <mat-icon>inventory</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.totalProducts) }}</div>
+                        <div class="metric-label">Tổng sản phẩm</div>
+                        <div class="metric-change neutral">
+                            <mat-icon>inventory_2</mat-icon>
+                            <span>Tất cả sản phẩm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card low-stock">
+                    <div class="metric-icon">
+                        <mat-icon>warning</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.lowStockProducts) }}</div>
+                        <div class="metric-label">Sản phẩm sắp hết hàng</div>
+                        <div class="metric-change warning">
+                            <mat-icon>warning</mat-icon>
+                            <span>Cần nhập hàng</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card out-of-stock">
+                    <div class="metric-icon">
+                        <mat-icon>error</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.outOfStockProducts) }}</div>
+                        <div class="metric-label">Sản phẩm hết hàng</div>
+                        <div class="metric-change danger">
+                            <mat-icon>error</mat-icon>
+                            <span>Khẩn cấp</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promotions Card -->
+                <div class="metric-card promotions">
+                    <div class="metric-icon">
+                        <mat-icon>local_offer</mat-icon>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value">{{ formatNumber(dashboardStats.activePromotions) }}</div>
+                        <div class="metric-label">Khuyến mãi đang hoạt động</div>
+                        <div class="metric-change positive">
+                            <mat-icon>local_offer</mat-icon>
+                            <span>Đang chạy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Tables Section -->
+        <div class="charts-section">
+            <mat-tab-group [(selectedIndex)]="selectedTab" (selectedIndexChange)="onTabChange($event)">
+                <!-- Revenue Chart Tab -->
+                <mat-tab label="Biểu đồ doanh thu">
+                    <div class="tab-content">
+                        <div class="chart-container">
+                            <h3 class="chart-title">
+                                <mat-icon>trending_up</mat-icon>
+                                Biểu đồ doanh thu theo thời gian
+                            </h3>
+                            <div class="chart-placeholder" *ngIf="revenueChartData.length === 0">
+                                <mat-icon>bar_chart</mat-icon>
+                                <p>Chưa có dữ liệu biểu đồ</p>
+                            </div>
+                            <div class="chart-data" *ngIf="revenueChartData.length > 0">
+                                <div class="chart-item" *ngFor="let item of revenueChartData">
+                                    <div class="chart-date">{{ item.name }}</div>
+                                    <div class="chart-value">{{ formatCurrency(item.value) }}</div>
+                                    <div class="chart-orders">{{ item.orders }} đơn hàng</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <!-- Order Status Chart Tab -->
+                <mat-tab label="Trạng thái đơn hàng">
+                    <div class="tab-content">
+                        <div class="chart-container">
+                            <h3 class="chart-title">
+                                <mat-icon>pie_chart</mat-icon>
+                                Phân bố trạng thái đơn hàng
+                            </h3>
+                            <div class="chart-placeholder" *ngIf="orderStatusData.length === 0">
+                                <mat-icon>pie_chart</mat-icon>
+                                <p>Chưa có dữ liệu trạng thái</p>
+                            </div>
+                            <div class="status-chart" *ngIf="orderStatusData.length > 0">
+                                <div class="status-item" *ngFor="let item of orderStatusData">
+                                    <div class="status-info">
+                                        <div class="status-name">{{ item.name }}</div>
+                                        <div class="status-count">{{ formatNumber(item.value) }} đơn hàng</div>
+                                        <div class="status-revenue">{{ formatCurrency(item.revenue) }}</div>
+                                    </div>
+                                    <div class="status-bar">
+                                        <div class="status-progress" [style.width.%]="(item.value / dashboardStats.totalOrders) * 100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <!-- Top Products Tab -->
+                <mat-tab label="Sản phẩm bán chạy">
+                    <div class="tab-content">
+                        <div class="table-container">
+                            <h3 class="table-title">
+                                <mat-icon>star</mat-icon>
+                                Top sản phẩm bán chạy
+                            </h3>
+                            <div class="table-wrapper">
+                                <table mat-table [dataSource]="topProducts" class="products-table">
+                                    <ng-container matColumnDef="product">
+                                        <th mat-header-cell *matHeaderCellDef>Sản phẩm</th>
+                                        <td mat-cell *matCellDef="let product">
+                                            <div class="product-info">
+                                                <div class="product-name">{{ product.productName }}</div>
+                                                <div class="product-id">ID: {{ product.productId }}</div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="sold">
+                                        <th mat-header-cell *matHeaderCellDef>Đã bán</th>
+                                        <td mat-cell *matCellDef="let product">
+                                            <div class="sold-info">
+                                                <div class="sold-count">{{ formatNumber(product.totalSold) }}</div>
+                                                <div class="sold-label">sản phẩm</div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="revenue">
+                                        <th mat-header-cell *matHeaderCellDef>Doanh thu</th>
+                                        <td mat-cell *matCellDef="let product">
+                                            <div class="revenue-info">
+                                                <div class="revenue-amount">{{ formatCurrency(product.totalRevenue) }}</div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <tr mat-header-row *matHeaderRowDef="productColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: productColumns;"></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </mat-tab>
+
+                <!-- Top Customers Tab -->
+                <mat-tab label="Khách hàng VIP">
+                    <div class="tab-content">
+                        <div class="table-container">
+                            <h3 class="table-title">
+                                <mat-icon>star</mat-icon>
+                                Top khách hàng VIP
+                            </h3>
+                            <div class="table-wrapper">
+                                <table mat-table [dataSource]="topCustomers" class="customers-table">
+                                    <ng-container matColumnDef="customer">
+                                        <th mat-header-cell *matHeaderCellDef>Khách hàng</th>
+                                        <td mat-cell *matCellDef="let customer">
+                                            <div class="customer-info">
+                                                <div class="customer-name">{{ customer.customerName }}</div>
+                                                <div class="customer-email">{{ customer.customerEmail }}</div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="orders">
+                                        <th mat-header-cell *matHeaderCellDef>Đơn hàng</th>
+                                        <td mat-cell *matCellDef="let customer">
+                                            <div class="orders-info">
+                                                <div class="orders-count">{{ formatNumber(customer.totalOrders) }}</div>
+                                                <div class="orders-label">đơn hàng</div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <ng-container matColumnDef="spent">
+                                        <th mat-header-cell *matHeaderCellDef>Chi tiêu</th>
+                                        <td mat-cell *matCellDef="let customer">
+                                            <div class="spent-info">
+                                                <div class="spent-amount">{{ formatCurrency(customer.totalSpent) }}</div>
+                                            </div>
+                                        </td>
+                                    </ng-container>
+
+                                    <tr mat-header-row *matHeaderRowDef="customerColumns"></tr>
+                                    <tr mat-row *matRowDef="let row; columns: customerColumns;"></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+        </div>
+    </div>
+</div>
