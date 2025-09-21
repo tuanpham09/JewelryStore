@@ -30,13 +30,13 @@ public class Product {
     @Column(name = "short_description", columnDefinition = "TEXT")
     private String shortDescription;
     
-    @Column(nullable = false, precision = 10, scale = 2)
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal price;
     
-    @Column(name = "original_price", precision = 10, scale = 2)
+    @Column(name = "original_price", precision = 15, scale = 2)
     private BigDecimal originalPrice;
     
-    @Column(name = "sale_price", precision = 10, scale = 2)
+    @Column(name = "sale_price", precision = 15, scale = 2)
     private BigDecimal salePrice;
     
     @Column(nullable = false)

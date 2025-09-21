@@ -14,37 +14,60 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-
-interface Product {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    originalPrice?: number;
-    category: string;
-    material: string;
-    color: string;
-    size: string;
-    images: string[];
-    inStock: boolean;
-    rating: number;
-    reviewCount: number;
-    tags: string[];
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { AdminService, ProductDto, ProductUpsertDto, CategoryDto } from '../../services/admin.service';
+import { environment } from '../../../environments/environment';
 
 interface ProductForm {
+    // Basic Info
     name: string;
+    slug?: string;
     description: string;
+    shortDescription?: string;
     price: number;
     originalPrice?: number;
-    category: string;
+    salePrice?: number;
+    categoryId: number;
+    
+    // Physical Properties
     material: string;
     color: string;
-    size: string;
+    size: string; // Single size
+    sizes: string[]; // Multi-select for sizes
+    weight?: number;
+    dimensions?: string;
+    
+    // Business Info
+    sku?: string;
+    barcode?: string;
+    brand?: string;
+    origin?: string;
+    warrantyPeriod?: number;
+    
+    // Stock & Inventory
+    stock: number;
+    minStock?: number;
+    maxStock?: number;
+    
+    // Status Flags
+    isActive: boolean;
+    isFeatured: boolean;
+    isNew: boolean;
+    isBestseller: boolean;
+    
+    // Analytics & Tracking
+    viewCount?: number;
+    soldCount?: number;
+    
+    // SEO
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
+    
+    // Media
     images: File[];
-    inStock: boolean;
+    thumbnail?: string;
+    
+    // Tags
     tags: string[];
 }
 
@@ -75,41 +98,78 @@ export class ProductManagementComponent implements OnInit {
     // Expose Math object to template
     Math = Math;
 
-    products: Product[] = [];
-    filteredProducts: Product[] = [];
+    products: ProductDto[] = [];
+    filteredProducts: ProductDto[] = [];
+    categories: CategoryDto[] = [];
     searchTerm: string = '';
-    selectedCategory: string = '';
+    selectedCategory: number | null = null;
     isAddDialogOpen: boolean = false;
     isEditDialogOpen: boolean = false;
-    editingProduct: Product | null = null;
+    editingProduct: ProductDto | null = null;
     isLoading: boolean = false;
+
+    // Additional form properties
+    discountPercentage: number = 0;
+    availableTags: string[] = ['Trang sức', 'Nhẫn', 'Dây chuyền', 'Vòng tay', 'Bông tai', 'Lắc tay'];
+    slug: string = '';
 
     // Form data
     productForm: ProductForm = {
+        // Basic Info
         name: '',
+        slug: '',
         description: '',
+        shortDescription: '',
         price: 0,
         originalPrice: 0,
-        category: '',
+        salePrice: 0,
+        categoryId: 0,
+        
+        // Physical Properties
         material: '',
         color: '',
         size: '',
+        sizes: [],
+        weight: 0,
+        dimensions: '',
+        
+        // Business Info
+        sku: '',
+        barcode: '',
+        brand: '',
+        origin: '',
+        warrantyPeriod: 0,
+        
+        // Stock & Inventory
+        stock: 0,
+        minStock: 5,
+        maxStock: 1000,
+        
+        // Status Flags
+        isActive: true,
+        isFeatured: false,
+        isNew: true,
+        isBestseller: false,
+        
+        // Analytics & Tracking
+        viewCount: 0,
+        soldCount: 0,
+        
+        // SEO
+        metaTitle: '',
+        metaDescription: '',
+        metaKeywords: '',
+        
+        // Media
         images: [],
-        inStock: true,
+        thumbnail: '',
+        
+        // Tags
         tags: []
     };
 
     newTag: string = '';
     previewImages: string[] = [];
-
-    // Categories and options
-    categories = [
-        { value: 'rings', label: 'Nhẫn' },
-        { value: 'necklaces', label: 'Dây chuyền' },
-        { value: 'bracelets', label: 'Vòng tay' },
-        { value: 'earrings', label: 'Bông tai' },
-        { value: 'watches', label: 'Đồng hồ' }
-    ];
 
     materials = [
         { value: 'gold', label: 'Vàng' },
@@ -132,7 +192,15 @@ export class ProductManagementComponent implements OnInit {
         { value: 's', label: 'S' },
         { value: 'm', label: 'M' },
         { value: 'l', label: 'L' },
-        { value: 'xl', label: 'XL' }
+        { value: 'xl', label: 'XL' },
+        { value: 'xxl', label: 'XXL' },
+        { value: 'xxxl', label: 'XXXL' },
+        { value: 'free-size', label: 'Free Size' },
+        { value: 'one-size', label: 'One Size' }
+    ];
+
+    sizeOptions = [
+        'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size', 'One Size'
     ];
 
     displayedColumns: string[] = [
@@ -147,81 +215,129 @@ export class ProductManagementComponent implements OnInit {
 
     constructor(
         private dialog: MatDialog,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private adminService: AdminService
     ) { }
 
     ngOnInit() {
+        this.testApiConnection();
+        this.loadCategories();
         this.loadProducts();
+    }
+
+    // Generate slug from product name
+    generateSlug(name: string): string {
+        return name
+            .toLowerCase()
+            .trim()
+            .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
+            .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
+            .replace(/[ìíịỉĩ]/g, 'i')
+            .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
+            .replace(/[ùúụủũưừứựửữ]/g, 'u')
+            .replace(/[ỳýỵỷỹ]/g, 'y')
+            .replace(/đ/g, 'd')
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+
+    // Auto-generate slug when name changes
+    onNameChange() {
+        if (this.productForm.name) {
+            this.productForm.slug = this.generateSlug(this.productForm.name);
+        }
+    }
+
+    // Upload images for product
+    uploadImages(productId: number) {
+        if (this.productForm.images && this.productForm.images.length > 0) {
+            console.log(`Uploading ${this.productForm.images.length} new images for product ${productId}`);
+            this.productForm.images.forEach((file: File, index: number) => {
+                console.log(`Uploading image ${index + 1}:`, file.name);
+                this.adminService.uploadProductImage(productId, file).subscribe({
+                    next: (result) => {
+                        console.log(`Image ${index + 1} uploaded successfully:`, result);
+                        this.snackBar.open(`Ảnh ${index + 1} đã upload thành công!`, 'Đóng', { duration: 2000 });
+                    },
+                    error: (error) => {
+                        console.error(`Error uploading image ${index + 1}:`, error);
+                        this.snackBar.open(`Lỗi khi upload ảnh ${index + 1}: ${error.error?.message || error.message}`, 'Đóng', { duration: 5000 });
+                    }
+                });
+            });
+        } else {
+            console.log('No new images to upload');
+        }
+    }
+
+    testApiConnection() {
+        console.log('Testing API connection...');
+        console.log('API Base URL:', `${environment.apiUrl}/admin`);
+        console.log('Products endpoint:', `${environment.apiUrl}/admin/products`);
+        console.log('Categories endpoint:', `${environment.apiUrl}/admin/categories`);
+    }
+
+    loadCategories() {
+        // Don't load if already loaded
+        if (this.categories.length > 0) {
+            return;
+        }
+        
+        console.log('Loading categories from API...');
+        this.adminService.getCategories().subscribe({
+            next: (categories) => {
+                console.log('Categories loaded successfully:', categories);
+                this.categories = categories;
+            },
+            error: (error) => {
+                console.error('Error loading categories:', error);
+                console.error('Error details:', {
+                    status: error.status,
+                    statusText: error.statusText,
+                    message: error.message,
+                    url: error.url
+                });
+                this.snackBar.open(`Lỗi khi tải danh mục: ${error.status} ${error.statusText}`, 'Đóng', { duration: 5000 });
+            }
+        });
     }
 
     loadProducts() {
         this.isLoading = true;
-        // Mock data - replace with actual API call
-        setTimeout(() => {
-            this.products = [
-                {
-                    id: '1',
-                    name: 'Nhẫn vàng 18k đính kim cương',
-                    description: 'Nhẫn vàng 18k với viên kim cương 0.5ct, thiết kế tinh tế và sang trọng.',
-                    price: 15000000,
-                    originalPrice: 18000000,
-                    category: 'rings',
-                    material: 'gold',
-                    color: 'gold',
-                    size: 'm',
-                    images: ['https://via.placeholder.com/300x300?text=Ring+1'],
-                    inStock: true,
-                    rating: 4.8,
-                    reviewCount: 25,
-                    tags: ['kim cương', 'vàng 18k', 'sang trọng'],
-                    createdAt: new Date('2024-01-15'),
-                    updatedAt: new Date('2024-01-15')
-                },
-                {
-                    id: '2',
-                    name: 'Dây chuyền bạc 925',
-                    description: 'Dây chuyền bạc 925 với thiết kế hiện đại, phù hợp cho mọi dịp.',
-                    price: 2500000,
-                    category: 'necklaces',
-                    material: 'silver',
-                    color: 'silver',
-                    size: 'm',
-                    images: ['https://via.placeholder.com/300x300?text=Necklace+1'],
-                    inStock: true,
-                    rating: 4.5,
-                    reviewCount: 18,
-                    tags: ['bạc 925', 'hiện đại'],
-                    createdAt: new Date('2024-01-10'),
-                    updatedAt: new Date('2024-01-10')
-                },
-                {
-                    id: '3',
-                    name: 'Vòng tay charm vàng hồng',
-                    description: 'Vòng tay charm vàng hồng với các hạt charm đáng yêu.',
-                    price: 3500000,
-                    category: 'bracelets',
-                    material: 'rose-gold',
-                    color: 'rose-gold',
-                    size: 's',
-                    images: ['https://via.placeholder.com/300x300?text=Bracelet+1'],
-                    inStock: false,
-                    rating: 4.2,
-                    reviewCount: 12,
-                    tags: ['charm', 'vàng hồng', 'đáng yêu'],
-                    createdAt: new Date('2024-01-08'),
-                    updatedAt: new Date('2024-01-08')
-                }
-            ];
-            this.filteredProducts = [...this.products];
-            this.isLoading = false;
-        }, 1000);
+        console.log('Loading products from API...');
+        this.adminService.getProducts().subscribe({
+            next: (products) => {
+                console.log('Products loaded successfully:', products);
+                this.products = products;
+                this.filteredProducts = [...this.products];
+                this.isLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading products:', error);
+                console.error('Error details:', {
+                    status: error.status,
+                    statusText: error.statusText,
+                    message: error.message,
+                    url: error.url
+                });
+                
+                // Fallback to empty array if API fails
+                this.products = [];
+                this.filteredProducts = [];
+                this.isLoading = false;
+                
+                this.snackBar.open(`Lỗi khi tải danh sách sản phẩm: ${error.status} ${error.statusText}`, 'Đóng', { duration: 5000 });
+            }
+        });
     }
 
     filterProducts() {
         this.filteredProducts = this.products.filter(product => {
             const matchesSearch = product.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                product.description.toLowerCase().includes(this.searchTerm.toLowerCase());
-            const matchesCategory = !this.selectedCategory || product.category === this.selectedCategory;
+                (product.description && product.description.toLowerCase().includes(this.searchTerm.toLowerCase()));
+            const matchesCategory = !this.selectedCategory || product.categoryId === this.selectedCategory;
             return matchesSearch && matchesCategory;
         });
     }
@@ -231,23 +347,78 @@ export class ProductManagementComponent implements OnInit {
         this.isAddDialogOpen = true;
     }
 
-    openEditDialog(product: Product) {
+    openEditDialog(product: ProductDto) {
         this.editingProduct = product;
+        
+        // Ensure categories are loaded
+        if (this.categories.length === 0) {
+            this.loadCategories();
+        }
+        
         this.productForm = {
+            // Basic Info
             name: product.name,
-            description: product.description,
+            slug: product.slug || this.generateSlug(product.name),
+            description: product.description || '',
+            shortDescription: product.shortDescription || '',
             price: product.price,
             originalPrice: product.originalPrice,
-            category: product.category,
-            material: product.material,
-            color: product.color,
-            size: product.size,
+            salePrice: product.salePrice,
+            categoryId: product.categoryId || 0,
+            
+            // Physical Properties
+            material: product.material || '',
+            color: product.color || '',
+            size: product.size || '',
+            sizes: product.sizes || [],
+            weight: product.weight || 0,
+            dimensions: product.dimensions || '',
+            
+            // Business Info
+            sku: product.sku || '',
+            barcode: product.barcode || '',
+            brand: product.brand || '',
+            origin: product.origin || '',
+            warrantyPeriod: product.warrantyPeriod || 0,
+            
+            // Stock & Inventory
+            stock: product.stock || 0,
+            minStock: product.minStock || 5,
+            maxStock: product.maxStock || 1000,
+            
+            // Status Flags
+            isActive: product.isActive !== false,
+            isFeatured: product.isFeatured || false,
+            isNew: product.isNew || false,
+            isBestseller: product.isBestseller || false,
+            
+            // Analytics & Tracking
+            viewCount: product.viewCount || 0,
+            soldCount: product.soldCount || 0,
+            
+            // SEO
+            metaTitle: product.metaTitle || '',
+            metaDescription: product.metaDescription || '',
+            metaKeywords: product.metaKeywords || '',
+            
+            // Media
             images: [],
-            inStock: product.inStock,
-            tags: [...product.tags]
+            thumbnail: product.thumbnail || '',
+            
+            // Tags
+            tags: product.tags || []
         };
-        this.previewImages = [...product.images];
-        this.isEditDialogOpen = true;
+        this.previewImages = product.images ? product.images.map(img => img.imageUrl) : [];
+        // Wait for categories to load before opening dialog
+        if (this.categories.length === 0) {
+            this.loadCategories();
+            // Wait a bit for categories to load
+            setTimeout(() => {
+                this.isEditDialogOpen = true;
+            }, 100);
+        } else {
+            this.isEditDialogOpen = true;
+        }
     }
 
     closeDialogs() {
@@ -259,16 +430,56 @@ export class ProductManagementComponent implements OnInit {
 
     resetForm() {
         this.productForm = {
+            // Basic Info
             name: '',
+            slug: '',
             description: '',
+            shortDescription: '',
             price: 0,
             originalPrice: 0,
-            category: '',
+            salePrice: 0,
+            categoryId: 0,
+            
+            // Physical Properties
             material: '',
             color: '',
             size: '',
+            sizes: [],
+            weight: 0,
+            dimensions: '',
+            
+            // Business Info
+            sku: '',
+            barcode: '',
+            brand: '',
+            origin: '',
+            warrantyPeriod: 0,
+            
+            // Stock & Inventory
+            stock: 0,
+            minStock: 5,
+            maxStock: 1000,
+            
+            // Status Flags
+            isActive: true,
+            isFeatured: false,
+            isNew: true,
+            isBestseller: false,
+            
+            // Analytics & Tracking
+            viewCount: 0,
+            soldCount: 0,
+            
+            // SEO
+            metaTitle: '',
+            metaDescription: '',
+            metaKeywords: '',
+            
+            // Media
             images: [],
-            inStock: true,
+            thumbnail: '',
+            
+            // Tags
             tags: []
         };
         this.previewImages = [];
@@ -278,20 +489,37 @@ export class ProductManagementComponent implements OnInit {
     onImageSelected(event: any) {
         const files = event.target.files;
         if (files) {
+            console.log(`Selected ${files.length} new images`);
             for (let i = 0; i < files.length; i++) {
+                // Add to productForm.images (for upload)
                 this.productForm.images.push(files[i]);
+                
+                // Add to previewImages (for display)
                 const reader = new FileReader();
                 reader.onload = (e: any) => {
                     this.previewImages.push(e.target.result);
                 };
                 reader.readAsDataURL(files[i]);
             }
+            console.log(`Total images in form: ${this.productForm.images.length}`);
+            console.log(`Total preview images: ${this.previewImages.length}`);
         }
     }
 
     removeImage(index: number) {
+        console.log(`Removing image at index ${index}`);
+        console.log(`Before removal - previewImages: ${this.previewImages.length}, productForm.images: ${this.productForm.images.length}`);
+        
+        // Remove from preview
         this.previewImages.splice(index, 1);
-        this.productForm.images.splice(index, 1);
+        
+        // Only remove from productForm.images if it's a new image (File object)
+        // If it's an old image (string URL), don't remove from productForm.images
+        if (index < this.productForm.images.length) {
+            this.productForm.images.splice(index, 1);
+        }
+        
+        console.log(`After removal - previewImages: ${this.previewImages.length}, productForm.images: ${this.productForm.images.length}`);
     }
 
     addTag() {
@@ -309,53 +537,106 @@ export class ProductManagementComponent implements OnInit {
         if (this.validateForm()) {
             this.isLoading = true;
 
-            // Simulate API call
-            setTimeout(() => {
-                if (this.isEditDialogOpen && this.editingProduct) {
-                    // Update existing product
-                    const index = this.products.findIndex(p => p.id === this.editingProduct!.id);
-                    if (index !== -1) {
-                        this.products[index] = {
-                            ...this.products[index],
-                            ...this.productForm,
-                            images: this.previewImages,
-                            updatedAt: new Date()
-                        };
-                    }
-                    this.snackBar.open('Cập nhật sản phẩm thành công!', 'Đóng', { duration: 3000 });
-                } else {
-                    // Add new product
-                    const newProduct: Product = {
-                        id: Date.now().toString(),
-                        ...this.productForm,
-                        images: this.previewImages,
-                        rating: 0,
-                        reviewCount: 0,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                    };
-                    this.products.unshift(newProduct);
-                    this.snackBar.open('Thêm sản phẩm thành công!', 'Đóng', { duration: 3000 });
-                }
+            const productData: ProductUpsertDto = {
+                name: this.productForm.name,
+                slug: this.productForm.slug || this.generateSlug(this.productForm.name),
+                description: this.productForm.description,
+                shortDescription: this.productForm.shortDescription,
+                price: this.productForm.price,
+                originalPrice: this.productForm.originalPrice,
+                salePrice: this.productForm.salePrice,
+                categoryId: this.productForm.categoryId,
+                material: this.productForm.material,
+                color: this.productForm.color,
+                size: this.productForm.size || '',
+                sizes: this.productForm.sizes,
+                weight: this.productForm.weight,
+                dimensions: this.productForm.dimensions,
+                sku: this.productForm.sku,
+                barcode: this.productForm.barcode,
+                brand: this.productForm.brand,
+                origin: this.productForm.origin,
+                warrantyPeriod: this.productForm.warrantyPeriod,
+                stock: this.productForm.stock,
+                minStock: this.productForm.minStock,
+                maxStock: this.productForm.maxStock,
+                inStock: this.productForm.stock > 0,
+                isActive: this.productForm.isActive,
+                isFeatured: this.productForm.isFeatured,
+                isNew: this.productForm.isNew,
+                isBestseller: this.productForm.isBestseller,
+                viewCount: this.productForm.viewCount,
+                soldCount: this.productForm.soldCount,
+                metaTitle: this.productForm.metaTitle,
+                metaDescription: this.productForm.metaDescription,
+                metaKeywords: this.productForm.metaKeywords,
+                tags: this.productForm.tags
+            };
 
-                this.filterProducts();
-                this.closeDialogs();
-                this.isLoading = false;
-            }, 1500);
+            if (this.isEditDialogOpen && this.editingProduct) {
+                // Update existing product
+                this.adminService.updateProduct(this.editingProduct.id, productData).subscribe({
+                    next: (updatedProduct) => {
+                        const index = this.products.findIndex(p => p.id === updatedProduct.id);
+                        if (index !== -1) {
+                            this.products[index] = updatedProduct;
+                        }
+                        
+                        // Upload images if any
+                        this.uploadImages(updatedProduct.id);
+                        
+                        this.snackBar.open('Cập nhật sản phẩm thành công!', 'Đóng', { duration: 3000 });
+                        this.filterProducts();
+                        this.closeDialogs();
+                        this.isLoading = false;
+                    },
+                    error: (error) => {
+                        console.error('Error updating product:', error);
+                        this.snackBar.open('Lỗi khi cập nhật sản phẩm', 'Đóng', { duration: 3000 });
+                        this.isLoading = false;
+                    }
+                });
+            } else {
+                // Add new product
+                this.adminService.createProduct(productData).subscribe({
+                    next: (newProduct) => {
+                        this.products.unshift(newProduct);
+                        
+                        // Upload images if any
+                        this.uploadImages(newProduct.id);
+                        
+                        this.snackBar.open('Thêm sản phẩm thành công!', 'Đóng', { duration: 3000 });
+                        this.filterProducts();
+                        this.closeDialogs();
+                        this.isLoading = false;
+                    },
+                    error: (error) => {
+                        console.error('Error creating product:', error);
+                        this.snackBar.open('Lỗi khi thêm sản phẩm', 'Đóng', { duration: 3000 });
+                        this.isLoading = false;
+                    }
+                });
+            }
         }
     }
 
-    deleteProduct(product: Product) {
+    deleteProduct(product: ProductDto) {
         if (confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${product.name}"?`)) {
             this.isLoading = true;
 
-            // Simulate API call
-            setTimeout(() => {
-                this.products = this.products.filter(p => p.id !== product.id);
-                this.filterProducts();
-                this.snackBar.open('Xóa sản phẩm thành công!', 'Đóng', { duration: 3000 });
-                this.isLoading = false;
-            }, 1000);
+            this.adminService.deleteProduct(product.id).subscribe({
+                next: () => {
+                    this.products = this.products.filter(p => p.id !== product.id);
+                    this.filterProducts();
+                    this.snackBar.open('Xóa sản phẩm thành công!', 'Đóng', { duration: 3000 });
+                    this.isLoading = false;
+                },
+                error: (error) => {
+                    console.error('Error deleting product:', error);
+                    this.snackBar.open('Lỗi khi xóa sản phẩm', 'Đóng', { duration: 3000 });
+                    this.isLoading = false;
+                }
+            });
         }
     }
 
@@ -372,19 +653,31 @@ export class ProductManagementComponent implements OnInit {
             this.snackBar.open('Vui lòng nhập giá sản phẩm hợp lệ!', 'Đóng', { duration: 3000 });
             return false;
         }
-        if (!this.productForm.category) {
+        if (!this.productForm.categoryId || this.productForm.categoryId === 0) {
             this.snackBar.open('Vui lòng chọn danh mục!', 'Đóng', { duration: 3000 });
             return false;
         }
-        if (this.previewImages.length === 0) {
-            this.snackBar.open('Vui lòng thêm ít nhất một hình ảnh!', 'Đóng', { duration: 3000 });
+        if (this.productForm.stock < 0) {
+            this.snackBar.open('Số lượng tồn kho không hợp lệ!', 'Đóng', { duration: 3000 });
+            return false;
+        }
+        if (this.productForm.minStock && this.productForm.maxStock && this.productForm.minStock > this.productForm.maxStock) {
+            this.snackBar.open('Tồn tối thiểu không được lớn hơn tồn tối đa!', 'Đóng', { duration: 3000 });
+            return false;
+        }
+        if (this.productForm.metaTitle && this.productForm.metaTitle.length > 60) {
+            this.snackBar.open('Meta Title không được vượt quá 60 ký tự!', 'Đóng', { duration: 3000 });
+            return false;
+        }
+        if (this.productForm.metaDescription && this.productForm.metaDescription.length > 160) {
+            this.snackBar.open('Meta Description không được vượt quá 160 ký tự!', 'Đóng', { duration: 3000 });
             return false;
         }
         return true;
     }
 
-    getCategoryLabel(value: string): string {
-        return this.categories.find(c => c.value === value)?.label || value;
+    getCategoryLabel(categoryId: number): string {
+        return this.categories.find(c => c.id === categoryId)?.name || 'Chưa phân loại';
     }
 
     getMaterialLabel(value: string): string {

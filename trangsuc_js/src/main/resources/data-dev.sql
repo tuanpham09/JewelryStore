@@ -13,7 +13,20 @@ INSERT INTO roles (name)
 SELECT 'ROLE_STAFF' 
 WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = 'ROLE_STAFF');
 
--- 2. Thêm danh mục sản phẩm
+-- 2. Thêm user admin
+INSERT INTO users (email, password, full_name, phone_number, address, enabled, created_at, updated_at)
+SELECT 'admin@gmail.com', '$2a$10$cgziXouzLTHpKg2VcRYIkuwS/lePp/PxXYi6ecWKzTXHZi2eg86ve', 'Administrator', '0123456789', 'Admin Address', true, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@gmail.com');
+
+-- 3. Gán role ADMIN cho user admin
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.id, r.id
+FROM users u, roles r
+WHERE u.email = 'admin@gmail.com' 
+AND r.name = 'ROLE_ADMIN'
+AND NOT EXISTS (SELECT 1 FROM user_roles ur WHERE ur.user_id = u.id AND ur.role_id = r.id);
+
+-- 4. Thêm danh mục sản phẩm
 INSERT INTO categories (name, slug)
 SELECT 'Nhẫn', 'nhan'
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = 'nhan');
@@ -30,7 +43,7 @@ INSERT INTO categories (name, slug)
 SELECT 'Bông tai', 'bong-tai'
 WHERE NOT EXISTS (SELECT 1 FROM categories WHERE slug = 'bong-tai');
 
--- 3. Thêm sản phẩm mẫu với các trường featured, new, bestseller
+-- 5. Thêm sản phẩm mẫu với các trường featured, new, bestseller
 INSERT INTO products (name, slug, description, price, original_price, sale_price, stock, thumbnail, category_id, is_active, is_featured, is_new, is_bestseller, brand, material, color, created_at, updated_at)
 SELECT 'Nhan vang 24K', 'nhan-vang-24k', 'Nhan vang 24K cao cap, thiet ke tinh te voi hoa van co dien. San pham duoc che tac thu cong boi nhung nghe nhan lanh nghe nhat.', 10000000, 12000000, 10000000, 10, 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&h=400&fit=crop', c.id, true, true, false, true, 'JewelryStore', 'Vang 24K', 'Vang', NOW(), NOW()
 FROM categories c

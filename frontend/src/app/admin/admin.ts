@@ -17,6 +17,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
 import { ProductManagementComponent } from './product-management/product-management';
+import { CategoryManagementComponent } from './category-management/category-management';
 
 interface Product {
     id: string;
@@ -72,7 +73,8 @@ interface ProductForm {
         MatProgressSpinnerModule,
         Header,
         Footer,
-        ProductManagementComponent
+        ProductManagementComponent,
+        CategoryManagementComponent
     ],
     templateUrl: './admin.html',
     styleUrl: './admin.css'

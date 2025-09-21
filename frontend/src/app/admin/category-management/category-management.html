@@ -1,0 +1,199 @@
+<!-- Category Management Component -->
+<div class="category-management">
+    <!-- Controls -->
+    <div class="controls-section">
+        <div class="search-controls">
+            <div class="search-bar">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Tìm kiếm danh mục..." [(ngModel)]="searchTerm"
+                    (input)="filterCategories()" class="search-input" />
+            </div>
+        </div>
+
+        <button mat-raised-button color="primary" (click)="openAddDialog()" class="add-btn">
+            <mat-icon>add</mat-icon>
+            Thêm danh mục
+        </button>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="table-container">
+        <div class="table-header">
+            <h2>Danh sách danh mục</h2>
+            <span class="count-badge">{{ filteredCategories.length }} danh mục</span>
+        </div>
+
+        <div class="table-wrapper" *ngIf="!isLoading; else loadingTemplate">
+            <table mat-table [dataSource]="filteredCategories" class="categories-table">
+                <!-- Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef>Tên danh mục</th>
+                    <td mat-cell *matCellDef="let category">
+                        <div class="category-info">
+                            <div class="category-name">{{ category.name }}</div>
+                            <div class="category-slug">{{ category.slug }}</div>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Description Column -->
+                <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef>Mô tả</th>
+                    <td mat-cell *matCellDef="let category">
+                        <div class="description-text">
+                            {{ category.description || 'Chưa có mô tả' }}
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="isActive">
+                    <th mat-header-cell *matHeaderCellDef>Trạng thái</th>
+                    <td mat-cell *matCellDef="let category">
+                        <span class="status-badge" [class.active]="category.isActive" [class.inactive]="!category.isActive">
+                            {{ category.isActive ? 'Hoạt động' : 'Tạm dừng' }}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Sort Order Column -->
+                <ng-container matColumnDef="sortOrder">
+                    <th mat-header-cell *matHeaderCellDef>Thứ tự</th>
+                    <td mat-cell *matCellDef="let category">
+                        <span class="sort-order">{{ category.sortOrder || 0 }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Thao tác</th>
+                    <td mat-cell *matCellDef="let category">
+                        <div class="action-buttons">
+                            <button mat-icon-button color="primary" (click)="openEditDialog(category)" 
+                                matTooltip="Chỉnh sửa" class="edit-btn">
+                                <mat-icon>edit</mat-icon>
+                            </button>
+                            <button mat-icon-button color="warn" (click)="deleteCategory(category)" 
+                                matTooltip="Xóa" class="delete-btn">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+        </div>
+
+        <!-- Loading Template -->
+        <ng-template #loadingTemplate>
+            <div class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Đang tải danh mục...</p>
+            </div>
+        </ng-template>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="!isLoading && filteredCategories.length === 0">
+            <mat-icon>category</mat-icon>
+            <h3>Chưa có danh mục nào</h3>
+            <p>Hãy thêm danh mục đầu tiên để bắt đầu quản lý sản phẩm</p>
+            <button mat-raised-button color="primary" (click)="openAddDialog()">
+                <mat-icon>add</mat-icon>
+                Thêm danh mục
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Category Dialog -->
+<div class="dialog-overlay" *ngIf="isAddDialogOpen || isEditDialogOpen" (click)="closeDialogs()">
+    <div class="dialog-content" (click)="$event.stopPropagation()">
+        <div class="dialog-header">
+            <h2 class="dialog-title">
+                <mat-icon>{{ isEditDialogOpen ? 'edit' : 'add' }}</mat-icon>
+                {{ isEditDialogOpen ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới' }}
+            </h2>
+            <button mat-icon-button (click)="closeDialogs()" class="close-btn">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <form class="category-form" (ngSubmit)="saveCategory()">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>info</mat-icon>
+                    Thông tin cơ bản
+                </h3>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Tên danh mục *</mat-label>
+                        <input matInput [(ngModel)]="categoryForm.name" name="name" (input)="onNameChange()" required>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Slug (URL)</mat-label>
+                        <input matInput [(ngModel)]="categoryForm.slug" name="slug" placeholder="Tự động tạo từ tên danh mục">
+                        <mat-hint>URL thân thiện cho danh mục (tự động tạo)</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>Mô tả *</mat-label>
+                        <textarea matInput [(ngModel)]="categoryForm.description" name="description" 
+                            rows="3" required></textarea>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="full-width">
+                        <mat-label>URL hình ảnh</mat-label>
+                        <input matInput [(ngModel)]="categoryForm.imageUrl" name="imageUrl" 
+                            placeholder="https://example.com/image.jpg">
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <mat-icon>settings</mat-icon>
+                    Cài đặt
+                </h3>
+
+                <div class="form-row">
+                    <mat-checkbox [(ngModel)]="categoryForm.isActive" name="isActive">
+                        Danh mục hoạt động
+                    </mat-checkbox>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field class="half-width">
+                        <mat-label>Thứ tự sắp xếp</mat-label>
+                        <input matInput type="number" [(ngModel)]="categoryForm.sortOrder" name="sortOrder" 
+                            min="0" max="999">
+                        <mat-hint>Số càng nhỏ, hiển thị càng trước</mat-hint>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" mat-button (click)="closeDialogs()" class="cancel-btn">
+                    Hủy
+                </button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    <mat-icon *ngIf="!isLoading">{{ isEditDialogOpen ? 'save' : 'add' }}</mat-icon>
+                    {{ isEditDialogOpen ? 'Cập nhật' : 'Thêm mới' }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

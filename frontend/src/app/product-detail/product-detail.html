@@ -151,7 +151,7 @@
         <mat-tab-group>
             <mat-tab label="Mô tả chi tiết">
                 <div class="tab-content">
-                    <p>{{ product?.description || 'No description available' }}</p>
+                    <p>{{ product.description || 'No description available' }}</p>
                     <p *ngIf="product.shortDescription">{{ product.shortDescription }}</p>
                 </div>
             </mat-tab>

@@ -12,9 +12,9 @@
             <mat-form-field class="category-filter">
                 <mat-label>Danh mục</mat-label>
                 <mat-select [(ngModel)]="selectedCategory" (selectionChange)="filterProducts()">
-                    <mat-option value="">Tất cả</mat-option>
-                    <mat-option *ngFor="let category of categories" [value]="category.value">
-                        {{ category.label }}
+                    <mat-option [value]="null">Tất cả</mat-option>
+                    <mat-option *ngFor="let category of categories" [value]="category.id">
+                        {{ category.name }}
                     </mat-option>
                 </mat-select>
             </mat-form-field>
@@ -40,7 +40,7 @@
                         <th mat-header-cell *matHeaderCellDef>Hình ảnh</th>
                         <td mat-cell *matCellDef="let product">
                             <div class="product-image">
-                                <img [src]="product.images[0]" [alt]="product.name" />
+                                <img [src]="product.thumbnail || 'assets/placeholder-product.png'" [alt]="product.name" />
                             </div>
                         </td>
                     </ng-container>
@@ -52,7 +52,7 @@
                             <div class="product-info">
                                 <h4 class="product-name">{{ product.name }}</h4>
                                 <p class="product-description">{{ product.description }}</p>
-                                <div class="product-tags">
+                                <div class="product-tags" *ngIf="product.tags && product.tags.length > 0">
                                     <mat-chip *ngFor="let tag of product.tags" class="tag-chip">
                                         {{ tag }}
                                     </mat-chip>
@@ -65,7 +65,7 @@
                     <ng-container matColumnDef="category">
                         <th mat-header-cell *matHeaderCellDef>Danh mục</th>
                         <td mat-cell *matCellDef="let product">
-                            <span class="category-badge">{{ getCategoryLabel(product.category) }}</span>
+                            <span class="category-badge">{{ product.categoryName || 'Chưa phân loại' }}</span>
                         </td>
                     </ng-container>
 
@@ -86,9 +86,9 @@
                     <ng-container matColumnDef="stock">
                         <th mat-header-cell *matHeaderCellDef>Tồn kho</th>
                         <td mat-cell *matCellDef="let product">
-                            <span class="stock-badge" [class.in-stock]="product.inStock"
-                                [class.out-of-stock]="!product.inStock">
-                                {{ product.inStock ? 'Còn hàng' : 'Hết hàng' }}
+                            <span class="stock-badge" [class.in-stock]="product.stock > 0"
+                                [class.out-of-stock]="product.stock <= 0">
+                                {{ product.stock > 0 ? 'Còn hàng (' + product.stock + ')' : 'Hết hàng' }}
                             </span>
                         </td>
                     </ng-container>
@@ -99,11 +99,11 @@
                         <td mat-cell *matCellDef="let product">
                             <div class="rating-info">
                                 <div class="stars">
-                                    <mat-icon *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= product.rating"
-                                        [class.half]="star === Math.ceil(product.rating) && product.rating % 1 !== 0">
-                                        {{ star <= product.rating ? 'star' : 'star_border' }} </mat-icon>
+                                    <mat-icon *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= product.averageRating"
+                                        [class.half]="star === Math.ceil(product.averageRating) && product.averageRating % 1 !== 0">
+                                        {{ star <= product.averageRating ? 'star' : 'star_border' }} </mat-icon>
                                 </div>
-                                <span class="rating-text">{{ product.rating }}/5 ({{ product.reviewCount }})</span>
+                                <span class="rating-text">{{ product.averageRating }}/5 ({{ product.reviewCount }})</span>
                             </div>
                         </td>
                     </ng-container>
@@ -152,142 +152,195 @@
 <div class="dialog-overlay" *ngIf="isAddDialogOpen || isEditDialogOpen" (click)="closeDialogs()">
     <div class="dialog-content" (click)="$event.stopPropagation()">
         <div class="dialog-header">
-            <h2>{{ isEditDialogOpen ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới' }}</h2>
+            <div class="header-content">
+                <div class="header-icon">
+                    <mat-icon>{{ isEditDialogOpen ? 'edit' : 'add_circle' }}</mat-icon>
+                </div>
+                <div class="header-text">
+                    <h2>{{ isEditDialogOpen ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới' }}</h2>
+                    <p class="header-subtitle">{{ isEditDialogOpen ? 'Cập nhật thông tin sản phẩm' : 'Tạo sản phẩm mới cho cửa hàng' }}</p>
+                </div>
+            </div>
             <button mat-icon-button (click)="closeDialogs()" class="close-btn">
                 <mat-icon>close</mat-icon>
             </button>
         </div>
 
         <form class="product-form" (ngSubmit)="saveProduct()">
-            <div class="form-row">
-                <mat-form-field class="full-width">
-                    <mat-label>Tên sản phẩm *</mat-label>
-                    <input matInput [(ngModel)]="productForm.name" name="name" required>
-                </mat-form-field>
-            </div>
+            <!-- Two Column Layout -->
+            <div class="form-layout">
+                <!-- Left Column -->
+                <div class="form-column-left">
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <mat-icon>info</mat-icon>
+                            Thông tin cơ bản
+                        </h3>
+                
+                        <div class="form-row">
+                            <mat-form-field class="full-width">
+                                <mat-label>Tên sản phẩm *</mat-label>
+                                <input matInput [(ngModel)]="productForm.name" name="name" (input)="onNameChange()" required>
+                            </mat-form-field>
+                        </div>
 
-            <div class="form-row">
-                <mat-form-field class="full-width">
-                    <mat-label>Mô tả sản phẩm *</mat-label>
-                    <textarea matInput [(ngModel)]="productForm.description" name="description" rows="3"
-                        required></textarea>
-                </mat-form-field>
-            </div>
+                        <div class="form-row">
+                            <mat-form-field class="full-width">
+                                <mat-label>Slug (URL)</mat-label>
+                                <input matInput [(ngModel)]="productForm.slug" name="slug" placeholder="Tự động tạo từ tên sản phẩm">
+                                <mat-hint>URL thân thiện cho sản phẩm (tự động tạo)</mat-hint>
+                            </mat-form-field>
+                        </div>
 
-            <div class="form-row">
-                <mat-form-field class="half-width">
-                    <mat-label>Giá bán *</mat-label>
-                    <input matInput type="number" [(ngModel)]="productForm.price" name="price" required>
-                </mat-form-field>
-
-                <mat-form-field class="half-width">
-                    <mat-label>Giá gốc</mat-label>
-                    <input matInput type="number" [(ngModel)]="productForm.originalPrice" name="originalPrice">
-                </mat-form-field>
-            </div>
-
-            <div class="form-row">
-                <mat-form-field class="half-width">
-                    <mat-label>Danh mục *</mat-label>
-                    <mat-select [(ngModel)]="productForm.category" name="category" required>
-                        <mat-option *ngFor="let category of categories" [value]="category.value">
-                            {{ category.label }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field class="half-width">
-                    <mat-label>Chất liệu</mat-label>
-                    <mat-select [(ngModel)]="productForm.material" name="material">
-                        <mat-option *ngFor="let material of materials" [value]="material.value">
-                            {{ material.label }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
-
-            <div class="form-row">
-                <mat-form-field class="half-width">
-                    <mat-label>Màu sắc</mat-label>
-                    <mat-select [(ngModel)]="productForm.color" name="color">
-                        <mat-option *ngFor="let color of colors" [value]="color.value">
-                            {{ color.label }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field class="half-width">
-                    <mat-label>Kích thước</mat-label>
-                    <mat-select [(ngModel)]="productForm.size" name="size">
-                        <mat-option *ngFor="let size of sizes" [value]="size.value">
-                            {{ size.label }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
-
-            <div class="form-row">
-                <div class="checkbox-field">
-                    <mat-checkbox [(ngModel)]="productForm.inStock" name="inStock">
-                        Còn hàng
-                    </mat-checkbox>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="image-upload-section">
-                    <h4>Hình ảnh sản phẩm *</h4>
-                    <div class="upload-area">
-                        <input type="file" multiple accept="image/*" (change)="onImageSelected($event)" #fileInput
-                            style="display: none;" />
-                        <button type="button" mat-stroked-button (click)="fileInput.click()" class="upload-btn">
-                            <mat-icon>cloud_upload</mat-icon>
-                            Chọn hình ảnh
-                        </button>
-                        <p class="upload-hint">Chọn nhiều hình ảnh (JPG, PNG, GIF)</p>
+                        <div class="form-row">
+                            <mat-form-field class="full-width">
+                                <mat-label>Mô tả chi tiết *</mat-label>
+                                <textarea matInput [(ngModel)]="productForm.description" name="description" rows="4" required></textarea>
+                            </mat-form-field>
+                        </div>
                     </div>
 
-                    <div class="image-preview" *ngIf="previewImages.length > 0">
-                        <div class="preview-item" *ngFor="let image of previewImages; let i = index">
-                            <img [src]="image" [alt]="'Preview ' + (i + 1)" />
-                            <button type="button" mat-icon-button (click)="removeImage(i)" class="remove-btn">
-                                <mat-icon>close</mat-icon>
-                            </button>
+                    <!-- Pricing Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <mat-icon>attach_money</mat-icon>
+                            Giá cả
+                        </h3>
+                        
+                        <div class="form-row">
+                            <mat-form-field class="half-width">
+                                <mat-label>Giá bán *</mat-label>
+                                <input matInput type="number" [(ngModel)]="productForm.price" name="price" required>
+                            </mat-form-field>
+
+                            <mat-form-field class="half-width">
+                                <mat-label>Giá gốc</mat-label>
+                                <input matInput type="number" [(ngModel)]="productForm.originalPrice" name="originalPrice">
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-row">
+                            <mat-form-field class="half-width">
+                                <mat-label>Giá khuyến mãi</mat-label>
+                                <input matInput type="number" [(ngModel)]="productForm.salePrice" name="salePrice">
+                            </mat-form-field>
+
+                            <mat-form-field class="half-width">
+                                <mat-label>Phần trăm giảm giá (%)</mat-label>
+                                <input matInput type="number" [(ngModel)]="discountPercentage" name="discountPercentage" placeholder="25%">
+                            </mat-form-field>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <mat-icon>warehouse</mat-icon>
+                            Quản lý kho
+                        </h3>
+                        
+                        <div class="form-row">
+                            <mat-form-field class="third-width">
+                                <mat-label>SKU</mat-label>
+                                <input matInput [(ngModel)]="productForm.sku" name="sku">
+                            </mat-form-field>
+
+                            <mat-form-field class="third-width">
+                                <mat-label>Mã vạch</mat-label>
+                                <input matInput [(ngModel)]="productForm.barcode" name="barcode">
+                            </mat-form-field>
+
+                            <mat-form-field class="third-width">
+                                <mat-label>Tồn kho *</mat-label>
+                                <input matInput type="number" [(ngModel)]="productForm.stock" name="stock" required>
+                            </mat-form-field>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="form-column-right">
+                    <!-- Product Media Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <mat-icon>photo_library</mat-icon>
+                            Hình ảnh sản phẩm
+                        </h3>
+                        
+                        <div class="image-upload-section">
+                            <div class="upload-area">
+                                <input type="file" multiple accept="image/*" (change)="onImageSelected($event)" #fileInput
+                                    style="display: none;" />
+                                <button type="button" mat-stroked-button (click)="fileInput.click()" class="upload-btn">
+                                    <mat-icon>cloud_upload</mat-icon>
+                                    Chọn hình ảnh
+                                </button>
+                                <p class="upload-hint">Chọn nhiều hình ảnh (JPG, PNG, GIF)</p>
+                            </div>
+
+                            <div class="image-preview" *ngIf="previewImages.length > 0">
+                                <div class="preview-item" *ngFor="let image of previewImages; let i = index">
+                                    <img [src]="image" [alt]="'Preview ' + (i + 1)" />
+                                    <button type="button" mat-icon-button (click)="removeImage(i)" class="remove-btn">
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <mat-icon>category</mat-icon>
+                            Danh mục
+                        </h3>
+                        
+                        <div class="form-row">
+                            <mat-form-field class="full-width">
+                                <mat-label>Danh mục sản phẩm *</mat-label>
+                                <mat-select [(ngModel)]="productForm.categoryId" name="categoryId" required>
+                                    <mat-option *ngFor="let category of categories" [value]="category.id">
+                                        {{ category.name }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
+
+                        <div class="form-row">
+                            <mat-form-field class="full-width">
+                                <mat-label>Thẻ tag sản phẩm</mat-label>
+                                <mat-select [(ngModel)]="productForm.tags" name="tags" multiple>
+                                    <mat-option *ngFor="let tag of availableTags" [value]="tag">
+                                        {{ tag }}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="form-row">
-                <div class="tags-section">
-                    <h4>Thẻ tag</h4>
-                    <div class="tags-input">
-                        <mat-form-field class="tag-input">
-                            <mat-label>Thêm thẻ tag</mat-label>
-                            <input matInput [(ngModel)]="newTag" name="newTag" (keyup.enter)="addTag()">
-                        </mat-form-field>
-                        <button type="button" mat-button (click)="addTag()" class="add-tag-btn">
-                            <mat-icon>add</mat-icon>
-                        </button>
-                    </div>
-
-                    <div class="tags-list" *ngIf="productForm.tags.length > 0">
-                        <mat-chip *ngFor="let tag of productForm.tags" class="tag-chip">
-                            {{ tag }}
-                            <mat-icon (click)="removeTag(tag)">close</mat-icon>
-                        </mat-chip>
-                    </div>
-                </div>
-            </div>
 
             <div class="form-actions">
-                <button type="button" mat-button (click)="closeDialogs()">
-                    Hủy
-                </button>
-                <button type="submit" mat-raised-button color="primary" [disabled]="isLoading">
-                    <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-                    <span *ngIf="!isLoading">{{ isEditDialogOpen ? 'Cập nhật' : 'Thêm sản phẩm' }}</span>
-                </button>
+                <div class="form-actions-left">
+                    <button type="button" mat-stroked-button (click)="closeDialogs()" class="cancel-btn">
+                        <mat-icon>close</mat-icon>
+                        Hủy
+                    </button>
+                </div>
+                <div class="form-actions-right">
+                    <button type="button" mat-button (click)="resetForm()" class="reset-btn" *ngIf="!isEditDialogOpen">
+                        <mat-icon>refresh</mat-icon>
+                        Làm mới
+                    </button>
+                    <button type="submit" mat-raised-button color="primary" [disabled]="isLoading" class="save-btn">
+                        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                        <mat-icon *ngIf="!isLoading">{{ isEditDialogOpen ? 'save' : 'add' }}</mat-icon>
+                        <span *ngIf="!isLoading">{{ isEditDialogOpen ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm' }}</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>
