@@ -91,6 +91,8 @@ interface ProductForm {
 })
 export class AdminComponent implements OnInit {
     activeSection: string = 'dashboard';
+    isCheckingPermission: boolean = true;
+    hasAdminPermission: boolean = false;
 
     // Legacy product management properties (for future use)
     products: Product[] = [];
@@ -173,9 +175,6 @@ export class AdminComponent implements OnInit {
     ngOnInit() {
         // Kiểm tra quyền admin trước khi cho phép truy cập
         this.checkAdminPermission();
-        
-        // Initialize with dashboard section
-        this.activeSection = 'dashboard';
     }
 
     private checkAdminPermission() {
@@ -193,6 +192,11 @@ export class AdminComponent implements OnInit {
             this.redirectToHome('Bạn không có quyền truy cập trang quản trị');
             return;
         }
+
+        // Có quyền admin, cho phép hiển thị
+        this.hasAdminPermission = true;
+        this.isCheckingPermission = false;
+        this.activeSection = 'dashboard';
     }
 
     private isAdmin(user: any): boolean {
@@ -214,15 +218,9 @@ export class AdminComponent implements OnInit {
     }
 
     private redirectToHome(message: string) {
-        this.snackBar.open(message, 'Đóng', { 
-            duration: 2000,
-            panelClass: ['error-snackbar']
-        });
-        
-        // Redirect đến trang 404 sau 1 giây
-        setTimeout(() => {
-            this.router.navigate(['/404']);
-        }, 1000);
+        // Redirect ngay lập tức đến trang 404
+        this.router.navigate(['/404']);
+
     }
 
     setActiveSection(section: string) {

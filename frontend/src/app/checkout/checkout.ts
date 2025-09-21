@@ -14,6 +14,7 @@ import { AuthService } from '../auth.service';
 import { PaymentService } from '../services/payment.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 @Component({
     selector: 'app-checkout',
@@ -28,7 +29,8 @@ import { Footer } from '../shared/footer/footer';
         MatSnackBarModule,
         MatDividerModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: './checkout.html',
     styleUrl: './checkout.css'
@@ -39,6 +41,13 @@ export class Checkout implements OnInit {
     cartTotal = 0;
     cartItemCount = 0;
     isProcessing = false;
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [
+        { label: 'Trang chủ', url: '/home' },
+        { label: 'Giỏ hàng', url: '/cart' },
+        { label: 'Thanh toán', active: true }
+    ];
 
     constructor(
         private fb: FormBuilder,
@@ -167,10 +176,16 @@ export class Checkout implements OnInit {
     }
 
     formatPrice(price: number): string {
+        const correctPrice = this.getCorrectPrice(price);
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(price);
+        }).format(correctPrice);
+    }
+
+    // Fix: Nếu giá quá lớn (có thể bị nhân với 1000), chia cho 1000
+    getCorrectPrice(price: number): number {
+        return price > 100000000 ? price / 1000 : price;
     }
 
     getErrorMessage(fieldName: string): string {

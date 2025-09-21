@@ -57,6 +57,8 @@ public class PaymentController {
             final String returnUrl = requestBody.getReturnUrl();
             final String cancelUrl = requestBody.getCancelUrl();
             final int price = requestBody.getPrice();
+
+            log.info("Creating payment link: price={}",  price);
             
             CheckoutResponseData data = paymentService.createPaymentLink(
                 productName, description, returnUrl, cancelUrl, price);
@@ -183,5 +185,31 @@ public class PaymentController {
         log.info("Updating order status: orderId={}, status={}", orderId, status);
         OrderDto order = paymentService.updateOrderStatus(orderId, status);
         return ApiResponse.success("Order status updated successfully", order);
+    }
+
+    @PostMapping("/confirm-payment")
+    public ApiResponse<OrderDto> confirmPayment(@RequestBody Map<String, String> request) {
+        log.info("=== CONFIRM PAYMENT ENDPOINT CALLED ===");
+        log.info("Request body: {}", request);
+        
+        String orderCode = request.get("orderCode");
+        String paymentId = request.get("paymentId");
+        
+        log.info("Confirming payment: orderCode={}, paymentId={}", orderCode, paymentId);
+        
+        try {
+            OrderDto order = paymentService.confirmPayment(orderCode, paymentId);
+            log.info("Payment confirmed successfully: {}", order);
+            return ApiResponse.success("Payment confirmed successfully", order);
+        } catch (Exception e) {
+            log.error("Error confirming payment: ", e);
+            return ApiResponse.error("Failed to confirm payment: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/test")
+    public ApiResponse<String> testEndpoint() {
+        log.info("=== TEST ENDPOINT CALLED ===");
+        return ApiResponse.success("Test endpoint working", "OK");
     }
 }

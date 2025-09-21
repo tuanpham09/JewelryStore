@@ -18,13 +18,13 @@ public class CurrencyServiceImpl implements CurrencyService {
     
     private String currentCurrency = "VND";
     
-    // Mock exchange rates (in production, these would come from an external API)
+    // Bỏ exchange rates - giữ nguyên giá gốc
     private final Map<String, BigDecimal> exchangeRates = new HashMap<String, BigDecimal>() {{
         put("VND", BigDecimal.ONE);
-        put("USD", BigDecimal.valueOf(24000));
-        put("EUR", BigDecimal.valueOf(26000));
-        put("CNY", BigDecimal.valueOf(3300));
-        put("JPY", BigDecimal.valueOf(160));
+        put("USD", BigDecimal.ONE); // Tỷ giá = 1
+        put("EUR", BigDecimal.ONE); // Tỷ giá = 1
+        put("CNY", BigDecimal.ONE); // Tỷ giá = 1
+        put("JPY", BigDecimal.ONE); // Tỷ giá = 1
     }};
     
     @Override
@@ -32,10 +32,10 @@ public class CurrencyServiceImpl implements CurrencyService {
     public List<CurrencyDto> getAvailableCurrencies() {
         return Arrays.asList(
             new CurrencyDto("VND", "Vietnamese Dong", "₫", "🇻🇳", BigDecimal.ONE, true, true),
-            new CurrencyDto("USD", "US Dollar", "$", "🇺🇸", BigDecimal.valueOf(24000), true, false),
-            new CurrencyDto("EUR", "Euro", "€", "🇪🇺", BigDecimal.valueOf(26000), true, false),
-            new CurrencyDto("CNY", "Chinese Yuan", "¥", "🇨🇳", BigDecimal.valueOf(3300), true, false),
-            new CurrencyDto("JPY", "Japanese Yen", "¥", "🇯🇵", BigDecimal.valueOf(160), true, false)
+            new CurrencyDto("USD", "US Dollar", "$", "🇺🇸", BigDecimal.ONE, true, false), // Tỷ giá = 1
+            new CurrencyDto("EUR", "Euro", "€", "🇪🇺", BigDecimal.ONE, true, false), // Tỷ giá = 1
+            new CurrencyDto("CNY", "Chinese Yuan", "¥", "🇨🇳", BigDecimal.ONE, true, false), // Tỷ giá = 1
+            new CurrencyDto("JPY", "Japanese Yen", "¥", "🇯🇵", BigDecimal.ONE, true, false) // Tỷ giá = 1
         );
     }
     
@@ -57,26 +57,15 @@ public class CurrencyServiceImpl implements CurrencyService {
     @Override
     @Transactional(readOnly = true)
     public CurrencyConversionDto convertCurrency(BigDecimal amount, String fromCurrency, String toCurrency) {
-        BigDecimal fromRate = exchangeRates.get(fromCurrency);
-        BigDecimal toRate = exchangeRates.get(toCurrency);
-        
-        if (fromRate == null || toRate == null) {
-            throw new RuntimeException("Unsupported currency");
-        }
-        
-        // Convert to VND first, then to target currency
-        BigDecimal amountInVND = amount.multiply(fromRate);
-        BigDecimal convertedAmount = amountInVND.divide(toRate, 2, RoundingMode.HALF_UP);
-        BigDecimal exchangeRate = fromRate.divide(toRate, 4, RoundingMode.HALF_UP);
-        
+        // Bỏ logic chuyển đổi tiền tệ - giữ nguyên giá gốc
         return new CurrencyConversionDto(
             amount,
             fromCurrency,
             toCurrency,
-            convertedAmount,
-            exchangeRate,
+            amount, // Giữ nguyên giá gốc
+            BigDecimal.ONE, // Tỷ giá = 1
             formatPrice(amount, fromCurrency),
-            formatPrice(convertedAmount, toCurrency)
+            formatPrice(amount, toCurrency)
         );
     }
     
@@ -108,25 +97,15 @@ public class CurrencyServiceImpl implements CurrencyService {
     @Override
     @Transactional(readOnly = true)
     public BigDecimal getExchangeRate(String fromCurrency, String toCurrency) {
-        BigDecimal fromRate = exchangeRates.get(fromCurrency);
-        BigDecimal toRate = exchangeRates.get(toCurrency);
-        
-        if (fromRate == null || toRate == null) {
-            throw new RuntimeException("Unsupported currency");
-        }
-        
-        return fromRate.divide(toRate, 4, RoundingMode.HALF_UP);
+        // Bỏ logic chuyển đổi tiền tệ - tỷ giá luôn = 1
+        return BigDecimal.ONE;
     }
     
     @Override
     @Transactional
     public void updateExchangeRates() {
-        // In production, this would fetch real-time exchange rates from an external API
-        // For now, we'll just update the mock rates
-        exchangeRates.put("USD", BigDecimal.valueOf(24000 + (Math.random() - 0.5) * 1000));
-        exchangeRates.put("EUR", BigDecimal.valueOf(26000 + (Math.random() - 0.5) * 1000));
-        exchangeRates.put("CNY", BigDecimal.valueOf(3300 + (Math.random() - 0.5) * 100));
-        exchangeRates.put("JPY", BigDecimal.valueOf(160 + (Math.random() - 0.5) * 10));
+        // Bỏ logic cập nhật tỷ giá - giữ nguyên tỷ giá = 1
+        // Không làm gì cả để tránh thay đổi giá sản phẩm
     }
     
     private String getCurrencySymbol(String currencyCode) {

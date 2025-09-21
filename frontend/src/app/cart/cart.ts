@@ -11,6 +11,7 @@ import { CartService, CartItem } from '../services/cart.service';
 import { AuthService } from '../auth.service'; 
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 @Component({
     selector: 'app-cart',
@@ -23,7 +24,8 @@ import { Footer } from '../shared/footer/footer';
         MatDividerModule,
         MatSnackBarModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: './cart.html',
     styleUrl: './cart.css'
@@ -32,6 +34,12 @@ export class Cart implements OnInit {
     cartItems: CartItem[] = [];
     cartItemCount = 0;
     cartTotal = 0;
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [
+        { label: 'Trang chủ', url: '/home' },
+        { label: 'Giỏ hàng', active: true }
+    ];
 
     constructor(
         private cartService: CartService,
@@ -121,9 +129,15 @@ export class Cart implements OnInit {
     }
 
     formatPrice(price: number): string {
+        const correctPrice = this.getCorrectPrice(price);
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(price);
+        }).format(correctPrice);
+    }
+
+    // Fix: Nếu giá quá lớn (có thể bị nhân với 1000), chia cho 1000
+    getCorrectPrice(price: number): number {
+        return price > 100000000 ? price / 1000 : price;
     }
 }

@@ -274,6 +274,7 @@ export class OrderManagementComponent implements OnInit {
     getPaymentStatusColor(status: string): string {
         const colorMap: { [key: string]: string } = {
             'PENDING': '#ffc107',
+            'SUCCESS': '#28a745',
             'PAID': '#28a745',
             'FAILED': '#dc3545',
             'REFUNDED': '#6c757d'
@@ -284,6 +285,7 @@ export class OrderManagementComponent implements OnInit {
     getPaymentStatusDisplayName(status: string): string {
         const statusMap: { [key: string]: string } = {
             'PENDING': 'Chờ thanh toán',
+            'SUCCESS': 'Thanh toán thành công',
             'PAID': 'Đã thanh toán',
             'FAILED': 'Thanh toán thất bại',
             'REFUNDED': 'Đã hoàn tiền'

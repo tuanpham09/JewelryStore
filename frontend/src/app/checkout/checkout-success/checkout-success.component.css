@@ -73,6 +73,49 @@
   font-size: 1.1rem;
 }
 
+.order-details h3 {
+  color: #333;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row .label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.detail-row .value {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.detail-row .value.status-paid {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.detail-row .value.price {
+  color: #d63384;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
 .action-buttons {
   display: flex;
   gap: 15px;

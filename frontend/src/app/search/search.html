@@ -1,11 +1,7 @@
 <app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
 
 <!-- Breadcrumb -->
-<div class="breadcrumb">
-    <span (click)="goBack()" style="cursor: pointer;">Trang chủ</span>
-    <mat-icon>chevron_right</mat-icon>
-    <span class="current">Tìm kiếm</span>
-</div>
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
 
 <!-- Search Content -->
 <div class="search-container">

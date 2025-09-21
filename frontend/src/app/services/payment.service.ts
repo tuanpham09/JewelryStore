@@ -113,6 +113,16 @@ export class PaymentService {
   }
 
   /**
+   * Xác nhận thanh toán từ PAYOS callback
+   */
+  confirmPayment(orderCode: string, paymentId: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/confirm-payment`, {
+      orderCode: orderCode,
+      paymentId: paymentId
+    });
+  }
+
+  /**
    * Redirect đến PayOS checkout
    */
   redirectToPayOS(checkoutUrl: string): void {

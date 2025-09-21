@@ -1,7 +1,17 @@
 <!-- Admin Dashboard -->
 <app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
 
-<div class="admin-dashboard">
+<!-- Loading Permission Check -->
+<div *ngIf="isCheckingPermission" class="permission-checking">
+    <div class="checking-content">
+        <mat-spinner diameter="60"></mat-spinner>
+        <h3>Đang kiểm tra quyền truy cập...</h3>
+        <p>Vui lòng chờ trong giây lát</p>
+    </div>
+</div>
+
+<!-- Admin Dashboard Content -->
+<div *ngIf="hasAdminPermission && !isCheckingPermission" class="admin-dashboard">
     <!-- Sidebar -->
     <div class="admin-sidebar">
         <div class="sidebar-header">

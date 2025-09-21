@@ -73,10 +73,6 @@ export class Header {
         this.router.navigate(['/wishlist']);
     }
 
-    navigateToSearch() {
-        this.router.navigate(['/search']);
-    }
-
     navigateToAdmin() {
         this.router.navigate(['/admin']);
     }

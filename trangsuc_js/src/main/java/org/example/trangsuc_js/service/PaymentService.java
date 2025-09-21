@@ -26,4 +26,6 @@ public interface PaymentService {
     List<OrderDto> getUserOrders();
     
     OrderDto updateOrderStatus(Long orderId, String status);
+    
+    OrderDto confirmPayment(String orderCode, String paymentId);
 }

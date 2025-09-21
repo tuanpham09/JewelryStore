@@ -20,9 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -918,9 +920,10 @@ public class AdminServiceImpl implements AdminService {
     public DashboardStatsDto getDashboardStats() {
         DashboardStatsDto stats = new DashboardStatsDto();
         
-        // Total revenue
+        // Total revenue - tính cả PROCESSING và DELIVERED orders (đã thanh toán)
         BigDecimal totalRevenue = orderRepo.findAll().stream()
-                .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED)
+                .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                           o.getStatus() == Order.OrderStatus.DELIVERED)
                 .map(Order::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         stats.setTotalRevenue(totalRevenue);
@@ -958,6 +961,10 @@ public class AdminServiceImpl implements AdminService {
                 .filter(Promotion::isActive)
                 .count();
         stats.setActivePromotions(activePromotions);
+        
+        // Generate chart data
+        stats.setRevenueChart(generateRevenueChartData());
+        stats.setOrderStatusStats(generateOrderStatusStats());
         
         return stats;
     }
@@ -1158,5 +1165,62 @@ public class AdminServiceImpl implements AdminService {
         
         // Add timestamp to ensure uniqueness
         return slug + "-" + System.currentTimeMillis();
+    }
+    
+    private List<RevenueChartDto> generateRevenueChartData() {
+        List<RevenueChartDto> chartData = new ArrayList<>();
+        
+        // Generate data for last 30 days for bar chart
+        LocalDate today = LocalDate.now();
+        for (int i = 29; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.atTime(23, 59, 59);
+            
+            BigDecimal dailyRevenue = orderRepo.findAll().stream()
+                    .filter(o -> o.getCreatedAt().isAfter(startOfDay) && o.getCreatedAt().isBefore(endOfDay))
+                    .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                               o.getStatus() == Order.OrderStatus.DELIVERED)
+                    .map(Order::getTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            long dailyOrders = orderRepo.findAll().stream()
+                    .filter(o -> o.getCreatedAt().isAfter(startOfDay) && o.getCreatedAt().isBefore(endOfDay))
+                    .count();
+            
+            RevenueChartDto dto = new RevenueChartDto();
+            dto.setDate(date.getDayOfMonth() + "/" + date.getMonthValue());
+            dto.setRevenue(dailyRevenue.doubleValue());
+            dto.setOrders((int) dailyOrders);
+            chartData.add(dto);
+        }
+        
+        return chartData;
+    }
+    
+    private List<OrderStatusDto> generateOrderStatusStats() {
+        List<OrderStatusDto> statusStats = new ArrayList<>();
+        
+        // Count orders by status
+        Map<Order.OrderStatus, Long> statusCounts = orderRepo.findAll().stream()
+                .collect(Collectors.groupingBy(Order::getStatus, Collectors.counting()));
+        
+        Map<Order.OrderStatus, BigDecimal> statusRevenue = orderRepo.findAll().stream()
+                .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                           o.getStatus() == Order.OrderStatus.DELIVERED)
+                .collect(Collectors.groupingBy(
+                    Order::getStatus,
+                    Collectors.reducing(BigDecimal.ZERO, Order::getTotal, BigDecimal::add)
+                ));
+        
+        for (Order.OrderStatus status : Order.OrderStatus.values()) {
+            OrderStatusDto dto = new OrderStatusDto();
+            dto.setStatus(status.name());
+            dto.setCount(statusCounts.getOrDefault(status, 0L).intValue());
+            dto.setTotalValue(statusRevenue.getOrDefault(status, BigDecimal.ZERO).doubleValue());
+            statusStats.add(dto);
+        }
+        
+        return statusStats;
     }
 }

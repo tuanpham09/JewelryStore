@@ -10,7 +10,29 @@
       Cảm ơn bạn đã mua hàng. Đơn hàng của bạn đã được xác nhận và đang được xử lý.
     </p>
     
-    <div class="order-info" *ngIf="orderNumber">
+    <div class="order-info" *ngIf="orderDetails">
+      <div class="order-details">
+        <h3>Thông tin đơn hàng</h3>
+        <div class="detail-row">
+          <span class="label">Mã đơn hàng:</span>
+          <span class="value">{{ orderDetails.orderNumber }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Trạng thái:</span>
+          <span class="value status-paid">Đã thanh toán</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Tổng tiền:</span>
+          <span class="value price">{{ formatPrice(orderDetails.totalAmount) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Ngày đặt:</span>
+          <span class="value">{{ formatDate(orderDetails.createdAt) }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="order-info" *ngIf="!orderDetails && orderNumber">
       <p><strong>Mã đơn hàng:</strong> {{ orderNumber }}</p>
     </div>
     
@@ -47,6 +69,11 @@
       <button class="btn btn-primary" (click)="goToHome()">
         <i class="fas fa-home"></i>
         Về trang chủ
+      </button>
+      
+      <button class="btn btn-secondary" (click)="goToOrders()" *ngIf="orderCode">
+        <i class="fas fa-list"></i>
+        Xem đơn hàng
       </button>
     </div>
   </div>

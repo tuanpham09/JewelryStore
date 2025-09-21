@@ -204,21 +204,58 @@
                 <!-- Revenue Chart Tab -->
                 <mat-tab label="Biểu đồ doanh thu">
                     <div class="tab-content">
-                        <div class="chart-container">
-                            <h3 class="chart-title">
-                                <mat-icon>trending_up</mat-icon>
-                                Biểu đồ doanh thu theo thời gian
-                            </h3>
+                        <div class="">
+                            <div class="chart-header">
+                                <div class="chart-title-section">
+                                    <h3 class="chart-title">Phân tích doanh thu</h3>
+                                    <p class="chart-subtitle">So với năm trước</p>
+                                </div>
+                                <div class="chart-actions">
+                                    <button mat-raised-button class="action-btn" (click)="refreshStats()">
+                                        <mat-icon>refresh</mat-icon>
+                                        Làm mới
+                                    </button>
+                                    <button mat-raised-button class="action-btn primary" (click)="exportPDF()">
+                                        <mat-icon>picture_as_pdf</mat-icon>
+                                        Xuất PDF
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-stats" *ngIf="dashboardStats">
+                                <div class="stat-item">
+                                    <div class="stat-label">Doanh thu thực tế</div>
+                                    <div class="stat-value">{{ formatCurrency(dashboardStats.totalRevenue) }}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Mục tiêu doanh thu</div>
+                                    <div class="stat-value">{{ formatCurrency(dashboardStats.monthlyRevenue) }}</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-label">Mục tiêu</div>
+                                    <div class="stat-value goal">{{ getGoalPercentage() }}%</div>
+                                </div>
+                            </div>
+                            
                             <div class="chart-placeholder" *ngIf="revenueChartData.length === 0">
                                 <mat-icon>bar_chart</mat-icon>
                                 <p>Chưa có dữ liệu biểu đồ</p>
                             </div>
-                            <div class="chart-data" *ngIf="revenueChartData.length > 0">
-                                <div class="chart-item" *ngFor="let item of revenueChartData">
-                                    <div class="chart-date">{{ item.name }}</div>
-                                    <div class="chart-value">{{ formatCurrency(item.value) }}</div>
-                                    <div class="chart-orders">{{ item.orders }} đơn hàng</div>
-                                </div>
+                            
+                            <div class="chart-wrapper" *ngIf="revenueChartData.length > 0">
+                                <ngx-charts-bar-vertical
+                                    [results]="revenueChartData"
+                                    [scheme]="revenueColorScheme"
+                                    [xAxis]="revenueChartOptions.showXAxis"
+                                    [yAxis]="revenueChartOptions.showYAxis"
+                                    [legend]="revenueChartOptions.showLegend"
+                                    [showXAxisLabel]="revenueChartOptions.showXAxisLabel"
+                                    [showYAxisLabel]="revenueChartOptions.showYAxisLabel"
+                                    [xAxisLabel]="revenueChartOptions.xAxisLabel"
+                                    [yAxisLabel]="revenueChartOptions.yAxisLabel"
+                                    [gradient]="revenueChartOptions.gradient"
+                                    [view]="[1000, 400]">
+                                </ngx-charts-bar-vertical>
                             </div>
                         </div>
                     </div>
@@ -227,26 +264,38 @@
                 <!-- Order Status Chart Tab -->
                 <mat-tab label="Trạng thái đơn hàng">
                     <div class="tab-content">
-                        <div class="chart-container">
-                            <h3 class="chart-title">
-                                <mat-icon>pie_chart</mat-icon>
-                                Phân bố trạng thái đơn hàng
-                            </h3>
+                        <div class="">
+                            <div class="chart-header">
+                                <div class="chart-title-section">
+                                    <h3 class="chart-title">Phân đoạn</h3>
+                                    <p class="chart-subtitle">Nguồn doanh thu</p>
+                                </div>
+                                <div class="chart-actions">
+                                    <button mat-raised-button class="action-btn" (click)="refreshStats()">
+                                        <mat-icon>refresh</mat-icon>
+                                        Làm mới
+                                    </button>
+                                    <button mat-raised-button class="action-btn primary" (click)="exportExcel()">
+                                        <mat-icon>table_chart</mat-icon>
+                                        Xuất Excel
+                                    </button>
+                                </div>
+                            </div>
+                            
                             <div class="chart-placeholder" *ngIf="orderStatusData.length === 0">
                                 <mat-icon>pie_chart</mat-icon>
                                 <p>Chưa có dữ liệu trạng thái</p>
                             </div>
-                            <div class="status-chart" *ngIf="orderStatusData.length > 0">
-                                <div class="status-item" *ngFor="let item of orderStatusData">
-                                    <div class="status-info">
-                                        <div class="status-name">{{ item.name }}</div>
-                                        <div class="status-count">{{ formatNumber(item.value) }} đơn hàng</div>
-                                        <div class="status-revenue">{{ formatCurrency(item.revenue) }}</div>
-                                    </div>
-                                    <div class="status-bar">
-                                        <div class="status-progress" [style.width.%]="(item.value / dashboardStats.totalOrders) * 100"></div>
-                                    </div>
-                                </div>
+                            
+                            <div class="chart-wrapper" *ngIf="orderStatusData.length > 0">
+                                <ngx-charts-pie-chart
+                                    [results]="orderStatusData"
+                                    [scheme]="orderStatusColorScheme"
+                                    [legend]="orderStatusChartOptions.showLegend"
+                                    [labels]="orderStatusChartOptions.showLabels"
+                                    [doughnut]="orderStatusChartOptions.isDoughnut"
+                                    [view]="[800, 400]">
+                                </ngx-charts-pie-chart>
                             </div>
                         </div>
                     </div>

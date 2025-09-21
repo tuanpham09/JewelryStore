@@ -21,6 +21,7 @@ import { ProductService, Product, ProductSize, ProductImage, ProductReview } fro
 import { CartService, CartItem } from '../services/cart.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 
 @Component({
@@ -43,7 +44,8 @@ import { Footer } from '../shared/footer/footer';
         MatProgressSpinnerModule,
         MatSnackBarModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: 'product-detail.html',
     styleUrl: 'product-detail.css'
@@ -68,6 +70,9 @@ export class ProductDetail implements OnInit {
 
     // Expose Math to template
     Math = Math;
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [];
 
     constructor(
         public route: ActivatedRoute,
@@ -150,7 +155,8 @@ export class ProductDetail implements OnInit {
             next: (response) => {
                 if (response.success && response.data) {
                     this.product = Array.isArray(response.data) ? response.data[0] : response.data;
-        this.loadRelatedProducts();
+                    this.setBreadcrumbItems();
+                    this.loadRelatedProducts();
                     this.incrementViewCount();
                 } else {
                     this.error = 'Không thể tải thông tin sản phẩm';
@@ -388,6 +394,16 @@ export class ProductDetail implements OnInit {
         this.router.navigate(['/']);
     }
 
+    setBreadcrumbItems() {
+        if (this.product) {
+            this.breadcrumbItems = [
+                { label: 'Trang chủ', url: '/home' },
+                { label: 'Trang sức', url: '/home' },
+                { label: this.product.name, active: true }
+            ];
+        }
+    }
+
     navigateToProduct(productId: string) {
         this.router.navigate(['/product', productId]);
     }
@@ -440,13 +456,21 @@ export class ProductDetail implements OnInit {
 
     getCurrentPrice(): number {
         if (!this.product) return 0;
-        return this.product.currentPrice || this.product.salePrice || this.product.price;
+        const price = this.product.currentPrice || this.product.salePrice || this.product.price;
+        
+        // Fix: Nếu giá quá lớn (có thể bị nhân với 1000), chia cho 1000
+        if (price > 100000000) { // Nếu giá > 100 triệu VND
+            return price / 1000;
+        }
+        
+        return price;
     }
 
     getDiscountPercentage(): number {
         if (!this.product || !this.product.originalPrice) return 0;
         const currentPrice = this.getCurrentPrice();
-        return Math.round((1 - currentPrice / this.product.originalPrice) * 100);
+        const originalPrice = this.product.originalPrice > 100000000 ? this.product.originalPrice / 1000 : this.product.originalPrice;
+        return Math.round((1 - currentPrice / originalPrice) * 100);
     }
 
     isInStock(): boolean {

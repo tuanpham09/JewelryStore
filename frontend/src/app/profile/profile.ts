@@ -18,6 +18,7 @@ import { AuthService } from '../auth.service';
 import { CustomerProfileService, CustomerProfileDto, UpdateProfileRequest, ChangePasswordRequest, UserStats } from '../services/customer-profile.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 interface Address {
     id: string;
@@ -56,7 +57,8 @@ interface UserPreferences {
         MatChipsModule,
         MatSlideToggleModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: './profile.html',
     styleUrl: './profile.css'
@@ -69,6 +71,12 @@ export class Profile implements OnInit {
 
     // Expose document to template
     document = document;
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [
+        { label: 'Trang chủ', url: '/home' },
+        { label: 'Trang cá nhân', active: true }
+    ];
 
     // User Info - sử dụng CustomerProfileDto
     userInfo: CustomerProfileDto = {

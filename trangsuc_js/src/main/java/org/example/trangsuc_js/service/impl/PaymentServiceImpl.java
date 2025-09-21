@@ -53,6 +53,9 @@ public class PaymentServiceImpl implements PaymentService {
         order.setShippingAddress(dto.getShippingAddress());
         order.setNotes(dto.getNotes());
         order.setStatus(Order.OrderStatus.PENDING);
+        order.setPaymentStatus("PENDING");
+        order.setPaymentMethod("PAYOS");
+        // payment_reference sẽ được set sau khi tạo payment với PAYOS
         
         // Thêm items
         for (CreateOrderDto.OrderItemDto itemDto : dto.getItems()) {
@@ -111,6 +114,12 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setPayosPaymentId(response.getPaymentLinkId());
             payment.setPayosPaymentUrl(response.getCheckoutUrl());
             payment.setPayosQrCode(response.getQrCode());
+            
+            // Cập nhật orderNumber với orderCode từ PAYOS
+            String orderCode = String.valueOf(paymentData.getOrderCode());
+            order.setOrderNumber(orderCode);
+            order.setPaymentReference(orderCode); // Lưu orderCode vào payment_reference
+            log.info("Updated orderNumber with PAYOS orderCode: {}", orderCode);
             
             payment = paymentRepo.save(payment);
             order.setPayment(payment);
@@ -184,35 +193,29 @@ public class PaymentServiceImpl implements PaymentService {
     
     private PaymentData createPaymentData(Order order) {
         log.info("Creating payment data for order: {}, totalAmount: {}", order.getOrderNumber(), order.getTotalAmount());
-        
-        // Tạo orderCode unique (timestamp + random)
-        int orderCode = (int) (System.currentTimeMillis() % Integer.MAX_VALUE);
-        
-        // Kiểm tra và convert amount to VND (multiply by 100 for cents)
+    
+        // Tạo orderCode unique dựa trên order ID
+        int orderCode = (int) (order.getId() * 1000 + (System.currentTimeMillis() % 1000));
+    
+        // Giữ nguyên giá gốc
         BigDecimal totalAmount = order.getTotalAmount();
         if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
             log.error("Invalid total amount: {}", totalAmount);
             throw new RuntimeException("Invalid order total amount: " + totalAmount);
         }
-        
-        // Convert to VND (multiply by 100 for cents) và đảm bảo là số nguyên dương
-        long amountInVND = totalAmount.multiply(BigDecimal.valueOf(100)).longValue();
-        if (amountInVND <= 0) {
-            log.error("Invalid converted amount: {}", amountInVND);
-            throw new RuntimeException("Invalid converted amount: " + amountInVND);
-        }
-        
-        log.info("Converted amount: {} VND -> {} cents", totalAmount, amountInVND);
-        
-        // Tạo items
+    
+        long amountInVND = totalAmount.longValue();
+        log.info("Using original amount: {} VND", totalAmount);
+    
+        // Tạo items - giữ nguyên đơn giá
         List<ItemData> items = order.getItems().stream()
                 .map(item -> {
                     BigDecimal unitPrice = item.getUnitPrice();
                     if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
                         throw new RuntimeException("Invalid unit price for item: " + item.getProduct().getName());
                     }
-                    
-                    long priceInVND = unitPrice.multiply(BigDecimal.valueOf(100)).longValue();
+    
+                    long priceInVND = unitPrice.longValue(); 
                     return ItemData.builder()
                             .name(item.getProduct().getName())
                             .quantity(item.getQuantity())
@@ -220,7 +223,6 @@ public class PaymentServiceImpl implements PaymentService {
                             .build();
                 })
                 .collect(Collectors.toList());
-        
         return PaymentData.builder()
                 .orderCode((long) orderCode)
                 .amount((int) amountInVND)
@@ -230,7 +232,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .returnUrl(appBaseUrl + "/checkout/success")
                 .build();
     }
-
 
     private OrderDto toOrderDto(Order order) {
         OrderDto dto = new OrderDto();
@@ -291,8 +292,8 @@ public class PaymentServiceImpl implements PaymentService {
             String currentTimeString = String.valueOf(System.currentTimeMillis());
             long orderCode = Long.parseLong(currentTimeString.substring(currentTimeString.length() - 6));
 
-            // Convert price to VND (multiply by 100 for cents)
-            int amountInVND = price * 100;
+            // Bỏ logic nhân với 100 - giữ nguyên giá gốc
+            int amountInVND = price;
 
             ItemData item = ItemData.builder()
                     .name(productName)
@@ -394,6 +395,44 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception e) {
             log.error("Error updating order status: ", e);
             throw new RuntimeException("Failed to update order status: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public OrderDto confirmPayment(String orderCode, String paymentId) {
+        log.info("Confirming payment: orderCode={}, paymentId={}", orderCode, paymentId);
+        
+        try {
+            // Tìm order theo orderCode (orderCode từ PAYOS được lưu trong order_number)
+            Order order = orderRepo.findByOrderNumber(orderCode)
+                    .orElseThrow(() -> new RuntimeException("Order not found with orderCode: " + orderCode));
+            
+            log.info("Found order: id={}, orderNumber={}, status={}", order.getId(), order.getOrderNumber(), order.getStatus());
+            
+            // Cập nhật trạng thái đơn hàng thành PROCESSING (đã thanh toán, đang xử lý)
+            order.setStatus(Order.OrderStatus.PROCESSING);
+            order.setPaidAt(LocalDateTime.now());
+            order.setPaymentStatus("SUCCESS"); // payment_status: PENDING → SUCCESS
+            order.setPaymentMethod("PAYOS"); // Giữ nguyên
+            // payment_reference đã lưu orderCode từ trước, không cần cập nhật
+            order.setUpdatedAt(LocalDateTime.now());
+            order = orderRepo.save(order);
+            
+            // Cập nhật trạng thái payment nếu có
+            List<Payment> payments = paymentRepo.findByOrderId(order.getId());
+            for (Payment payment : payments) {
+                payment.setStatus(Payment.PaymentStatus.SUCCESS);
+                payment.setUpdatedAt(LocalDateTime.now());
+                paymentRepo.save(payment);
+            }
+            
+            log.info("Payment confirmed successfully: orderId={}, status=PAID", order.getId());
+            return toOrderDto(order);
+            
+        } catch (Exception e) {
+            log.error("Error confirming payment: ", e);
+            throw new RuntimeException("Failed to confirm payment: " + e.getMessage());
         }
     }
 }

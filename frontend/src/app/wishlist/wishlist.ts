@@ -12,6 +12,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '../auth.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 interface WishlistItem {
     id: string;
@@ -43,7 +44,8 @@ interface WishlistItem {
         MatBadgeModule,
         MatCheckboxModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: './wishlist.html',
     styleUrl: './wishlist.css'
@@ -53,6 +55,12 @@ export class Wishlist implements OnInit {
     wishlistItems: WishlistItem[] = [];
     selectedItems: string[] = [];
     allSelected: boolean = false;
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [
+        { label: 'Trang chủ', url: '/home' },
+        { label: 'Danh sách yêu thích', active: true }
+    ];
 
     constructor(
         public router: Router,

@@ -1,13 +1,7 @@
 <app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="cartItemCount"></app-header>
 
 <!-- Breadcrumb -->
-<div class="breadcrumb">
-    <span (click)="goBack()" style="cursor: pointer;">Trang chủ</span>
-    <mat-icon>chevron_right</mat-icon>
-    <span (click)="goBack()" style="cursor: pointer;">Trang sức</span>
-    <mat-icon>chevron_right</mat-icon>
-    <span class="current">{{ product?.name }}</span>
-</div>
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
 
 <!-- Loading Spinner -->
 <div class="loading-container" *ngIf="loading">

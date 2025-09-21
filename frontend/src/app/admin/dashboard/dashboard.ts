@@ -23,6 +23,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
+import { NgxChartsModule } from '@swimlane/ngx-charts';
 import { AdminService, DashboardStatsDto, TopProductDto, TopCustomerDto, RevenueChartDto, OrderStatusDto } from '../../services/admin.service';
 
 @Component({
@@ -52,7 +53,8 @@ import { AdminService, DashboardStatsDto, TopProductDto, TopCustomerDto, Revenue
         MatNativeDateModule,
         MatGridListModule,
         MatListModule,
-        MatDividerModule
+        MatDividerModule,
+        NgxChartsModule
     ],
     templateUrl: './dashboard.html',
     styleUrl: './dashboard.css'
@@ -65,6 +67,29 @@ export class DashboardComponent implements OnInit {
     // Chart data
     revenueChartData: any[] = [];
     orderStatusData: any[] = [];
+    
+    // Chart options
+    revenueChartOptions = {
+        showXAxis: true,
+        showYAxis: true,
+        gradient: false,
+        showLegend: true,
+        showXAxisLabel: true,
+        showYAxisLabel: true,
+        xAxisLabel: 'Ngày',
+        yAxisLabel: 'Doanh thu (VND)',
+        timeline: true
+    };
+
+    orderStatusChartOptions = {
+        showLegend: true,
+        showLabels: true,
+        isDoughnut: false
+    };
+
+    // Color schemes
+    revenueColorScheme = 'cool';
+    orderStatusColorScheme = 'cool';
 
     // Table data
     topProducts: TopProductDto[] = [];
@@ -103,18 +128,16 @@ export class DashboardComponent implements OnInit {
     }
 
     prepareChartData(stats: DashboardStatsDto) {
-        // Prepare revenue chart data
+        // Prepare revenue chart data for bar chart
         this.revenueChartData = stats.revenueChart?.map(item => ({
-            name: this.formatDate(item.date),
-            value: item.revenue,
-            orders: item.orders
+            name: item.date,
+            value: item.revenue
         })) || [];
 
-        // Prepare order status data
+        // Prepare order status data for pie chart
         this.orderStatusData = stats.orderStatusStats?.map(item => ({
             name: this.getStatusDisplayName(item.status),
-            value: item.count,
-            revenue: item.totalValue
+            value: item.count
         })) || [];
     }
 
@@ -159,6 +182,13 @@ export class DashboardComponent implements OnInit {
         if (change > 0) return 'trending_up';
         if (change < 0) return 'trending_down';
         return 'trending_flat';
+    }
+
+    getGoalPercentage(): number {
+        if (!this.dashboardStats || !this.dashboardStats.monthlyRevenue || this.dashboardStats.monthlyRevenue === 0) {
+            return 0;
+        }
+        return Math.round((this.dashboardStats.totalRevenue / this.dashboardStats.monthlyRevenue) * 100);
     }
 
     refreshStats() {

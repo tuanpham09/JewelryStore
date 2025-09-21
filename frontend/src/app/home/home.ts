@@ -14,6 +14,7 @@ import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 import { ProductService, Product, SearchResponse } from '../services/product.service';
 import { CategoryService, Category } from '../services/category.service';
 import { SearchService, ProductSearchDto } from '../services/search.service';
@@ -44,7 +45,8 @@ interface ViewOption {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     Header,
-    Footer
+    Footer,
+    BreadcrumbComponent
   ],
   templateUrl: './home.html',
   styleUrl: './home.css'
@@ -78,6 +80,17 @@ export class Home implements OnInit, OnDestroy {
     'Nhẫn vàng', 'Bông tai kim cương', 'Vòng tay charm', 
     'Dây chuyền bạc', 'Lắc tay vàng', 'Nhẫn cưới'
   ];
+
+  // Breadcrumb items
+  breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Trang chủ', url: '/home' },
+    { label: 'Trang sức', active: true }
+  ];
+
+  // Fix: Nếu giá quá lớn (có thể bị nhân với 1000), chia cho 1000
+  getCorrectPrice(price: number): number {
+    return price > 100000000 ? price / 1000 : price;
+  }
   isSearchMode: boolean = false;
 
   // Product lists
@@ -296,9 +309,9 @@ export class Home implements OnInit, OnDestroy {
       productId: product.id,
       productName: product.name,
       productImage: product.thumbnail || product.primaryImageUrl || '',
-      unitPrice: product.currentPrice || product.salePrice || product.price,
+      unitPrice: this.getCorrectPrice(product.currentPrice || product.salePrice || product.price),
       quantity: 1,
-      subtotal: product.currentPrice || product.salePrice || product.price,
+      subtotal: this.getCorrectPrice(product.currentPrice || product.salePrice || product.price),
       sizeValue: undefined,
       colorValue: undefined
     };

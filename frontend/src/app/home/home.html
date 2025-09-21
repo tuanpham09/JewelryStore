@@ -1,11 +1,7 @@
 <app-header [cartItemCount]="cartItemCount"></app-header>
 
 <!-- Breadcrumb -->
-<div class="breadcrumb">
-  <span>Home</span>
-  <mat-icon>chevron_right</mat-icon>
-  <span class="current">Trang sức</span>
-</div>
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
 
 <!-- Hero Section -->
 <div class="hero-section">

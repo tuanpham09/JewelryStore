@@ -15,6 +15,7 @@ import { CancelOrderDialogComponent } from './cancel-order-dialog/cancel-order-d
 import { ReturnOrderDialogComponent } from './return-order-dialog/return-order-dialog.component';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 interface OrderItem {
     id: string;
@@ -37,6 +38,7 @@ interface Order {
     items: OrderItem[];
     shippingAddress: string;
     paymentMethod: string;
+    paymentStatus: string;
     trackingNumber?: string;
     estimatedDelivery?: string;
 }
@@ -52,7 +54,8 @@ interface Order {
         MatTabsModule,
         MatDividerModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: 'order-history.html',
     styleUrl: 'order-history.css'
@@ -63,6 +66,12 @@ export class OrderHistory implements OnInit {
     orders: any[] = []; // Sử dụng any[] để phù hợp với API response
     isLoading = false;
     error: string | null = null;
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [
+        { label: 'Trang chủ', url: '/home' },
+        { label: 'Lịch sử đơn hàng', active: true }
+    ];
 
     constructor(
         public router: Router,
@@ -377,10 +386,16 @@ export class OrderHistory implements OnInit {
     }
 
     formatPrice(price: number): string {
+        const correctPrice = this.getCorrectPrice(price);
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(price);
+        }).format(correctPrice);
+    }
+
+    // Fix: Nếu giá quá lớn (có thể bị nhân với 1000), chia cho 1000
+    getCorrectPrice(price: number): number {
+        return price > 100000000 ? price / 1000 : price;
     }
 
     canCancelOrder(order: any): boolean {

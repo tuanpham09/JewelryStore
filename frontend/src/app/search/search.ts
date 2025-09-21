@@ -17,6 +17,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { AuthService } from '../auth.service';
 import { Header } from '../shared/header/header';
 import { Footer } from '../shared/footer/footer';
+import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadcrumb';
 
 interface Product {
     id: string;
@@ -70,7 +71,8 @@ interface SortOption {
         MatDividerModule,
         MatBadgeModule,
         Header,
-        Footer
+        Footer,
+        BreadcrumbComponent
     ],
     templateUrl: './search.html',
     styleUrl: './search.css'
@@ -80,6 +82,12 @@ export class Search implements OnInit {
     searchQuery: string = '';
     sortBy: string = 'relevance';
     viewMode: 'grid' | 'list' = 'grid';
+
+    // Breadcrumb items
+    breadcrumbItems: BreadcrumbItem[] = [
+        { label: 'Trang chủ', url: '/home' },
+        { label: 'Tìm kiếm', active: true }
+    ];
 
     // Filter options
     filters: FilterOptions = {
@@ -442,9 +450,15 @@ export class Search implements OnInit {
     }
 
     formatPrice(price: number): string {
+        const correctPrice = this.getCorrectPrice(price);
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
-        }).format(price);
+        }).format(correctPrice);
+    }
+
+    // Fix: Nếu giá quá lớn (có thể bị nhân với 1000), chia cho 1000
+    getCorrectPrice(price: number): number {
+        return price > 100000000 ? price / 1000 : price;
     }
 }

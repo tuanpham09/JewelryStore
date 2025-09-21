@@ -1,0 +1,20 @@
+<!-- Breadcrumb Navigation -->
+<div class="breadcrumb-container">
+    <div class="breadcrumb-content">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <ol class="breadcrumb-list">
+                <li *ngFor="let item of items; let last = last" class="breadcrumb-item" [class.active]="item.active">
+                    <a *ngIf="item.url && !item.active" 
+                       (click)="navigateTo(item)" 
+                       class="breadcrumb-link">
+                        {{ item.label }}
+                    </a>
+                    <span *ngIf="!item.url || item.active" class="breadcrumb-current">
+                        {{ item.label }}
+                    </span>
+                    <mat-icon *ngIf="!last" class="breadcrumb-separator">chevron_right</mat-icon>
+                </li>
+            </ol>
+        </nav>
+    </div>
+</div>
