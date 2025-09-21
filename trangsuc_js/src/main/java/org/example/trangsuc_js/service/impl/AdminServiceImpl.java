@@ -966,6 +966,10 @@ public class AdminServiceImpl implements AdminService {
         stats.setRevenueChart(generateRevenueChartData());
         stats.setOrderStatusStats(generateOrderStatusStats());
         
+        // Generate top selling products and top customers
+        stats.setTopSellingProducts(generateTopSellingProducts());
+        stats.setTopCustomers(generateTopCustomers());
+        
         return stats;
     }
 
@@ -1222,5 +1226,85 @@ public class AdminServiceImpl implements AdminService {
         }
         
         return statusStats;
+    }
+    
+    private List<TopProductDto> generateTopSellingProducts() {
+        List<TopProductDto> topProducts = new ArrayList<>();
+        
+        // Get top 5 selling products
+        List<Product> products = productRepo.findAll().stream()
+                .sorted((p1, p2) -> Long.compare(p2.getSoldCount(), p1.getSoldCount()))
+                .limit(5)
+                .collect(Collectors.toList());
+        
+        for (Product product : products) {
+            TopProductDto dto = new TopProductDto();
+            dto.setProductId(product.getId());
+            dto.setProductName(product.getName());
+            dto.setProductThumbnail(product.getThumbnail());
+            dto.setTotalSold(product.getSoldCount());
+            
+            // Calculate total revenue for this product - include all non-cancelled orders
+            BigDecimal totalRevenue = orderRepo.findAll().stream()
+                    .filter(o -> o.getStatus() != Order.OrderStatus.CANCELLED) // Include PENDING, PROCESSING, DELIVERED
+                    .flatMap(o -> o.getItems().stream())
+                    .filter(item -> item.getProduct().getId().equals(product.getId()))
+                    .map(OrderItem::getSubtotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            dto.setTotalRevenue(totalRevenue);
+            topProducts.add(dto);
+    
+        }
+        
+        return topProducts;
+    }
+    
+    private List<TopCustomerDto> generateTopCustomers() {
+        List<TopCustomerDto> topCustomers = new ArrayList<>();
+        
+        // Get top 5 customers by total spent
+        List<User> users = userRepo.findAll().stream()
+                .sorted((u1, u2) -> {
+                    double spent1 = u1.getOrders().stream()
+                            .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                                       o.getStatus() == Order.OrderStatus.DELIVERED)
+                            .mapToDouble(o -> o.getTotal().doubleValue())
+                            .sum();
+                    double spent2 = u2.getOrders().stream()
+                            .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                                       o.getStatus() == Order.OrderStatus.DELIVERED)
+                            .mapToDouble(o -> o.getTotal().doubleValue())
+                            .sum();
+                    return Double.compare(spent2, spent1);
+                })
+                .limit(5)
+                .collect(Collectors.toList());
+        
+        for (User user : users) {
+            TopCustomerDto dto = new TopCustomerDto();
+            dto.setCustomerId(user.getId());
+            dto.setCustomerName(user.getFullName());
+            dto.setCustomerEmail(user.getEmail());
+            
+            // Count total orders
+            long totalOrders = user.getOrders().stream()
+                    .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                               o.getStatus() == Order.OrderStatus.DELIVERED)
+                    .count();
+            dto.setTotalOrders(totalOrders);
+            
+            // Calculate total spent
+            BigDecimal totalSpent = user.getOrders().stream()
+                    .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
+                               o.getStatus() == Order.OrderStatus.DELIVERED)
+                    .map(Order::getTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            dto.setTotalSpent(totalSpent);
+            topCustomers.add(dto);
+        }
+        
+        return topCustomers;
     }
 }
