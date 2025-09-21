@@ -1,0 +1,98 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="cartItemCount"></app-header>
+
+<!-- Breadcrumb -->
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+
+<div class="cart-container">
+    <div class="cart-header">
+        <h1>Giỏ hàng của bạn</h1>
+        <p *ngIf="cartItems.length === 0" class="empty-cart-message">
+            Giỏ hàng của bạn đang trống
+        </p>
+    </div>
+
+    <div class="cart-content" *ngIf="cartItems.length > 0">
+        <div class="cart-items">
+            <div class="cart-item" *ngFor="let item of cartItems">
+                <div class="item-image">
+                    <img [src]="item.productImage" [alt]="item.productName" />
+                </div>
+                
+                <div class="item-details">
+                    <h3 class="item-name">{{ item.productName }}</h3>
+                    <div class="item-options" *ngIf="item.sizeValue || item.colorValue">
+                        <span *ngIf="item.sizeValue" class="option">Kích thước: {{ item.sizeValue }}</span>
+                        <span *ngIf="item.colorValue" class="option">Màu: {{ item.colorValue }}</span>
+                    </div>
+                    <div class="item-price">{{ formatPrice(item.unitPrice) }}</div>
+                </div>
+
+                <div class="item-quantity">
+                    <button mat-icon-button (click)="updateQuantity(item.id, item.quantity - 1)">
+                        <mat-icon>remove</mat-icon>
+                    </button>
+                    <span class="quantity">{{ item.quantity }}</span>
+                    <button mat-icon-button (click)="updateQuantity(item.id, item.quantity + 1)">
+                        <mat-icon>add</mat-icon>
+                    </button>
+                </div>
+
+                <div class="item-total">
+                    {{ formatPrice(item.subtotal) }}
+                </div>
+
+                <div class="item-actions">
+                    <button mat-icon-button (click)="removeItem(item.id)" class="remove-btn">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-summary">
+            <div class="summary-header">
+                <h2>Tổng kết đơn hàng</h2>
+                <button mat-button (click)="clearCart()" class="clear-cart-btn">
+                    <mat-icon>delete_sweep</mat-icon>
+                    Xóa tất cả
+                </button>
+            </div>
+            
+            <div class="summary-details">
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span>{{ formatPrice(cartTotal) }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí vận chuyển:</span>
+                    <span>Miễn phí</span>
+                </div>
+                <mat-divider></mat-divider>
+                <div class="summary-row total">
+                    <span>Tổng cộng:</span>
+                    <span>{{ formatPrice(cartTotal) }}</span>
+                </div>
+            </div>
+
+            <div class="checkout-actions">
+                <button mat-button (click)="continueShopping()" class="continue-btn">
+                    Tiếp tục mua sắm
+                </button>
+                <button mat-raised-button color="primary" (click)="proceedToCheckout()" class="checkout-btn">
+                    Mua hàng
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-cart" *ngIf="cartItems.length === 0">
+        <mat-icon>shopping_cart</mat-icon>
+        <h2>Giỏ hàng trống</h2>
+        <p>Hãy thêm một số sản phẩm vào giỏ hàng để bắt đầu mua sắm</p>
+        <button mat-raised-button color="primary" (click)="continueShopping()">
+            Bắt đầu mua sắm
+        </button>
+    </div>
+</div>
+
+<app-footer></app-footer>

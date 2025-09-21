@@ -1,0 +1,112 @@
+<!-- Admin Dashboard -->
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<!-- Loading Permission Check -->
+<div *ngIf="isCheckingPermission" class="permission-checking">
+    <div class="checking-content">
+        <mat-spinner diameter="60"></mat-spinner>
+        <h3>Đang kiểm tra quyền truy cập...</h3>
+        <p>Vui lòng chờ trong giây lát</p>
+    </div>
+</div>
+
+<!-- Admin Dashboard Content -->
+<div *ngIf="hasAdminPermission && !isCheckingPermission" class="admin-dashboard">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title gradient-text">Admin Panel</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button mat-button class="nav-item" [class.active]="activeSection === 'dashboard'"
+                (click)="setActiveSection('dashboard')">
+                <mat-icon>dashboard</mat-icon>
+                <span>Dashboard</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'products'"
+                (click)="setActiveSection('products')">
+                <mat-icon>inventory_2</mat-icon>
+                <span>Quản lý sản phẩm</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'categories'"
+                (click)="setActiveSection('categories')">
+                <mat-icon>category</mat-icon>
+                <span>Quản lý danh mục</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'users'"
+                (click)="setActiveSection('users')">
+                <mat-icon>people</mat-icon>
+                <span>Quản lý người dùng</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'orders'"
+                (click)="setActiveSection('orders')">
+                <mat-icon>shopping_bag</mat-icon>
+                <span>Quản lý đơn hàng</span>
+            </button>
+
+            <button mat-button class="nav-item" [class.active]="activeSection === 'promotions'"
+                (click)="setActiveSection('promotions')">
+                <mat-icon>local_offer</mat-icon>
+                <span>Quản lý khuyến mãi</span>
+            </button>
+
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-content">
+        <!-- Dashboard Section -->
+        <div class="content-section" *ngIf="activeSection === 'dashboard'">
+            <app-dashboard></app-dashboard>
+        </div>
+
+        <!-- Products Section -->
+        <div class="content-section" *ngIf="activeSection === 'products'">
+            <app-product-management></app-product-management>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="content-section" *ngIf="activeSection === 'categories'">
+            <app-category-management></app-category-management>
+        </div>
+
+        <!-- Users Section -->
+        <div class="content-section" *ngIf="activeSection === 'users'">
+            <app-user-management></app-user-management>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="content-section" *ngIf="activeSection === 'orders'">
+            <app-order-management></app-order-management>
+        </div>
+
+        <!-- Promotions Section -->
+        <div class="content-section" *ngIf="activeSection === 'promotions'">
+            <app-promotion-management></app-promotion-management>
+        </div>
+
+        <!-- Reports Section -->
+        <div class="content-section" *ngIf="activeSection === 'reports'">
+            <div class="section-header">
+                <h1 class="section-title gradient-text">Báo cáo & Thống kê</h1>
+                <p class="section-subtitle">Xuất báo cáo PDF/Excel và thống kê trực quan</p>
+            </div>
+
+            <div class="reports-actions">
+                <button mat-raised-button color="primary" class="export-btn">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    Xuất PDF
+                </button>
+                <button mat-raised-button color="accent" class="export-btn">
+                    <mat-icon>table_chart</mat-icon>
+                    Xuất Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

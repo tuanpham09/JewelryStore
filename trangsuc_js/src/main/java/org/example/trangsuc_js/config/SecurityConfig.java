@@ -29,8 +29,20 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // ✅ Cho phép login & register
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**", "/api/search/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/search/**").permitAll() // ✅ Cho phép POST search
+                        .requestMatchers("/api/payment/webhook").permitAll() // ✅ Cho phép webhook PayOS
+                        .requestMatchers("/api/payment/confirm-webhook").permitAll() // ✅ Cho phép confirm webhook
+                        .requestMatchers("/api/payment/create-payment-link").permitAll() // ✅ Cho phép tạo payment link
+                        .requestMatchers("/api/cart/**").authenticated() // ✅ Yêu cầu authentication cho cart
+                        .requestMatchers("/api/payment/**").authenticated() // ✅ Yêu cầu authentication cho payment
+                        .requestMatchers("/api/order/**").authenticated() // ✅ Yêu cầu authentication cho order
+                        .requestMatchers("/api/order-history/**").authenticated() // ✅ Yêu cầu authentication cho order history
+                        .requestMatchers("/api/profile/**").authenticated() // ✅ Yêu cầu authentication cho profile
+                        .requestMatchers("/api/wishlist/**").authenticated() // ✅ Yêu cầu authentication cho wishlist
+                        .requestMatchers("/api/search/**").authenticated() // ✅ Yêu cầu authentication cho search
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

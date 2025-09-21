@@ -1,0 +1,36 @@
+<!-- Header -->
+<app-header></app-header>
+
+<!-- 404 Not Found Content -->
+<div class="not-found-container">
+    <div class="not-found-content">
+        <div class="error-illustration">
+            <div class="error-number">404</div>
+            <div class="error-icon">
+                <mat-icon>error_outline</mat-icon>
+            </div>
+        </div>
+        
+        <div class="error-message">
+            <h1 class="error-title">Trang không tìm thấy</h1>
+            <p class="error-description">
+                Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc bạn không có quyền truy cập.
+            </p>
+        </div>
+
+        <div class="error-actions">
+            <button mat-raised-button color="primary" (click)="goHome()" class="action-btn home-btn">
+                <mat-icon>home</mat-icon>
+                Về trang chủ
+            </button>
+            
+            <button mat-stroked-button (click)="goBack()" class="action-btn back-btn">
+                <mat-icon>arrow_back</mat-icon>
+                Quay lại
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<app-footer></app-footer>

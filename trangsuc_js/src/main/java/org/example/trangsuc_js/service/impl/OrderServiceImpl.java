@@ -3,7 +3,6 @@ package org.example.trangsuc_js.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.trangsuc_js.dto.order.CheckoutDto;
 import org.example.trangsuc_js.dto.order.OrderDto;
-import org.example.trangsuc_js.dto.order.OrderItemDto;
 import org.example.trangsuc_js.entity.*;
 import org.example.trangsuc_js.repository.*;
 import org.example.trangsuc_js.service.OrderService;
@@ -40,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        order.setStatus("PENDING");
+        order.setStatus(Order.OrderStatus.PENDING);
         order.setTotal(BigDecimal.ZERO);
         order = orderRepo.save(order);
 
@@ -72,14 +71,26 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderDto toDto(Order o) {
-        List<OrderItemDto> items = o.getItems().stream()
-                .map(oi -> new OrderItemDto(
-                        oi.getProduct().getId(),
-                        oi.getProduct().getName(),
-                        oi.getQuantity(),
-                        oi.getPrice()))
+        List<OrderDto.OrderItemDto> items = o.getItems().stream()
+                .map(oi -> {
+                    OrderDto.OrderItemDto dto = new OrderDto.OrderItemDto();
+                    dto.setProductId(oi.getProduct().getId());
+                    dto.setProductName(oi.getProduct().getName());
+                    dto.setQuantity(oi.getQuantity());
+                    dto.setUnitPrice(oi.getPrice());
+                    dto.setSubtotal(oi.getSubtotal());
+                    dto.setSizeValue(oi.getSizeValue());
+                    dto.setColorValue(oi.getColorValue());
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
-        return new OrderDto(o.getId(), o.getStatus(), o.getTotal(), o.getCreatedAt(), items);
+        OrderDto orderDto = new OrderDto();
+        orderDto.setId(o.getId());
+        orderDto.setStatus(o.getStatus());
+        orderDto.setTotal(o.getTotal());
+        orderDto.setCreatedAt(o.getCreatedAt());
+        orderDto.setItems(items);
+        return orderDto;
     }
 }

@@ -1,0 +1,232 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<!-- Breadcrumb -->
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+
+<!-- Search Content -->
+<div class="search-container">
+    <!-- Search Header -->
+    <div class="search-header">
+        <div class="search-bar">
+            <mat-form-field class="search-input">
+                <mat-label>Tìm kiếm sản phẩm</mat-label>
+                <input matInput [(ngModel)]="searchQuery" (keyup.enter)="performSearch()"
+                    placeholder="Nhập tên sản phẩm, mô tả hoặc từ khóa...">
+                <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+            <button mat-raised-button color="primary" (click)="performSearch()">
+                <mat-icon>search</mat-icon>
+                Tìm kiếm
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Results Header -->
+    <div class="results-header" *ngIf="searchQuery || getActiveFiltersCount() > 0">
+        <div class="results-info">
+            <h2>Tìm thấy {{ totalResults }} sản phẩm</h2>
+            <p *ngIf="searchQuery">Kết quả cho: "{{ searchQuery }}"</p>
+        </div>
+        <div class="results-controls">
+            <button mat-button (click)="showFilters = !showFilters" class="filter-toggle">
+                <mat-icon>tune</mat-icon>
+                Bộ lọc
+                <mat-badge [matBadge]="getActiveFiltersCount()" matBadgeColor="accent"
+                    [matBadgeHidden]="getActiveFiltersCount() === 0"></mat-badge>
+            </button>
+            <mat-form-field class="sort-select">
+                <mat-label>Sắp xếp</mat-label>
+                <mat-select [(ngModel)]="sortBy" (selectionChange)="performSearch()">
+                    <mat-option *ngFor="let option of sortOptions" [value]="option.value">
+                        {{ option.label }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <div class="view-toggle">
+                <button mat-icon-button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'">
+                    <mat-icon>grid_view</mat-icon>
+                </button>
+                <button mat-icon-button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+                    <mat-icon>list</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel" *ngIf="showFilters">
+        <div class="filters-header">
+            <h3>Bộ lọc</h3>
+            <button mat-button (click)="clearAllFilters()" class="clear-filters">
+                <mat-icon>clear</mat-icon>
+                Xóa tất cả
+            </button>
+        </div>
+
+        <div class="filters-content">
+            <!-- Category Filter -->
+            <div class="filter-group">
+                <h4>Danh mục</h4>
+                <div class="filter-chips">
+                    <mat-chip *ngFor="let category of availableCategories"
+                        [class.selected]="filters.categories.includes(category.value)"
+                        (click)="toggleCategory(category.value)">
+                        {{ category.label }}
+                    </mat-chip>
+                </div>
+            </div>
+
+            <!-- Material Filter -->
+            <div class="filter-group">
+                <h4>Chất liệu</h4>
+                <div class="filter-chips">
+                    <mat-chip *ngFor="let material of availableMaterials"
+                        [class.selected]="filters.materials.includes(material.value)"
+                        (click)="toggleMaterial(material.value)">
+                        {{ material.label }}
+                    </mat-chip>
+                </div>
+            </div>
+
+            <!-- Color Filter -->
+            <div class="filter-group">
+                <h4>Màu sắc</h4>
+                <div class="filter-chips">
+                    <mat-chip *ngFor="let color of availableColors"
+                        [class.selected]="filters.colors.includes(color.value)" (click)="toggleColor(color.value)">
+                        {{ color.label }}
+                    </mat-chip>
+                </div>
+            </div>
+
+            <!-- Size Filter -->
+            <div class="filter-group">
+                <h4>Kích thước</h4>
+                <div class="filter-chips">
+                    <mat-chip *ngFor="let size of availableSizes" [class.selected]="filters.sizes.includes(size.value)"
+                        (click)="toggleSize(size.value)">
+                        {{ size.label }}
+                    </mat-chip>
+                </div>
+            </div>
+
+            <!-- Price Range Filter -->
+            <div class="filter-group">
+                <h4>Khoảng giá</h4>
+                <div class="price-range">
+                    <span class="price-label">{{ formatPrice(filters.priceRange[0]) }}</span>
+                    <mat-slider [min]="0" [max]="5000000" [step]="100000" [(ngModel)]="filters.priceRange"
+                        (ngModelChange)="onPriceRangeChange()" class="price-slider">
+                    </mat-slider>
+                    <span class="price-label">{{ formatPrice(filters.priceRange[1]) }}</span>
+                </div>
+            </div>
+
+            <!-- Rating Filter -->
+            <div class="filter-group">
+                <h4>Đánh giá</h4>
+                <div class="rating-filter">
+                    <mat-slider [min]="0" [max]="5" [step]="0.5" [(ngModel)]="filters.rating"
+                        (ngModelChange)="onRatingChange()" class="rating-slider">
+                    </mat-slider>
+                    <span class="rating-label">{{ filters.rating }} sao trở lên</span>
+                </div>
+            </div>
+
+            <!-- Additional Filters -->
+            <div class="filter-group">
+                <h4>Khác</h4>
+                <div class="checkbox-filters">
+                    <mat-checkbox [(ngModel)]="filters.inStock" (change)="onInStockChange()">
+                        Chỉ hiển thị sản phẩm còn hàng
+                    </mat-checkbox>
+                    <mat-checkbox [(ngModel)]="filters.onSale" (change)="onOnSaleChange()">
+                        Chỉ hiển thị sản phẩm đang giảm giá
+                    </mat-checkbox>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid/List -->
+    <div class="products-section" *ngIf="filteredProducts.length > 0; else noResults">
+        <div class="products-grid" [class.list-view]="viewMode === 'list'">
+            <div class="product-card" *ngFor="let product of filteredProducts">
+                <div class="product-image" (click)="navigateToProduct(product.id)">
+                    <img [src]="product.image" [alt]="product.name" />
+                    <div class="product-overlay">
+                        <button mat-icon-button class="overlay-btn"
+                            (click)="navigateToProduct(product.id); $event.stopPropagation()">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                    </div>
+                    <div class="product-badges">
+                        <mat-chip class="discount-chip" *ngIf="product.discount">
+                            -{{ product.discount }}%
+                        </mat-chip>
+                        <mat-chip class="out-of-stock-chip" *ngIf="!product.inStock">
+                            Hết hàng
+                        </mat-chip>
+                    </div>
+                </div>
+
+                <div class="product-info">
+                    <h3 class="product-name" (click)="navigateToProduct(product.id)">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.description }}</p>
+
+                    <div class="product-rating" *ngIf="product.rating > 0">
+                        <div class="stars">
+                            <mat-icon *ngFor="let star of getStarArray(product.rating)" class="star">star</mat-icon>
+                            <mat-icon *ngFor="let star of getStarArray(5 - product.rating)"
+                                class="star empty">star_border</mat-icon>
+                        </div>
+                        <span class="rating-text">({{ product.reviewCount }})</span>
+                    </div>
+
+                    <div class="product-pricing">
+                        <span class="current-price">{{ formatPrice(product.price) }}</span>
+                        <span class="original-price" *ngIf="product.originalPrice">{{ formatPrice(product.originalPrice)
+                            }}</span>
+                    </div>
+
+                    <div class="product-actions">
+                        <button mat-raised-button color="primary" class="add-to-cart-btn" (click)="addToCart(product)"
+                            [disabled]="!product.inStock">
+                            <mat-icon>shopping_cart</mat-icon>
+                            {{ product.inStock ? 'Thêm vào giỏ' : 'Hết hàng' }}
+                        </button>
+
+                        <button mat-icon-button class="wishlist-btn" (click)="addToWishlist(product)"
+                            matTooltip="Thêm vào yêu thích">
+                            <mat-icon>favorite_border</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Results -->
+    <ng-template #noResults>
+        <div class="no-results">
+            <div class="no-results-content">
+                <mat-icon class="no-results-icon">search_off</mat-icon>
+                <h2>Không tìm thấy sản phẩm</h2>
+                <p>Không có sản phẩm nào phù hợp với tiêu chí tìm kiếm của bạn. Hãy thử:</p>
+                <ul>
+                    <li>Kiểm tra lại từ khóa tìm kiếm</li>
+                    <li>Thử các từ khóa khác</li>
+                    <li>Bỏ bớt bộ lọc</li>
+                    <li>Mở rộng khoảng giá</li>
+                </ul>
+                <button mat-raised-button color="primary" class="clear-search-btn"
+                    (click)="clearAllFilters(); searchQuery = ''; performSearch()">
+                    <mat-icon>refresh</mat-icon>
+                    Xóa tất cả bộ lọc
+                </button>
+            </div>
+        </div>
+    </ng-template>
+</div>
+
+<app-footer></app-footer>

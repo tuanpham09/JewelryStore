@@ -1,0 +1,489 @@
+<app-header [showBackButton]="true" [backButtonText]="'Quay lại'" [cartItemCount]="0"></app-header>
+
+<!-- Breadcrumb -->
+<app-breadcrumb [items]="breadcrumbItems"></app-breadcrumb>
+
+<!-- Profile Content -->
+<div class="profile-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title gradient-text">Trang cá nhân</h1>
+        <p class="page-subtitle">Quản lý thông tin và tài khoản của bạn</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+        <mat-icon class="loading-icon">refresh</mat-icon>
+        <p>Đang tải thông tin profile...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="error-container">
+        <mat-icon class="error-icon">error</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" (click)="loadUserData()">
+            Thử lại
+        </button>
+    </div>
+
+    <!-- Profile Tabs -->
+    <div class="tabs-container" *ngIf="!isLoading && !error">
+        <mat-tab-group [(selectedIndex)]="selectedTab" class="profile-tabs">
+
+            <!-- Personal Information Tab -->
+            <mat-tab label="Thông tin cá nhân">
+                <div class="tab-content">
+                    <div class="profile-info-card">
+                        <div class="profile-header">
+                            <div class="avatar-section">
+                                <div class="avatar-large">
+                                    {{ getInitials() }}
+                                </div>
+                                <button mat-button class="upload-btn"
+                                    (click)="document.getElementById('avatar-input')?.click()">
+                                    <mat-icon>camera_alt</mat-icon>
+                                    Đổi ảnh đại diện
+                                </button>
+                                <input type="file" id="avatar-input" accept="image/*" (change)="uploadAvatar($event)"
+                                    style="display: none;">
+                            </div>
+                            <div class="user-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ userStats.totalOrders }}</span>
+                                    <span class="stat-label">Đơn hàng</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ userStats.totalSpent | currency:'VND':'symbol':'1.0-0'
+                                        }}</span>
+                                    <span class="stat-label">Đã chi tiêu</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ userStats.memberSince }}</span>
+                                    <span class="stat-label">Thành viên từ</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <mat-divider></mat-divider>
+
+                        <div class="profile-form">
+                            <h3>Thông tin cơ bản</h3>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">person</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.fullName" 
+                                            placeholder="Nhập họ và tên"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">email</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.email" 
+                                            type="email" 
+                                            placeholder="Email" 
+                                            readonly
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">phone</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.phoneNumber" 
+                                            placeholder="Nhập số điện thoại"
+                                            type="tel"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">cake</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.dateOfBirth" 
+                                            type="date"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-select-wrapper">
+                                        <mat-icon class="custom-select-icon">wc</mat-icon>
+                                        <select class="custom-select" [(ngModel)]="userInfo.gender">
+                                            <option value="">Chọn giới tính</option>
+                                            <option value="male">Nam</option>
+                                            <option value="female">Nữ</option>
+                                            <option value="other">Khác</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">home</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.address" 
+                                            placeholder="Nhập địa chỉ"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">location_city</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.city" 
+                                            placeholder="Nhập thành phố"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">map</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.province" 
+                                            placeholder="Nhập tỉnh"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">markunread_mailbox</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.postalCode" 
+                                            placeholder="Nhập mã bưu điện"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">public</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="userInfo.country" 
+                                            placeholder="Nhập quốc gia"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="custom-btn" (click)="updateUserInfo()">
+                                    <mat-icon>save</mat-icon>
+                                    Lưu thay đổi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <!-- Address Management Tab -->
+            <mat-tab label="Địa chỉ giao hàng">
+                <div class="tab-content">
+                    <div class="addresses-section">
+                        <div class="section-header">
+                            <h3>Địa chỉ giao hàng</h3>
+                            <button mat-raised-button color="primary" (click)="showAddressForm = true">
+                                <mat-icon>add</mat-icon>
+                                Thêm địa chỉ mới
+                            </button>
+                        </div>
+
+                        <!-- Address Form -->
+                        <div class="address-form" *ngIf="showAddressForm">
+                            <h4>{{ editingAddress ? 'Chỉnh sửa địa chỉ' : 'Thêm địa chỉ mới' }}</h4>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-select-wrapper">
+                                        <mat-icon class="custom-select-icon">home_work</mat-icon>
+                                        <select class="custom-select" [(ngModel)]="newAddress.type">
+                                            <option value="home">Nhà riêng</option>
+                                            <option value="work">Công ty</option>
+                                            <option value="other">Khác</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">person</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="newAddress.name" 
+                                            placeholder="Nhập họ tên"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">phone</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="newAddress.phone" 
+                                            placeholder="Nhập số điện thoại"
+                                            type="tel"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">home</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="newAddress.address" 
+                                            placeholder="Số nhà, tên đường"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">location_city</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="newAddress.city" 
+                                            placeholder="Nhập tỉnh/thành phố"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">map</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="newAddress.district" 
+                                            placeholder="Nhập quận/huyện"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">location_on</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="newAddress.ward" 
+                                            placeholder="Nhập phường/xã"
+                                            type="text"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="custom-btn" (click)="addAddress()">
+                                    <mat-icon>save</mat-icon>
+                                    {{ editingAddress ? 'Cập nhật' : 'Thêm địa chỉ' }}
+                                </button>
+                                <button class="custom-btn custom-btn-secondary" (click)="resetAddressForm()">
+                                    <mat-icon>cancel</mat-icon>
+                                    Hủy
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Address List -->
+                        <div class="addresses-list">
+                            <div class="address-card" *ngFor="let address of addresses">
+                                <div class="address-header">
+                                    <div class="address-info">
+                                        <h4>{{ address.name }}</h4>
+                                        <mat-chip [class]="'address-type-' + address.type">
+                                            {{ getAddressTypeLabel(address.type) }}
+                                        </mat-chip>
+                                        <mat-chip class="default-chip" *ngIf="address.isDefault">
+                                            <mat-icon>star</mat-icon>
+                                            Mặc định
+                                        </mat-chip>
+                                    </div>
+                                    <div class="address-actions">
+                                        <button mat-icon-button (click)="editAddress(address)">
+                                            <mat-icon>edit</mat-icon>
+                                        </button>
+                                        <button mat-icon-button (click)="deleteAddress(address.id)"
+                                            *ngIf="!address.isDefault">
+                                            <mat-icon>delete</mat-icon>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="address-details">
+                                    <p><strong>SĐT:</strong> {{ address.phone }}</p>
+                                    <p><strong>Địa chỉ:</strong> {{ address.address }}, {{ address.ward }}, {{
+                                        address.district }}, {{ address.city }}</p>
+                                </div>
+                                <div class="address-actions-bottom">
+                                    <button mat-button (click)="setDefaultAddress(address.id)"
+                                        *ngIf="!address.isDefault">
+                                        <mat-icon>star_border</mat-icon>
+                                        Đặt làm mặc định
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <!-- Security Tab -->
+            <mat-tab label="Bảo mật">
+                <div class="tab-content">
+                    <div class="security-section">
+                        <div class="password-change-card">
+                            <h3>Đổi mật khẩu</h3>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">lock</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="passwordForm.currentPassword" 
+                                            type="password"
+                                            placeholder="Nhập mật khẩu hiện tại"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">lock_outline</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="passwordForm.newPassword" 
+                                            type="password"
+                                            placeholder="Nhập mật khẩu mới"
+                                        >
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <div class="custom-input-wrapper">
+                                        <mat-icon class="custom-input-icon">lock_reset</mat-icon>
+                                        <input 
+                                            class="custom-input" 
+                                            [(ngModel)]="passwordForm.confirmPassword" 
+                                            type="password"
+                                            placeholder="Nhập lại mật khẩu mới"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="custom-btn" (click)="changePassword()">
+                                    <mat-icon>lock</mat-icon>
+                                    Đổi mật khẩu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <!-- Preferences Tab -->
+            <mat-tab label="Tùy chọn">
+                <div class="tab-content">
+                    <div class="preferences-section">
+                        <div class="preferences-card">
+                            <h3>Cài đặt tùy chọn</h3>
+
+                            <div class="preference-group">
+                                <h4>Ngôn ngữ và tiền tệ</h4>
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <div class="custom-select-wrapper">
+                                            <mat-icon class="custom-select-icon">language</mat-icon>
+                                            <select class="custom-select" [(ngModel)]="userInfo.preferredLanguage">
+                                                <option value="vi">Tiếng Việt</option>
+                                                <option value="en">English</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-field">
+                                        <div class="custom-select-wrapper">
+                                            <mat-icon class="custom-select-icon">attach_money</mat-icon>
+                                            <select class="custom-select" [(ngModel)]="userInfo.preferredCurrency">
+                                                <option value="VND">VND</option>
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <mat-divider></mat-divider>
+
+                            <div class="preference-group">
+                                <h4>Thông báo</h4>
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h5>Email thông báo</h5>
+                                        <p>Nhận thông báo qua email về đơn hàng và khuyến mãi</p>
+                                    </div>
+                                    <mat-slide-toggle [(ngModel)]="preferences.emailNotifications"></mat-slide-toggle>
+                                </div>
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h5>SMS thông báo</h5>
+                                        <p>Nhận thông báo qua SMS về trạng thái đơn hàng</p>
+                                    </div>
+                                    <mat-slide-toggle [(ngModel)]="preferences.smsNotifications"></mat-slide-toggle>
+                                </div>
+                                <div class="preference-item">
+                                    <div class="preference-info">
+                                        <h5>Newsletter</h5>
+                                        <p>Nhận thông tin về sản phẩm mới và khuyến mãi</p>
+                                    </div>
+                                    <mat-slide-toggle [(ngModel)]="preferences.newsletter"></mat-slide-toggle>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button class="custom-btn" (click)="updatePreferences()">
+                                    <mat-icon>save</mat-icon>
+                                    Lưu cài đặt
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </mat-tab>
+
+        </mat-tab-group>
+    </div>
+</div>
+
+<app-footer></app-footer>

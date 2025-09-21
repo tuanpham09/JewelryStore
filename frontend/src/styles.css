@@ -1,1 +1,75 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'ngx-toastr/toastr';
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* Fix text rendering issues */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Cancel Order Dialog Styles */
+.cancel-order-dialog-container {
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+.cancel-order-dialog-container .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+/* Return Order Dialog Styles */
+.return-order-dialog-container {
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+.return-order-dialog-container .mat-dialog-container {
+    padding: 0 !important;
+    border-radius: 15px !important;
+    overflow: hidden;
+}
+
+/* Fix gradient text rendering */
+.gradient-text {
+    background: linear-gradient(135deg, #d63384, #ff6b9d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    /* Fallback for browsers that don't support background-clip */
+    color: #d63384;
+}
+
+/* Ensure proper text spacing */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+}
+
+/* Fix text overlap issues */
+.page-title,
+.brand-logo,
+.section-title {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
