@@ -623,4 +623,59 @@ export class Home implements OnInit, OnDestroy {
       }
     });
   }
+
+  // Scroll to products section
+  scrollToProducts() {
+    const element = document.getElementById('products');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  // Scroll to categories section
+  scrollToCategories() {
+    const element = document.getElementById('categories');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  // Get category icon based on category name
+  getCategoryIcon(categoryName: string): string {
+    const iconMap: { [key: string]: string } = {
+      'Nhẫn': 'favorite',
+      'Bông tai': 'radio_button_checked',
+      'Vòng tay': 'watch',
+      'Dây chuyền': 'cable',
+      'Lắc tay': 'watch',
+      'Nhẫn cưới': 'favorite',
+      'Trang sức nam': 'male',
+      'Trang sức nữ': 'female'
+    };
+    return iconMap[categoryName] || 'diamond';
+  }
+
+  // Get category description based on category name
+  getCategoryDescription(categoryName: string): string {
+    const descriptionMap: { [key: string]: string } = {
+      'Nhẫn': 'Những chiếc nhẫn tinh tế và sang trọng',
+      'Bông tai': 'Bông tai đẹp mắt cho mọi dịp',
+      'Vòng tay': 'Vòng tay thanh lịch và hiện đại',
+      'Dây chuyền': 'Dây chuyền quý phái và tinh tế',
+      'Lắc tay': 'Lắc tay đẹp mắt và sang trọng',
+      'Nhẫn cưới': 'Nhẫn cưới đặc biệt cho ngày trọng đại',
+      'Trang sức nam': 'Trang sức nam phong cách và mạnh mẽ',
+      'Trang sức nữ': 'Trang sức nữ thanh lịch và quyến rũ'
+    };
+    return descriptionMap[categoryName] || 'Khám phá bộ sưu tập đa dạng';
+  }
+
+  // Toggle wishlist (placeholder for future implementation)
+  toggleWishlist(product: Product) {
+    // TODO: Implement wishlist functionality
+    console.log('Toggle wishlist for product:', product.name);
+    this.snackBar.open('Tính năng yêu thích sẽ sớm có mặt', 'Đóng', {
+      duration: 3000
+    });
+  }
 }

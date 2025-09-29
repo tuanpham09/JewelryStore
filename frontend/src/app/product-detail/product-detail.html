@@ -24,8 +24,8 @@
         <!-- Product Images -->
         <div class="product-images">
             <div class="main-image">
-                <img [src]="getProductImages()[selectedImageIndex]?.imageUrl || getPrimaryImage()" 
-                     [alt]="getProductImages()[selectedImageIndex]?.altText || product?.name || 'Product Image'" />
+                <img [src]="getProductImages()[selectedImageIndex].imageUrl || getPrimaryImage()" 
+                     [alt]="getProductImages()[selectedImageIndex].altText || product.name || 'Product Image'" />
                 <div class="image-overlay">
                     <button mat-fab color="primary" class="zoom-btn">
                         <mat-icon>zoom_in</mat-icon>
@@ -43,7 +43,7 @@
         <!-- Product Info -->
         <div class="product-info">
             <div class="product-header">
-                <h1 class="product-title">{{ product?.name || 'Product Name' }}</h1>
+                <h1 class="product-title">{{ product.name || 'Product Name' }}</h1>
                 <button mat-icon-button class="favorite-btn" [class.favorited]="product.isFavorite"
                     (click)="toggleFavorite()">
                     <mat-icon>{{ product.isFavorite ? 'favorite' : 'favorite_border' }}</mat-icon>
@@ -69,7 +69,7 @@
             </div>
 
             <div class="product-description">
-                <p>{{ product?.description || 'No description available' }}</p>
+                <p>{{ product.description || 'No description available' }}</p>
             </div>
 
             <!-- Product Options -->

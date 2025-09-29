@@ -118,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
         dto.setIsFeatured(product.getIsFeatured());
         dto.setIsNew(product.getIsNew());
         dto.setIsBestseller(product.getIsBestseller());
-        dto.setIsOnSale(product.isOnSale());
+        dto.setIsOnSale(product.getIsOnSale());
         dto.setDiscountPercentage(product.getDiscountPercentage());
         dto.setIsLowStock(product.isLowStock());
         dto.setIsOutOfStock(product.isOutOfStock());
@@ -163,5 +163,49 @@ public class ProductServiceImpl implements ProductService {
         dto.setStock(size.getStock());
         dto.setIsActive(size.getIsActive());
         return dto;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductDto> getDealOfTheDayProducts() {
+        // Get products that are on sale and featured, limit to 4
+        List<Product> products = productRepository.findAllWithCategory().stream()
+                .filter(p -> p.getIsOnSale() != null && p.getIsOnSale())
+                .filter(p -> p.getIsFeatured() != null && p.getIsFeatured())
+                .limit(4)
+                .collect(Collectors.toList());
+        
+        return products.stream()
+                .map(this::toProductDto)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductDto> getFeaturedProducts() {
+        List<Product> products = productRepository.findAllWithCategory().stream()
+                .filter(p -> p.getIsFeatured() != null && p.getIsFeatured())
+                .limit(8)
+                .collect(Collectors.toList());
+        
+        return products.stream()
+                .map(this::toProductDto)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductDto> getNewArrivals() {
+        // Get products created in the last 30 days, ordered by creation date
+        List<Product> products = productRepository.findAllWithCategory().stream()
+                .filter(p -> p.getCreatedAt() != null)
+                .filter(p -> p.getCreatedAt().isAfter(java.time.LocalDateTime.now().minusDays(30)))
+                .sorted((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()))
+                .limit(8)
+                .collect(Collectors.toList());
+        
+        return products.stream()
+                .map(this::toProductDto)
+                .collect(Collectors.toList());
     }
 }

@@ -1,46 +1,119 @@
-<!-- Header Navigation -->
-<mat-toolbar class="main-header">
+<!-- Main Header -->
+<div class="main-header">
     <div class="header-content">
-        <!-- Left Navigation -->
-        <div class="nav-left">
-            <button mat-button class="nav-link" *ngIf="showBackButton" (click)="goBack()">
-                <mat-icon>arrow_back</mat-icon>
-                {{ backButtonText }}
-            </button>
-            <button mat-button class="nav-link" *ngIf="!showBackButton" (click)="navigateToHome()">
-                SHOP
-            </button>
-            <button mat-button class="nav-link" *ngIf="!showBackButton" (click)="navigateToHome()">
-                NEW IN
-            </button>
+        <!-- Back button (optional) -->
+        <button *ngIf="showBackButton" mat-button class="back-btn" (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            <span>{{ backButtonText }}</span>
+        </button>
+
+        <!-- Logo -->
+        <div class="logo-section">
+            <a class="brand-logo" (click)="navigateToHome()">
+                <mat-icon class="logo-icon">diamond</mat-icon>
+                <span class="logo-text">G5 JEWELRY</span>
+            </a>
         </div>
 
-        <!-- Center Logo -->
-        <div class="logo-section">
-            <h1 class="brand-logo gradient-text" (click)="navigateToHome()">TRANG SỨC JS</h1>
+        <!-- Search Bar -->
+        <div class="search-section">
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        [(ngModel)]="searchKeyword"
+                        (input)="onSearchInput()"
+                        (focus)="showSuggestions = true"
+                        (blur)="hideSuggestions()"
+                        placeholder="I'm looking for..."
+                    >
+                    <button class="search-btn" (click)="performSearch()" [disabled]="isSearching">
+                        <mat-icon *ngIf="!isSearching">search</mat-icon>
+                        <span *ngIf="isSearching" class="loading-spinner">⟳</span>
+                    </button>
+                </div>
+                
+                <!-- Search Suggestions -->
+                <div class="search-suggestions" *ngIf="showSuggestions && searchSuggestions.length > 0">
+                    <div 
+                        class="suggestion-item" 
+                        *ngFor="let suggestion of searchSuggestions"
+                        (click)="selectSuggestion(suggestion)"
+                    >
+                        <mat-icon>search</mat-icon>
+                        <span>{{ suggestion }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Search Tags -->
+            <div class="quick-search-tags" *ngIf="showSuggestions">
+                <span class="tags-label">Tìm kiếm nhanh:</span>
+                <button 
+                    class="tag-btn" 
+                    *ngFor="let tag of quickSearchTags"
+                    (click)="searchByTag(tag)"
+                >
+                    {{ tag }}
+                </button>
+            </div>
         </div>
 
         <!-- Right Actions -->
         <div class="nav-right">
-            <button mat-icon-button class="action-icon" (click)="navigateToWishlist()">
-                <mat-icon>favorite_border</mat-icon>
-            </button>
-            <button mat-icon-button class="action-icon" (click)="navigateToCart()" [matBadge]="cartItemCount"
-                matBadgeColor="accent" [matBadgeHidden]="cartItemCount === 0">
-                <mat-icon>shopping_bag</mat-icon>
-            </button>
-            <button mat-icon-button class="action-icon user-avatar" *ngIf="currentUser; else notLoggedIn"
+            <!-- User Account -->
+            <button mat-icon-button class="action-icon user-icon" *ngIf="currentUser; else notLoggedIn"
                 [matMenuTriggerFor]="userMenu">
-                <div class="avatar-circle">
-                    {{ getInitials() }}
-                </div>
+                <mat-icon>person_outline</mat-icon>
             </button>
             <ng-template #notLoggedIn>
-                <button mat-button (click)="navigateToLogin()">Đăng nhập</button>
+                <button mat-icon-button class="action-icon user-icon" (click)="navigateToLogin()">
+                    <mat-icon>person_outline</mat-icon>
+                </button>
             </ng-template>
+
+            <!-- Wishlist -->
+            <button mat-icon-button class="action-icon wishlist-icon" (click)="navigateToWishlist()">
+                <mat-icon>favorite_border</mat-icon>
+                <span class="badge" *ngIf="wishlistCount > 0">{{ wishlistCount }}</span>
+            </button>
+
+            <!-- Cart -->
+            <button mat-icon-button class="action-icon cart-icon" (click)="navigateToCart()">
+                <mat-icon>shopping_cart</mat-icon>
+                <span class="badge" *ngIf="cartItemCount > 0">{{ cartItemCount }}</span>
+            </button>
         </div>
     </div>
-</mat-toolbar>
+</div>
+
+<!-- Secondary Navigation -->
+<!-- <div class="secondary-nav">
+    <div class="nav-content">
+        <div class="nav-links">
+            <a class="nav-link" routerLink="/home" routerLinkActive="active">Home Maia</a>
+            <a class="nav-link" routerLink="/shop" routerLinkActive="active">Shop</a>
+            <a class="nav-link" routerLink="/pages" routerLinkActive="active">Pages</a>
+            <a class="nav-link" routerLink="/blogs" routerLinkActive="active">Blogs</a>
+            <a class="nav-link" routerLink="/contact" routerLinkActive="active">Contact Us</a>
+        </div>
+        <div class="nav-features">
+            <a class="feature-link hot" routerLink="/hot">
+                <mat-icon>whatshot</mat-icon>
+                Hot
+            </a>
+            <a class="feature-link sale" routerLink="/sale">
+                <mat-icon>local_offer</mat-icon>
+                Sale
+            </a>
+            <div class="recently-viewed" (click)="toggleRecentlyViewed()">
+                Recently Viewed
+                <mat-icon>expand_more</mat-icon>
+            </div>
+        </div>
+    </div>
+</div> -->
 
 <!-- User Dropdown Menu -->
 <mat-menu #userMenu="matMenu" class="user-dropdown-menu">

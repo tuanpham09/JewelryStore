@@ -73,4 +73,37 @@ public class ProductController {
         ));
     }
 
+    @GetMapping("/deal-of-the-day")
+    public ResponseEntity<ApiResponse<List<ProductDto>>> getDealOfTheDayProducts() {
+        List<ProductDto> products = productService.getDealOfTheDayProducts();
+        
+        return ResponseEntity.ok(new ApiResponse<>(
+            true,
+            "Deal of the day products retrieved successfully",
+            products
+        ));
+    }
+
+    @GetMapping("/featured")
+    public ResponseEntity<ApiResponse<List<ProductDto>>> getFeaturedProducts() {
+        List<ProductDto> products = productService.getFeaturedProducts();
+        
+        return ResponseEntity.ok(new ApiResponse<>(
+            true,
+            "Featured products retrieved successfully",
+            products
+        ));
+    }
+
+    @GetMapping("/new-arrivals")
+    public ResponseEntity<ApiResponse<List<ProductDto>>> getNewArrivals() {
+        List<ProductDto> products = productService.getNewArrivals();
+        
+        return ResponseEntity.ok(new ApiResponse<>(
+            true,
+            "New arrivals retrieved successfully",
+            products
+        ));
+    }
+
 }

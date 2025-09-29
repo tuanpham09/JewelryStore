@@ -5,26 +5,42 @@
 
 <!-- Hero Section -->
 <div class="hero-section">
-  <h1 class="hero-title gradient-text">TRANG SỨC NỮ</h1>
-  <p class="hero-description">
-    Thêm ánh sáng cho trang phục hàng ngày của bạn với những món trang sức thanh lịch.
-    Bộ sưu tập của chúng tôi có đầy đủ từ nhẫn có thể xếp chồng và dây chuyền mặt dây
-    đến vòng tay charm. Chọn màu sắc yêu thích của bạn — vàng, vàng hồng, hoặc bạc —
-    và thêm những thiết kế sang trọng và hiện đại vào bộ sưu tập trang sức của bạn.
-  </p>
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1 class="hero-title">TRANG SỨC CAO CẤP</h1>
+      <p class="hero-subtitle">Tôn vinh vẻ đẹp của bạn</p>
+      <p class="hero-description">
+        Khám phá bộ sưu tập trang sức tinh tế, được chế tác thủ công với những viên đá quý 
+        và kim loại quý hiếm. Mỗi món trang sức đều kể một câu chuyện về sự sang trọng và đẳng cấp.
+      </p>
+      <div class="hero-actions">
+        <button mat-raised-button class="cta-button primary" (click)="scrollToProducts()">
+          Khám phá ngay
+        </button>
+        <button mat-stroked-button class="cta-button secondary" (click)="scrollToCategories()">
+          Xem danh mục
+        </button>
+      </div>
+    </div>
+    <div class="hero-image">
+      <div class="hero-image-placeholder">
+        <mat-icon class="hero-icon">diamond</mat-icon>
+      </div>
+    </div>
+  </div>
   
   <!-- Search Section -->
   <div class="search-section">
     <div class="search-container">
       <div class="search-input-wrapper">
         <mat-icon class="search-icon">search</mat-icon>
-              <input
-                type="text"
-                class="search-input"
-                placeholder="Tìm kiếm trang sức, nhẫn, dây chuyền..."
-                [(ngModel)]="searchKeyword"
-                (input)="onSearchInput()"
-              />
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Tìm kiếm trang sức, nhẫn, dây chuyền..."
+          [(ngModel)]="searchKeyword"
+          (input)="onSearchInput()"
+        />
         <button 
           class="search-btn" 
           (click)="performSearch()"
@@ -62,73 +78,204 @@
   </div>
 </div>
 
-<!-- Category Navigation -->
+<!-- Category Showcase -->
+<div class="category-showcase" id="categories">
+  <div class="container">
+    <h2 class="section-title">Danh mục sản phẩm</h2>
+    <p class="section-subtitle">Khám phá các bộ sưu tập trang sức đa dạng</p>
+    
+    <div class="category-grid" *ngIf="!isLoadingCategories">
+      <div 
+        class="category-card" 
+        *ngFor="let category of categories.slice(1, 5)"
+        (click)="selectCategory(category.id)"
+      >
+        <div class="category-image">
+          <mat-icon class="category-icon">{{ getCategoryIcon(category.name) }}</mat-icon>
+        </div>
+        <div class="category-info">
+          <h3 class="category-name">{{ category.name }}</h3>
+          <p class="category-description">{{ getCategoryDescription(category.name) }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="isLoadingCategories" class="category-loading">
+      <mat-spinner diameter="30"></mat-spinner>
+      <span>Đang tải danh mục...</span>
+    </div>
+  </div>
+</div>
 
+<!-- Featured Products Section -->
+<div class="featured-section" id="products">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Sản phẩm nổi bật</h2>
+      <p class="section-subtitle">Những món trang sức được yêu thích nhất</p>
+    </div>
+    
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Đang tải sản phẩm...</p>
+    </div>
+    
+    <div *ngIf="!isLoading && products.length > 0" class="products-showcase">
+      <div class="product-card featured" *ngFor="let product of products.slice(0, 6)" (click)="navigateToProduct(product.id)">
+        <div class="product-image">
+          <img [src]="product.thumbnail || 'https://via.placeholder.com/300x300?text=No+Image'" [alt]="product.name" />
+          <div class="product-overlay">
+            <button mat-fab color="primary" class="quick-view" (click)="navigateToProduct(product.id); $event.stopPropagation()">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-fab color="accent" class="wishlist-btn" (click)="toggleWishlist(product); $event.stopPropagation()">
+              <mat-icon>favorite</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="product.isOnSale" class="sale-badge">GIẢM GIÁ</div>
+          <div *ngIf="product.isNew" class="new-badge">MỚI</div>
+          <div *ngIf="product.isFeatured" class="featured-badge">NỔI BẬT</div>
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-category">{{ product.categoryName }}</p>
+          <div class="price-container">
+            <p class="product-price" *ngIf="!product.isOnSale">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
+            <div *ngIf="product.isOnSale" class="sale-price-container">
+              <p class="sale-price">{{ product.salePrice | currency:'VND':'symbol':'1.0-0' }}</p>
+              <p class="original-price">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</p>
+            </div>
+          </div>
+          <div class="rating-container" *ngIf="product.averageRating">
+            <div class="stars">
+              <span *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= product.averageRating!">★</span>
+            </div>
+            <span class="review-count">({{ product.reviewCount }})</span>
+          </div>
+          <button mat-raised-button color="primary" class="add-to-cart" (click)="addToCart(product); $event.stopPropagation()">
+            Thêm vào giỏ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Arrivals Section -->
+<div class="new-arrivals-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Sản phẩm mới</h2>
+      <p class="section-subtitle">Những thiết kế mới nhất từ bộ sưu tập</p>
+    </div>
+    
+    <div *ngIf="isLoadingNew" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Đang tải sản phẩm mới...</p>
+    </div>
+    
+    <div *ngIf="!isLoadingNew && newProducts.length > 0" class="products-showcase">
+      <div class="product-card new" *ngFor="let product of newProducts.slice(0, 4)" (click)="navigateToProduct(product.id)">
+        <div class="product-image">
+          <img [src]="product.thumbnail || 'https://via.placeholder.com/300x300?text=No+Image'" [alt]="product.name" />
+          <div class="product-overlay">
+            <button mat-fab color="primary" class="quick-view" (click)="navigateToProduct(product.id); $event.stopPropagation()">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-fab color="accent" class="wishlist-btn" (click)="toggleWishlist(product); $event.stopPropagation()">
+              <mat-icon>favorite</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="product.isNew" class="new-badge">MỚI</div>
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-category">{{ product.categoryName }}</p>
+          <div class="price-container">
+            <p class="product-price">{{ product.price | currency:'VND':'symbol':'1.0-0' }}</p>
+          </div>
+          <button mat-raised-button color="primary" class="add-to-cart" (click)="addToCart(product); $event.stopPropagation()">
+            Thêm vào giỏ
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="!isLoadingNew && newProducts.length === 0" class="empty-section">
+      <mat-icon class="empty-icon">new_releases</mat-icon>
+      <h3>Chưa có sản phẩm mới</h3>
+      <p>Vui lòng quay lại sau để xem các sản phẩm mới nhất</p>
+    </div>
+  </div>
+</div>
+
+<!-- On Sale Products Section -->
+<div class="on-sale-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Sản phẩm giảm giá</h2>
+      <p class="section-subtitle">Cơ hội mua sắm với giá tốt nhất</p>
+    </div>
+    
+    <div *ngIf="isLoadingOnSale" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Đang tải sản phẩm giảm giá...</p>
+    </div>
+    
+    <div *ngIf="!isLoadingOnSale && onSaleProducts.length > 0" class="products-showcase">
+      <div class="product-card sale" *ngFor="let product of onSaleProducts.slice(0, 4)" (click)="navigateToProduct(product.id)">
+        <div class="product-image">
+          <img [src]="product.thumbnail || 'https://via.placeholder.com/300x300?text=No+Image'" [alt]="product.name" />
+          <div class="product-overlay">
+            <button mat-fab color="primary" class="quick-view" (click)="navigateToProduct(product.id); $event.stopPropagation()">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-fab color="accent" class="wishlist-btn" (click)="toggleWishlist(product); $event.stopPropagation()">
+              <mat-icon>favorite</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="product.isOnSale" class="sale-badge">GIẢM GIÁ</div>
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-category">{{ product.categoryName }}</p>
+          <div class="price-container">
+            <div class="sale-price-container">
+              <p class="sale-price">{{ product.salePrice | currency:'VND':'symbol':'1.0-0' }}</p>
+              <p class="original-price">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</p>
+            </div>
+          </div>
+          <button mat-raised-button color="primary" class="add-to-cart" (click)="addToCart(product); $event.stopPropagation()">
+            Thêm vào giỏ
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="!isLoadingOnSale && onSaleProducts.length === 0" class="empty-section">
+      <mat-icon class="empty-icon">local_offer</mat-icon>
+      <h3>Hiện chưa có sản phẩm giảm giá</h3>
+      <p>Vui lòng quay lại sau để xem các ưu đãi mới nhất</p>
+    </div>
+  </div>
+</div>
 
 <!-- Search Results Info -->
 <div *ngIf="isSearchMode && !isLoading" class="search-results-info">
-  <h3>Kết quả tìm kiếm cho "{{ searchKeyword }}"</h3>
-  <p>Tìm thấy {{ totalProducts }} sản phẩm</p>
-  <button mat-button color="primary" (click)="clearSearch()">
-    <mat-icon>clear</mat-icon>
-    Xóa tìm kiếm
-  </button>
+  <div class="container">
+    <h3>Kết quả tìm kiếm cho "{{ searchKeyword }}"</h3>
+    <p>Tìm thấy {{ totalProducts }} sản phẩm</p>
+    <button mat-button color="primary" (click)="clearSearch()">
+      <mat-icon>clear</mat-icon>
+      Xóa tìm kiếm
+    </button>
+  </div>
 </div>
 
 <!-- Main Content Layout -->
 <div *ngIf="!isSearchMode" class="main-layout">
   <!-- Main Content -->
   <div class="main-content">
-
-
-
-    <!-- On Sale Products Section -->
-    <div class="on-sale-section">
-      <div class="section-header">
-        <h2 class="section-title">Sản phẩm đang giảm giá</h2>
-        <p class="section-subtitle">Cơ hội mua sắm với giá tốt nhất</p>
-      </div>
-      
-      <div *ngIf="isLoadingOnSale" class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Đang tải sản phẩm giảm giá...</p>
-      </div>
-      
-      <div *ngIf="!isLoadingOnSale && onSaleProducts.length > 0" class="products-carousel">
-        <div class="product-card" *ngFor="let product of onSaleProducts" (click)="navigateToProduct(product.id)">
-          <div class="product-image">
-            <img [src]="product.thumbnail || 'https://via.placeholder.com/300x300?text=No+Image'" [alt]="product.name" />
-            <div class="product-overlay">
-              <button mat-fab color="primary" class="quick-view" (click)="navigateToProduct(product.id); $event.stopPropagation()">
-                <mat-icon>visibility</mat-icon>
-              </button>
-            </div>
-            <div *ngIf="product.isOnSale" class="sale-badge">GIẢM GIÁ</div>
-          </div>
-          <div class="product-info">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <p class="product-category">{{ product.categoryName }}</p>
-            <div class="price-container">
-              <div class="sale-price-container">
-                <p class="sale-price">{{ product.salePrice | currency:'VND':'symbol':'1.0-0' }}</p>
-                <p class="original-price">{{ product.originalPrice | currency:'VND':'symbol':'1.0-0' }}</p>
-              </div>
-            </div>
-            <button mat-raised-button color="primary" class="add-to-cart" (click)="addToCart(product); $event.stopPropagation()">
-              Thêm vào giỏ
-            </button>
-
-          </div>
-        </div>
-      </div>
-      
-      <!-- Empty state for on-sale products -->
-      <div *ngIf="!isLoadingOnSale && onSaleProducts.length === 0" class="empty-section">
-        <mat-icon class="empty-icon">local_offer</mat-icon>
-        <h3>Hiện chưa có sản phẩm giảm giá</h3>
-        <p>Vui lòng quay lại sau để xem các ưu đãi mới nhất</p>
-      </div>
-    </div>
 
     <!-- Filter and Sort Bar -->
     <div class="filter-bar">

@@ -47,8 +47,8 @@ import { BreadcrumbComponent, BreadcrumbItem } from '../shared/breadcrumb/breadc
         Footer,
         BreadcrumbComponent
     ],
-    templateUrl: 'product-detail.html',
-    styleUrl: 'product-detail.css'
+    templateUrl: './product-detail.html',
+    styleUrls: ['./product-detail.css']
 })
 export class ProductDetail implements OnInit {
     currentUser: any = null;

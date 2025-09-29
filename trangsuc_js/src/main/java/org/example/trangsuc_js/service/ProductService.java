@@ -11,4 +11,7 @@ public interface ProductService {
     List<ProductDto> getProductsByCategory(Long categoryId);
     List<ProductDto> getRelatedProducts(Long productId, int limit);
     ProductDto incrementViewCount(Long productId);
+    List<ProductDto> getDealOfTheDayProducts();
+    List<ProductDto> getFeaturedProducts();
+    List<ProductDto> getNewArrivals();
 }

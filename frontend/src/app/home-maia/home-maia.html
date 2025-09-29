@@ -1,0 +1,182 @@
+<app-header></app-header>
+
+<!-- Hero Banner Slider -->
+<section class="maia-hero">
+  <div class="banner-slider">
+    <div class="banner-slides" [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'">
+      <div class="banner-slide" *ngFor="let banner of banners; let i = index" [class.active]="i === currentSlide">
+        <div class="banner-image">
+          <img [src]="banner.image" [alt]="banner.title">
+        </div>
+        <div class="banner-text">
+          <h1>{{ banner.title }}</h1>
+          <p>{{ banner.description }}</p>
+          <button mat-raised-button color="primary" class="learn-more" (click)="scrollToProducts()">
+            {{ banner.buttonText }}
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="banner-nav">
+      <button class="nav-btn prev" (click)="previousSlide()" [disabled]="currentSlide === 0">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <div class="slide-indicator">
+        <span class="current">{{ currentSlide + 1 }}</span>
+        <span class="separator">/</span>
+        <span class="total">{{ banners.length }}</span>
+      </div>
+      <button class="nav-btn next" (click)="nextSlide()" [disabled]="currentSlide === banners.length - 1">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Advantages -->
+<section class="maia-advantages">
+  <div class="adv-grid">
+    <div class="adv-item">
+      <mat-icon>local_shipping</mat-icon>
+      <div>
+        <h4>Free Delivery</h4>
+        <p>Free shipping over $100 to stores and home</p>
+      </div>
+    </div>
+    <div class="adv-item">
+      <mat-icon>payments</mat-icon>
+      <div>
+        <h4>Flexible payment</h4>
+        <p>Different finance options will be available</p>
+      </div>
+    </div>
+    <div class="adv-item">
+      <mat-icon>spa</mat-icon>
+      <div>
+        <h4>Naturally derived</h4>
+        <p>Natural & organic beauty products</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Deal Of The Day Section -->
+<section class="deal-of-the-day-section">
+  <div class="section-header">
+    <h2 class="section-title">Deal Of The Day</h2>
+    <div class="countdown-timer">
+      <div class="time-unit">
+        <span class="time-value">{{ countdown.days }}</span>
+        <span class="time-label">DAYS</span>
+      </div>
+      <div class="time-unit">
+        <span class="time-value">{{ countdown.hours }}</span>
+        <span class="time-label">HOURS</span>
+      </div>
+      <div class="time-unit">
+        <span class="time-value">{{ countdown.minutes }}</span>
+        <span class="time-label">MINS</span>
+      </div>
+      <div class="time-unit">
+        <span class="time-value">{{ countdown.seconds }}</span>
+        <span class="time-label">SECS</span>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="isLoadingDeal" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="product-grid" *ngIf="!isLoadingDeal && dealProducts.length">
+    <div class="product-card" *ngFor="let p of dealProducts.slice(0,4)" (click)="navigateToProduct(p.id)">
+      <div class="product-image">
+        <img [src]="p.thumbnail || 'https://via.placeholder.com/420x420?text=No+Image'" [alt]="p.name">
+        
+        <!-- Sale Badge -->
+        <div class="sale-badge" *ngIf="p.isOnSale">SALE</div>
+        
+        <!-- Featured Badge -->
+        <div class="featured-badge" *ngIf="p.isFeatured">FEATURED</div>
+        
+        <!-- Deal Ended Overlay -->
+        <div class="deal-ended-overlay" *ngIf="p.dealEnded">
+          <span>Deal ended</span>
+        </div>
+      </div>
+      
+      <div class="product-info">
+        <div class="price-container">
+          <span class="original-price" *ngIf="p.originalPrice && p.originalPrice > p.price">
+            {{ p.originalPrice | currency:'VND':'symbol':'1.0-0' }}
+          </span>
+          <span class="sale-price" [class.no-sale]="!p.isOnSale">
+            {{ p.price | currency:'VND':'symbol':'1.0-0' }}
+          </span>
+        </div>
+        
+        <h3 class="product-name">{{ p.name }}</h3>
+        <p class="brand" *ngIf="p.brand">{{ p.brand }}</p>
+        
+        <!-- Rating -->
+        <div class="rating" *ngIf="p.averageRating">
+          <div class="stars">
+            <span *ngFor="let star of [1,2,3,4,5]" 
+                  [class.filled]="star <= p.averageRating">★</span>
+          </div>
+          <span class="review-count" *ngIf="p.reviewCount">({{ p.reviewCount }})</span>
+        </div>
+        
+        <!-- Sold Info -->
+        <div class="sold-info" *ngIf="p.soldCount && p.stock">
+          <span class="sold-text">Sold: {{ p.soldCount }}/{{ p.soldCount + p.stock }}</span>
+          <div class="progress-bar">
+            <div class="progress-fill" 
+                 [style.width.%]="(p.soldCount / (p.soldCount + p.stock)) * 100"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- View All Button -->
+  <div class="view-all-container">
+    <button mat-raised-button class="view-all-btn" (click)="viewAllDeals()">
+      VIEW ALL
+    </button>
+  </div>
+</section>
+
+<!-- On Sale -->
+<section class="maia-section sale">
+  <div class="section-header">
+    <h2>On Sale</h2>
+    <p>Great prices for great items</p>
+  </div>
+
+  <div *ngIf="isLoadingOnSale" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="product-grid" *ngIf="!isLoadingOnSale && onSaleProducts.length">
+    <div class="product-card" *ngFor="let p of onSaleProducts.slice(0,8)" (click)="navigateToProduct(p.id)">
+      <div class="thumb">
+        <img [src]="p.thumbnail || 'https://via.placeholder.com/420x420?text=No+Image'" [alt]="p.name">
+        <div class="badge">Sale</div>
+      </div>
+      <div class="info">
+        <h3>{{ p.name }}</h3>
+        <div class="price-line">
+          <span class="sale-price">{{ p.salePrice | currency:'VND':'symbol':'1.0-0' }}</span>
+          <span class="orig-price">{{ p.originalPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
+
+

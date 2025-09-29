@@ -56,25 +56,29 @@
     <p>Đang xử lý thông tin đơn hàng...</p>
   </div>
   
-  <div class="error-card" *ngIf="error">
-    <div class="error-icon">
-      <i class="fas fa-exclamation-triangle"></i>
+  @if (error) {
+    <div class="error-card">
+      <div class="error-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+  
+      <h2 class="error-title">Có lỗi xảy ra</h2>
+      <p class="error-message">{{ error }}</p>
+  
+      <div class="action-buttons">
+        <button class="btn btn-primary" (click)="goToHome()">
+          <i class="fas fa-home"></i>
+          Về trang chủ
+        </button>
+  
+        @if (orderCode) {
+          <button class="btn btn-secondary" (click)="goToOrders()">
+            <i class="fas fa-list"></i>
+            Xem đơn hàng
+          </button>
+        }
+      </div>
     </div>
-    
-    <h2 class="error-title">Có lỗi xảy ra</h2>
-    
-    <p class="error-message">{{ error }}</p>
-    
-    <div class="action-buttons">
-      <button class="btn btn-primary" (click)="goToHome()">
-        <i class="fas fa-home"></i>
-        Về trang chủ
-      </button>
-      
-      <button class="btn btn-secondary" (click)="goToOrders()" *ngIf="orderCode">
-        <i class="fas fa-list"></i>
-        Xem đơn hàng
-      </button>
-    </div>
-  </div>
+  }
+  
 </div>
